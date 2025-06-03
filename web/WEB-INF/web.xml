@@ -68,11 +68,7 @@
         <servlet-name>BookingServlet</servlet-name>
         <servlet-class>controller.BookingServlet</servlet-class>
     </servlet>
-    <dependency>
-        <groupId>jakarta.servlet</groupId>
-        <artifactId>jstl</artifactId>
-        <version>1.2</version>
-    </dependency>
+    
     <servlet-mapping>
         <servlet-name>ReceptionController</servlet-name>
         <url-pattern>/reception</url-pattern>

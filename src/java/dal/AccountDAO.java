@@ -29,11 +29,13 @@ import model.Role;
 import model.Specialization;
 import model.Staff;
 import org.mindrot.jbcrypt.BCrypt;
+
 /**
  *
  * @author ADMIN
  */
 public class AccountDAO extends DBContext {
+
     private PreparedStatement ps = null;
     private ResultSet rs = null;
     private String xSql = null;
@@ -252,8 +254,8 @@ public class AccountDAO extends DBContext {
 
     // Phương thức: Thêm tài khoản và thông tin chi tiết
     public boolean addAccountWithDetails(String email, String username, String password, int roleId, boolean status,
-                                         String fullName, String address, LocalDateTime dob, String gender,
-                                         String phoneNumber, String imageURL, int specializationId, int doctorLevelId) {
+            String fullName, String address, LocalDateTime dob, String gender,
+            String phoneNumber, String imageURL, int specializationId, int doctorLevelId) {
         // Thêm tài khoản vào bảng accounts
         int accountId = addAccount(email, username, password, roleId, status);
         if (accountId <= 0) {
@@ -735,8 +737,7 @@ public class AccountDAO extends DBContext {
     public void migratePasswords() {
         String sqlSelect = "SELECT id, password FROM accounts";
         String sqlUpdate = "UPDATE accounts SET password = ? WHERE id = ?";
-        try (PreparedStatement psSelect = connection.prepareStatement(sqlSelect);
-             ResultSet rs = psSelect.executeQuery()) {
+        try (PreparedStatement psSelect = connection.prepareStatement(sqlSelect); ResultSet rs = psSelect.executeQuery()) {
             while (rs.next()) {
                 int id = rs.getInt("id");
                 String plainPassword = rs.getString("password");
@@ -766,7 +767,7 @@ public class AccountDAO extends DBContext {
                 "0987654321",
                 "doctor.jpg",
                 1, // specializationId
-                1  // doctorLevelId
+                1 // doctorLevelId
         );
         System.out.println("Add doctor success: " + success);
     }
