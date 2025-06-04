@@ -128,7 +128,7 @@
                         </div>
                         <div class="card">
                             <div class="card-body">
-                                <form action="<%= request.getContextPath()%>/AccountManagementServlet" method="POST">
+                                <form action="<%= request.getContextPath()%>/AccountManagementServlet" method="POST" accept-charset="UTF-8">
                                     <input type="hidden" name="action" value="add">
                                     <div class="row">
                                         <div class="col-md-6 mb-3">
@@ -213,26 +213,24 @@
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
 
-        <script>
-            function toggleFields(select) {
-                console.log("toggleFields called with value: " + select.value); // Log để kiểm tra
-                const doctorFields = document.querySelectorAll('.doctor-field');
-                const doctorRoleId = ${doctorRoleId != null ? doctorRoleId : 0};
+                <script>
+                    function toggleFields(select) {
+                        console.log("toggleFields called with value: " + select.value); // Log để kiểm tra
+                        const doctorFields = document.querySelectorAll('.doctor-field');
+                        const doctorRoleId = ${doctorRoleId != null ? doctorRoleId : 0};
 
-                // Ẩn tất cả các trường bổ sung trước
-                doctorFields.forEach(field => field.style.display = 'none');
-                doctorFields.forEach(field => field.querySelector('select').removeAttribute('required'));
+                        // Ẩn tất cả các trường bổ sung trước
+                        doctorFields.forEach(field => field.style.display = 'none');
+                        doctorFields.forEach(field => field.querySelector('select').removeAttribute('required'));
 
-                // Hiển thị các trường theo role
-                if (parseInt(select.value) === doctorRoleId) {
-                    doctorFields.forEach(field => field.style.display = 'block');
-                    doctorFields.forEach(field => field.querySelector('select').setAttribute('required', 'true'));
-                }
-            }
-        </script>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    </body>
-</html>
+                        // Hiển thị các trường theo role
+                        if (parseInt(select.value) === doctorRoleId) {
+                            doctorFields.forEach(field => field.style.display = 'block');
+                            doctorFields.forEach(field => field.querySelector('select').setAttribute('required', 'true'));
+                        }
+                    }
+                </script>
+                <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+                </body>
+                </html>

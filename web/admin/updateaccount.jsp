@@ -125,7 +125,7 @@
                         </div>
                         <div class="card">
                             <div class="card-body">
-                                <form action="<%= request.getContextPath()%>/AccountManagementServlet" method="POST">
+                                <form action="<%= request.getContextPath()%>/AccountManagementServlet" method="POST" accept-charset="UTF-8">
                                     <input type="hidden" name="action" value="updateAccount">
                                     <input type="hidden" name="showSection" value="account-management">
                                     <input type="hidden" name="accountId" value="${selectedAccount.id}">

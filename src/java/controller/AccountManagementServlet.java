@@ -22,6 +22,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import model.Account;
 import model.Doctor;
@@ -50,6 +51,63 @@ public class AccountManagementServlet extends HttpServlet {
     private SpecializationDao specializationDao = new SpecializationDao();
     private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     private static final int PAGE_SIZE = 5; // Số lượng tài khoản tối đa mỗi trang
+
+    // Regex patterns for validation
+    private static final Pattern PASSWORD_PATTERN = Pattern.compile("^(?=.*[!@#$%^&*(),.?\":{}|<>]).{8,31}$");
+    private static final Pattern USERNAME_PATTERN = Pattern.compile("^[a-zA-Z0-9]{6,}$");
+    private static final Pattern FULLNAME_PATTERN = Pattern.compile("^[\\p{L}]+( {1,4}[\\p{L}]+)*$");
+    private static final Pattern PHONE_PATTERN = Pattern.compile("^[0-9]{10}$");
+
+    // Validate input fields
+    private String validateInputFields(String username, String email, String password, String fullName,
+            String address, String dateOfBirth, String gender, String phoneNumber,
+            String roleIdParam, boolean isAddAction) {
+        // Check for empty required fields
+        if (username == null || email == null || fullName == null || dateOfBirth == null
+                || gender == null || phoneNumber == null || address == null || roleIdParam == null
+                || username.isEmpty() || email.isEmpty() || fullName.isEmpty() || dateOfBirth.isEmpty()
+                || gender.isEmpty() || phoneNumber.isEmpty() || address.isEmpty() || roleIdParam.isEmpty()) {
+            return "Vui lòng điền đầy đủ thông tin bắt buộc!";
+        }
+
+        // Validate password for add action
+        if (isAddAction && (password == null || password.isEmpty())) {
+            return "Mật khẩu không được để trống!";
+        }
+        if (isAddAction && !PASSWORD_PATTERN.matcher(password).matches()) {
+            return "Mật khẩu phải từ 8-31 ký tự và chứa ít nhất 1 ký tự đặc biệt!";
+        }
+
+        // Validate username
+        if (!USERNAME_PATTERN.matcher(username).matches()) {
+            return "Tên người dùng phải ít nhất 6 ký tự, chỉ chứa chữ cái, không có dấu cách hoặc ký tự đặc biệt!";
+        }
+
+        // Validate fullName
+        if (fullName.length() < 8) {
+            return "Họ tên phải có ít nhất 8 ký tự!";
+        }
+        if (!FULLNAME_PATTERN.matcher(fullName.trim()).matches()) {
+            return "Họ tên chỉ được chứa chữ cái và không chứa số hoặc ký tự đặc biệt!";
+        }
+
+        // Validate phoneNumber
+        if (!PHONE_PATTERN.matcher(phoneNumber).matches()) {
+            return "Số điện thoại phải chính xác 10 chữ số, không chứa chữ cái, ký tự đặc biệt hoặc dấu cách!";
+        }
+
+        // Validate dateOfBirth
+        try {
+            LocalDate localDate = LocalDate.parse(dateOfBirth, formatter);
+            if (localDate.isAfter(LocalDate.now())) {
+                return "Ngày sinh không được là ngày trong tương lai!";
+            }
+        } catch (DateTimeParseException e) {
+            return "Ngày sinh không hợp lệ! Định dạng phải là yyyy-MM-dd.";
+        }
+
+        return null; // No validation errors
+    }
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -89,20 +147,25 @@ public class AccountManagementServlet extends HttpServlet {
                 String statusParam = request.getParameter("status");
                 String pageParam = request.getParameter("page");
 
+                System.out.println("Filter parameters: email=" + email + ", roleIdParam=" + roleIdParam + ", statusParam=" + statusParam + ", pageParam=" + pageParam); // Thêm log tham số
+
                 Integer roleId = null;
                 if (roleIdParam != null && !roleIdParam.isEmpty() && !roleIdParam.equals("all")) {
                     try {
                         roleId = Integer.parseInt(roleIdParam);
+                        System.out.println("Parsed roleId: " + roleId); // Thêm log roleId
                     } catch (NumberFormatException e) {
                         System.err.println("Invalid roleId in search: " + roleIdParam);
                         request.setAttribute("message", "Vai trò không hợp lệ!");
                         request.setAttribute("messageType", "danger");
+                        roleId = null; // Đặt lại roleId để không lọc sai
                     }
                 }
 
                 Boolean status = null;
                 if (statusParam != null && !statusParam.isEmpty() && !statusParam.equals("all")) {
                     status = statusParam.equals("activated");
+                    System.out.println("Parsed status: " + status); // Thêm log status
                 }
 
                 int page = 1;
@@ -120,8 +183,12 @@ public class AccountManagementServlet extends HttpServlet {
                 int totalPages = (int) Math.ceil((double) totalAccounts / PAGE_SIZE);
 
                 // Đảm bảo page hợp lệ
-                if (page < 1) page = 1;
-                if (page > totalPages && totalPages > 0) page = totalPages;
+                if (page < 1) {
+                    page = 1;
+                }
+                if (page > totalPages && totalPages > 0) {
+                    page = totalPages;
+                }
 
                 // Lưu tham số lọc và phân trang để JSP hiển thị lại
                 request.setAttribute("filterEmail", email);
@@ -134,6 +201,7 @@ public class AccountManagementServlet extends HttpServlet {
                 try {
                     List<Account> accounts = accountDAO.getAccountsByPageWithFilter(page, PAGE_SIZE, email, roleId, status);
                     request.setAttribute("accounts", accounts);
+                    System.out.println("Accounts fetched for roleId=" + roleId + ": " + accounts.size()); // Thêm log số tài khoản
                 } catch (Exception e) {
                     System.err.println("Error while fetching accounts: " + e.getMessage());
                     request.setAttribute("message", "Lỗi khi tải danh sách tài khoản: " + e.getMessage());
@@ -141,91 +209,6 @@ public class AccountManagementServlet extends HttpServlet {
                 }
                 request.setAttribute("showSection", "account-management");
                 request.getRequestDispatcher("admin/admindashboard.jsp").forward(request, response);
-            } else if ("view".equals(action)) {
-                try {
-                    int id = Integer.parseInt(request.getParameter("id"));
-                    Account account = accountDAO.getAccountDetails(id);
-                    Object detail = accountDAO.getAccountDetailsByRole(id);
-                    request.setAttribute("selectedAccount", account);
-                    request.setAttribute("selectedDetail", detail);
-                    request.setAttribute("showSection", "account-detail");
-                    request.setAttribute("accounts", accountDAO.getAllAccounts());
-                    request.getRequestDispatcher("admin/admindashboard.jsp").forward(request, response);
-                } catch (NumberFormatException e) {
-                    System.err.println("Invalid account ID: " + request.getParameter("id"));
-                    request.setAttribute("message", "ID tài khoản không hợp lệ!");
-                    request.setAttribute("messageType", "danger");
-                    request.setAttribute("showSection", "account-management");
-                    request.setAttribute("accounts", accountDAO.getAllAccounts());
-                    request.getRequestDispatcher("admin/admindashboard.jsp").forward(request, response);
-                }
-            } else if ("deactivate".equals(action)) {
-                try {
-                    int id = Integer.parseInt(request.getParameter("id"));
-                    boolean success = accountDAO.changeAccountStatus(id, false);
-                    request.setAttribute("message", success ? "Vô hiệu hóa tài khoản thành công!" : "Vô hiệu hóa tài khoản thất bại!");
-                    request.setAttribute("messageType", success ? "success" : "danger");
-                    request.setAttribute("showSection", "account-management");
-                    String pageParam = request.getParameter("page");
-                    int page = pageParam != null ? Integer.parseInt(pageParam) : 1;
-                    List<Account> accounts = accountDAO.getAccountsByPageWithFilter(page, PAGE_SIZE, null, null, null);
-                    request.setAttribute("accounts", accounts);
-                    request.setAttribute("currentPage", page);
-                    request.setAttribute("totalPages", (int) Math.ceil((double) accountDAO.getTotalAccounts() / PAGE_SIZE));
-                    request.getRequestDispatcher("admin/admindashboard.jsp").forward(request, response);
-                } catch (NumberFormatException e) {
-                    System.err.println("Invalid account ID: " + request.getParameter("id"));
-                    request.setAttribute("message", "ID tài khoản không hợp lệ!");
-                    request.setAttribute("messageType", "danger");
-                    request.setAttribute("showSection", "account-management");
-                    request.setAttribute("accounts", accountDAO.getAllAccounts());
-                    request.getRequestDispatcher("admin/admindashboard.jsp").forward(request, response);
-                }
-            } else if ("activate".equals(action)) {
-                try {
-                    int id = Integer.parseInt(request.getParameter("id"));
-                    boolean success = accountDAO.changeAccountStatus(id, true);
-                    request.setAttribute("message", success ? "Kích hoạt tài khoản thành công!" : "Kích hoạt tài khoản thất bại!");
-                    request.setAttribute("messageType", success ? "success" : "danger");
-                    request.setAttribute("showSection", "account-management");
-                    String pageParam = request.getParameter("page");
-                    int page = pageParam != null ? Integer.parseInt(pageParam) : 1;
-                    List<Account> accounts = accountDAO.getAccountsByPageWithFilter(page, PAGE_SIZE, null, null, null);
-                    request.setAttribute("accounts", accounts);
-                    request.setAttribute("currentPage", page);
-                    request.setAttribute("totalPages", (int) Math.ceil((double) accountDAO.getTotalAccounts() / PAGE_SIZE));
-                    request.getRequestDispatcher("admin/admindashboard.jsp").forward(request, response);
-                } catch (NumberFormatException e) {
-                    System.err.println("Invalid account ID: " + request.getParameter("id"));
-                    request.setAttribute("message", "ID tài khoản không hợp lệ!");
-                    request.setAttribute("messageType", "danger");
-                    request.setAttribute("showSection", "account-management");
-                    request.setAttribute("accounts", accountDAO.getAllAccounts());
-                    request.getRequestDispatcher("admin/admindashboard.jsp").forward(request, response);
-                }
-            } else if ("statistics".equals(action)) {
-                request.setAttribute("showSection", "statistics");
-                request.setAttribute("accounts", accountDAO.getAllAccounts());
-                request.getRequestDispatcher("admin/admindashboard.jsp").forward(request, response);
-            } else if ("add".equals(action)) {
-                System.out.println("Redirecting to addaccount.jsp");
-                request.getRequestDispatcher("admin/addaccount.jsp").forward(request, response);
-            } else if ("update".equals(action)) {
-                try {
-                    int id = Integer.parseInt(request.getParameter("id"));
-                    Account account = accountDAO.getAccountDetails(id);
-                    Object detail = accountDAO.getAccountDetailsByRole(id);
-                    request.setAttribute("selectedAccount", account);
-                    request.setAttribute("selectedDetail", detail);
-                    request.getRequestDispatcher("admin/updateaccount.jsp").forward(request, response);
-                } catch (NumberFormatException e) {
-                    System.err.println("Invalid account ID: " + request.getParameter("id"));
-                    request.setAttribute("message", "ID tài khoản không hợp lệ!");
-                    request.setAttribute("messageType", "danger");
-                    request.setAttribute("showSection", "account-management");
-                    request.setAttribute("accounts", accountDAO.getAllAccounts());
-                    request.getRequestDispatcher("admin/admindashboard.jsp").forward(request, response);
-                }
             } else {
                 request.setAttribute("accounts", accountDAO.getAllAccounts());
                 request.setAttribute("showSection", "dashboard");
@@ -252,7 +235,7 @@ public class AccountManagementServlet extends HttpServlet {
             request.setAttribute("roles", accountDAO.getAllRoles());
             request.setAttribute("specializations", specializationDao.getAll());
             request.setAttribute("doctorLevels", doctorLevelDao.getAll());
-            
+
             request.setAttribute("doctorRoleId", accountDAO.getAllRoles().stream()
                     .filter(r -> r.getRoleName().equals("Doctor"))
                     .findFirst()
@@ -279,15 +262,13 @@ public class AccountManagementServlet extends HttpServlet {
                 String phoneNumber = request.getParameter("phoneNumber");
                 String imageURL = request.getParameter("imageURL");
 
-                // Kiểm tra các tham số bắt buộc trước
-                if (username == null || email == null || password == null || roleIdParam == null ||
-                    fullName == null || dateOfBirth == null || gender == null || phoneNumber == null ||
-                    username.isEmpty() || email.isEmpty() || password.isEmpty() || roleIdParam.isEmpty() ||
-                    fullName.isEmpty() || dateOfBirth.isEmpty() || gender.isEmpty() || phoneNumber.isEmpty()) {
-                    System.err.println("Missing required parameters: username=" + username + ", email=" + email + 
-                                       ", password=" + password + ", roleId=" + roleIdParam + ", fullName=" + fullName + 
-                                       ", dateOfBirth=" + dateOfBirth + ", gender=" + gender + ", phoneNumber=" + phoneNumber);
-                    request.setAttribute("message", "Vui lòng điền đầy đủ thông tin!");
+                // Validate input fields
+                String validationError = validateInputFields(username, email, password, fullName,
+                        address, dateOfBirth, gender, phoneNumber,
+                        roleIdParam, true);
+                if (validationError != null) {
+                    System.err.println("Validation error: " + validationError);
+                    request.setAttribute("message", validationError);
                     request.setAttribute("messageType", "danger");
                     request.getRequestDispatcher("admin/addaccount.jsp").forward(request, response);
                     return;
@@ -325,8 +306,8 @@ public class AccountManagementServlet extends HttpServlet {
                     String doctorLevelIdParam = request.getParameter("doctorLevelId");
                     String specializationIdParam = request.getParameter("specializationId");
 
-                    if (doctorLevelIdParam == null || specializationIdParam == null ||
-                        doctorLevelIdParam.isEmpty() || specializationIdParam.isEmpty()) {
+                    if (doctorLevelIdParam == null || specializationIdParam == null
+                            || doctorLevelIdParam.isEmpty() || specializationIdParam.isEmpty()) {
                         System.err.println("Missing doctorLevelId or specializationId for Doctor role: doctorLevelId=" + doctorLevelIdParam + ", specializationId=" + specializationIdParam);
                         request.setAttribute("message", "Vui lòng chọn trình độ và chuyên khoa cho bác sĩ!");
                         request.setAttribute("messageType", "danger");
@@ -390,15 +371,13 @@ public class AccountManagementServlet extends HttpServlet {
                 String phoneNumber = request.getParameter("phoneNumber");
                 String imageURL = request.getParameter("imageURL");
 
-                // Kiểm tra các tham số bắt buộc
-                if (accountIdParam == null || username == null || email == null || roleIdParam == null ||
-                    fullName == null || dateOfBirth == null || gender == null || phoneNumber == null ||
-                    accountIdParam.isEmpty() || username.isEmpty() || email.isEmpty() || roleIdParam.isEmpty() ||
-                    fullName.isEmpty() || dateOfBirth.isEmpty() || gender.isEmpty() || phoneNumber.isEmpty()) {
-                    System.err.println("Missing required parameters: accountId=" + accountIdParam + ", username=" + username + 
-                                       ", email=" + email + ", roleId=" + roleIdParam + ", fullName=" + fullName + 
-                                       ", dateOfBirth=" + dateOfBirth + ", gender=" + gender + ", phoneNumber=" + phoneNumber);
-                    request.setAttribute("message", "Vui lòng điền đầy đủ thông tin!");
+                // Validate input fields (password not required for update)
+                String validationError = validateInputFields(username, email, null, fullName,
+                        address, dateOfBirth, gender, phoneNumber,
+                        roleIdParam, false);
+                if (validationError != null) {
+                    System.err.println("Validation error: " + validationError);
+                    request.setAttribute("message", validationError);
                     request.setAttribute("messageType", "danger");
                     request.getRequestDispatcher("admin/updateaccount.jsp").forward(request, response);
                     return;
@@ -457,8 +436,8 @@ public class AccountManagementServlet extends HttpServlet {
                     String doctorLevelIdParam = request.getParameter("doctorLevelId");
                     String specializationIdParam = request.getParameter("specializationId");
 
-                    if (doctorLevelIdParam == null || specializationIdParam == null ||
-                        doctorLevelIdParam.isEmpty() || specializationIdParam.isEmpty()) {
+                    if (doctorLevelIdParam == null || specializationIdParam == null
+                            || doctorLevelIdParam.isEmpty() || specializationIdParam.isEmpty()) {
                         System.err.println("Missing doctorLevelId or specializationId for Doctor role: doctorLevelId=" + doctorLevelIdParam + ", specializationId=" + specializationIdParam);
                         request.setAttribute("message", "Vui lòng chọn trình độ và chuyên khoa cho bác sĩ!");
                         request.setAttribute("messageType", "danger");

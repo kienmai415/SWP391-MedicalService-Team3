@@ -522,13 +522,16 @@ public class AccountDAO extends DBContext {
             sql.append(" AND a.status = ?");
             params.add(status ? 1 : 0);
         }
+        System.out.println("Executing count SQL: " + sql.toString() + " with params: " + params); // Thêm log SQL
         try (PreparedStatement ps = connection.prepareStatement(sql.toString())) {
             for (int i = 0; i < params.size(); i++) {
                 ps.setObject(i + 1, params.get(i));
             }
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    return rs.getInt(1);
+                    int count = rs.getInt(1);
+                    System.out.println("Total accounts count: " + count); // Thêm log số lượng
+                    return count;
                 }
             }
         } catch (Exception e) {
@@ -561,6 +564,7 @@ public class AccountDAO extends DBContext {
         sql.append(" ORDER BY a.id OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
         params.add(offset);
         params.add(pageSize);
+        System.out.println("Executing SQL: " + sql.toString() + " with params: " + params); // Thêm log SQL
         try (PreparedStatement ps = connection.prepareStatement(sql.toString())) {
             for (int i = 0; i < params.size(); i++) {
                 ps.setObject(i + 1, params.get(i));
@@ -574,11 +578,13 @@ public class AccountDAO extends DBContext {
                     account.setRoleId(rs.getInt("role_id"));
                     account.setStatus(rs.getBoolean("status"));
                     accounts.add(account);
+                    System.out.println("Account fetched: ID=" + account.getId() + ", RoleID=" + account.getRoleId()); // Thêm log từng tài khoản
                 }
             }
         } catch (Exception e) {
             System.err.println("Error while fetching accounts with filter: page=" + page + ", pageSize=" + pageSize + ", email=" + email + ", roleId=" + roleId + ", status=" + status + ", error: " + e.getMessage());
         }
+        System.out.println("Total accounts fetched: " + accounts.size()); // Thêm log tổng số tài khoản
         return accounts;
     }
 
