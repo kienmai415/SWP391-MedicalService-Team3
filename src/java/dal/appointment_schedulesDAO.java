@@ -222,6 +222,7 @@ public class appointment_schedulesDAO extends DBContext {
 //        } else {
 //            System.out.println("Insert thất bại!");
 //        }
+
 //test update
 //        appointment_schedules updated = dao.updateAppointmentSchedules(
 //                new appointment_schedules(
@@ -241,21 +242,22 @@ public class appointment_schedulesDAO extends DBContext {
 //        } else {
 //            System.out.println("❌ Update thất bại!");
 //        }
-//test delete
-        appointment_schedules deleted = dao.deleteAppointmentSchedules(
-                new appointment_schedules(
-                        12, // ID cần xóa
-                        null, null, null,
-                        0, 0, 0,
-                        null
-                )
-        );
 
-        if (deleted != null) {
-            System.out.println("🗑️ Delete thành công: " + deleted);
-        } else {
-            System.out.println("❌ Delete thất bại!");
-        }
+//test delete
+//        appointment_schedules deleted = dao.deleteAppointmentSchedules(
+//                new appointment_schedules(
+//                        12, // ID cần xóa
+//                        null, null, null,
+//                        0, 0, 0,
+//                        null
+//                )
+//        );
+//
+//        if (deleted != null) {
+//            System.out.println("🗑️ Delete thành công: " + deleted);
+//        } else {
+//            System.out.println("❌ Delete thất bại!");
+//        }
 
         for (appointment_schedules app : list) {
             System.out.println(app);

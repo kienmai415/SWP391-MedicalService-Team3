@@ -1,6 +1,8 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
+
 <!DOCTYPE html>
 <html lang="vi">
     <head>
@@ -154,32 +156,43 @@
                     </div>
 
                     <nav class="nav flex-column">
-                        <a class="nav-link active" href="#" onclick="showTab('dashboard')">
-                            <i class="fas fa-tachometer-alt me-2"></i> Tổng quan
+
+                        <a class="nav-link ${activeTab == null || activeTab == 'dashboard' ? 'active' : ''}"
+                           href="${pageContext.request.contextPath}/ReceptionServlet">
+                            <i class="fas fa-tachometer-alt me-2"></i>Tổng quan
                         </a>
-                        <a class="nav-link" href="#" onclick="showTab('appointments')">
-                            <i class="fas fa-calendar-check me-2"></i> Quản lý lịch hẹn
-                            <span class="notification-badge">${book.size()}</span>
+
+                        <a class="nav-link ${activeTab == 'appointments' ? 'active' : ''}"
+                           href="${pageContext.request.contextPath}/ReceptionServlet?action=viewAppointments">
+                            <i class="fas fa-calendar-check me-2"></i>Quản lý lịch hẹn
+                            <c:if test="${not empty listApp}">
+                                <span class="notification-badge">${listApp.size()}</span>
+                            </c:if>
                         </a>
+
                         <a class="nav-link" href="#" onclick="showTab('feedback')">
-                            <i class="fas fa-comments me-2"></i> Phản hồi bệnh nhân
+                            <i class="fas fa-comments me-2"></i>Phản hồi bệnh nhân
                         </a>
+
                         <a class="nav-link" href="#" onclick="showTab('history')">
-                            <i class="fas fa-history me-2"></i> Lịch sử
+                            <i class="fas fa-history me-2"></i>Lịch sử
                         </a>
+
                         <a class="nav-link" href="#" onclick="showTab('shifts')">
-                            <i class="fas fa-user-md me-2"></i> Ca làm bác sĩ
+                            <i class="fas fa-user-md me-2"></i>Ca làm bác sĩ
                         </a>
+
                         <a class="nav-link" href="#" onclick="showTab('support')">
-                            <i class="fas fa-headset me-2"></i> Hỗ trợ khách hàng
+                            <i class="fas fa-headset me-2"></i>Hỗ trợ khách hàng
                         </a>
+
                     </nav>
                 </div>
 
                 <!-- Main Content -->
                 <div class="col-md-9 col-lg-10 content-area">
                     <!-- Dashboard Tab -->
-                    <div id="dashboard" class="tab-content active">
+                    <div id="dashboard" class="tab-content ${activeTab == null || activeTab == 'dashboard' ? 'active' : ''}">
                         <h2 class="header-title">
                             <i class="fas fa-tachometer-alt me-2"></i>Tổng quan hệ thống
                         </h2>
@@ -196,7 +209,7 @@
                             <div class="col-md-3">
                                 <div class="stats-card">
                                     <div class="stats-number">
-                                        <c:out value="${book.stream().filter(b -> b.dateAppointment.toString() == '2025-05-27').count()}"/>
+                                        <%--<c:out value="${book.stream().filter(b -> b.dateAppointment.toString() == '2025-05-27').count()}"/>--%>
                                     </div>
                                     <div>Lịch hẹn hôm nay</div>
                                 </div>
@@ -204,7 +217,7 @@
                             <div class="col-md-3">
                                 <div class="stats-card">
                                     <div class="stats-number">
-                                        <c:out value="${book.stream().filter(b -> b.confirmationStatus == 'Pending').count()}"/>
+                                        <%--<c:out value="${book.stream().filter(b -> b.confirmationStatus == 'Pending').count()}"/>--%>
                                     </div>
                                     <div>Chờ xác nhận</div>
                                 </div>
@@ -233,7 +246,7 @@
                                     <div class="card-body">
                                         <c:choose>
                                             <c:when test="${not empty book}">
-                                                <c:set var="nearestBooking" value="${book.stream().sorted((b1, b2) -> b1.dateAppointment.compareTo(b2.dateAppointment)).findFirst().orElse(null)}"/>
+                                                <%--<c:set var="nearestBooking" value="${book.stream().sorted((b1, b2) -> b1.dateAppointment.compareTo(b2.dateAppointment)).findFirst().orElse(null)}"/>--%>
                                                 <c:if test="${nearestBooking != null}">
                                                     <div class="d-flex justify-content-between align-items-center mb-2">
                                                         <strong>${nearestBooking.patientName}</strong>
@@ -272,98 +285,105 @@
                         </div>
                     </div>
 
+
                     <!-- Appointments Tab -->
-                    <form action="receptionistBooking" method="get">
-                        <div id="appointments" class="tab-content">
-                            <h2 class="header-title">
-                                <i class="fas fa-calendar-check me-2"></i>Quản lý lịch hẹn
-                            </h2>
+                    <div id="appointments" class="tab-content ${activeTab == 'appointments' ? 'active' : ''}">
+                        <h2 class="header-title">
+                            <i class="fas fa-calendar-check me-2"></i> Quản lý lịch hẹn
+                        </h2>
 
-                            <c:if test="${not empty message}">
-                                <div class="alert alert-success">${message}</div>
-                            </c:if>
-                            <c:if test="${not empty error}">
-                                <div class="alert alert-danger">${error}</div>
-                            </c:if>
+                        <c:if test="${not empty message}">
+                            <div class="alert alert-success">${message}</div>
+                        </c:if>
+                        <c:if test="${not empty error}">
+                            <div class="alert alert-danger">${error}</div>
+                        </c:if>
 
-                            <div class="card">
-                                <div class="card-header">
-                                    <h5 class="mb-0">Danh sách lịch hẹn</h5>
-                                </div>
-                                <div class="card-body">
-                                    <div class="table-responsive">
-                                        <table class="table table-hover">
-                                            <thead>
-                                                <tr>
-                                                    <th>ID</th>
-                                                    <th>Ngày</th>
-                                                    <th>Thời gian</th>
-                                                    <th>Bệnh nhân</th>
-                                                    <th>Bác sĩ</th>
-                                                    <th>Trạng thái</th>
-                                                    <th>Thao tác</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <c:choose>
-                                                    <c:when test="${not empty book}">
-                                                        <c:forEach items="${book}" var="i">
-                                                            <tr>
-                                                                <td>${i.id}</td>
-                                                                <td><fmt:formatDate value="${i.dateAppointment}" pattern="dd/MM/yyyy"/></td>
-                                                                <td>
-                                                                    <fmt:formatDate value="${i.startTime}" pattern="HH:mm"/> - 
-                                                                    <fmt:formatDate value="${i.endTime}" pattern="HH:mm"/>
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">Danh sách lịch hẹn</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>Ngày</th>
+                                                <th>Thời gian</th>
+                                                <th>Bệnh nhân</th>
+                                                <th>Bác sĩ</th>
+                                                <th>Trạng thái</th>
+                                                <th>Thao tác</th>
+                                                <th></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <c:choose>
+                                                <c:when test="${not empty listApp}">
+                                                    <c:forEach items="${listApp}" var="i">
+                                                        <tr>
+                                                            <td>${i.id}</td>
+                                                            <td><fmt:formatDate value="${i.date_appointment}" pattern="dd/MM/yyyy"/></td>
+                                                            <td>
+                                                                ${fn:substring(i.start_time, 0, 5)} - ${fn:substring(i.end_time, 0, 5)}
+                                                            </td>
+                                                            <td>
+                                                                <strong>${i.patient_id}</strong>
+                                                            </td>
+
+                                                            <td>${i.doctor_id}</td>
+                                                            <td>
+                                                                <span class="badge
+                                                                      ${i.confirmation_status == 'Pending' ? 'bg-warning' : 
+                                                                        i.confirmation_status == 'Đã xác nhận' ? 'bg-success' : 
+                                                                        i.confirmation_status == 'Đã hủy' ? 'bg-danger' : 'bg-secondary'}">
+                                                                          ${i.confirmation_status}
+                                                                      </span>
                                                                 </td>
+
+
                                                                 <td>
-                                                                    <strong>${i.patientName}</strong>
+                                                                    <c:if test="${i.confirmation_status == 'Pending'}">
+                                                                        <form action="ReceptionServlet" method="post" style="display: inline;">
+                                                                            <input type="hidden" name="action" value="confirm"/>
+                                                                            <input type="hidden" name="id" value="${i.id}"/>
+                                                                            <button type="submit" class="btn btn-success btn-sm me-1" title="Xác nhận">
+                                                                                <i class="fas fa-check"></i>
+                                                                            </button>
+                                                                        </form>
+                                                                        <form action="ReceptionServlet" method="post" style="display: inline;">
+                                                                            <input type="hidden" name="action" value="cancel"/>
+                                                                            <input type="hidden" name="id" value="${i.id}"/>
+                                                                            <button type="submit" class="btn btn-danger btn-sm me-1" title="Hủy">
+                                                                                <i class="fas fa-times"></i>
+                                                                            </button>
+                                                                        </form>
+                                                                    </c:if>
+                                                                    <c:if test="${i.confirmation_status != 'Pending'}">
+                                                                        <span>—</span>
+                                                                    </c:if>
                                                                 </td>
-                                                                <td>${i.doctorName}</td>
+                                                                
                                                                 <td>
-                                                                    <span class="badge
-                                                                          ${i.confirmationStatus == 'Pending' ? 'bg-warning' : 
-                                                                            i.confirmationStatus == 'Đã xác nhận' ? 'bg-success' : 
-                                                                            i.confirmationStatus == 'Đã hủy' ? 'bg-danger' : 'bg-secondary'}">
-                                                                              ${i.confirmationStatus}
-                                                                          </span>
-                                                                    </td>
-                                                                    <td>
-                                                                        <c:if test="${i.confirmationStatus == 'Pending'}">
-                                                                            <form action="receptionistBooking" method="post" style="display: inline;">
-                                                                                <input type="hidden" name="action" value="confirm"/>
-                                                                                <input type="hidden" name="id" value="${i.id}"/>
-                                                                                <button type="submit" class="btn btn-success btn-sm me-1" title="Xác nhận">
-                                                                                    <i class="fas fa-check"></i>
-                                                                                </button>
-                                                                            </form>
-                                                                            <form action="receptionistBooking" method="post" style="display: inline;">
-                                                                                <input type="hidden" name="action" value="cancel"/>
-                                                                                <input type="hidden" name="id" value="${i.id}"/>
-                                                                                <button type="submit" class="btn btn-danger btn-sm me-1" title="Hủy">
-                                                                                    <i class="fas fa-times"></i>
-                                                                                </button>
-                                                                            </form>
-                                                                        </c:if>
-                                                                        <c:if test="${i.confirmationStatus != 'Pending'}">
-                                                                            <span>—</span>
-                                                                        </c:if>
-                                                                    </td>
-                                                                </tr>
-                                                            </c:forEach>
-                                                        </c:when>
-                                                        <c:otherwise>
-                                                            <tr>
-                                                                <td colspan="7" class="text-center">Không có lịch hẹn nào.</td>
+                                                                    <input type="submit" value="Chi tiết">
+                                                                </td>
                                                             </tr>
-                                                        </c:otherwise>
-                                                    </c:choose>
-                                                </tbody>
-                                            </table>
-                                        </div>
+                                                        </c:forEach>
+                                                    </c:when>
+                                                    <c:otherwise>
+                                                        <tr>
+                                                            <td colspan="7" class="text-center">Không có lịch hẹn nào.</td>
+                                                        </tr>
+                                                    </c:otherwise>
+                                                </c:choose>
+                                            </tbody>
+                                        </table>
                                     </div>
                                 </div>
                             </div>
-                        </form>
+                        </div>
+
 
                         <!-- Feedback Tab -->
                         <div id="feedback" class="tab-content">
@@ -417,15 +437,15 @@
 
                 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
                 <script>
-                                function showTab(tabName) {
-                                    const tabs = document.querySelectorAll('.tab-content');
-                                    tabs.forEach(tab => tab.classList.remove('active'));
-                                    document.getElementById(tabName).classList.add('active');
+                            function showTab(tabName) {
+                                const tabs = document.querySelectorAll('.tab-content');
+                                tabs.forEach(tab => tab.classList.remove('active'));
+                                document.getElementById(tabName).classList.add('active');
 
-                                    const navLinks = document.querySelectorAll('.nav-link');
-                                    navLinks.forEach(link => link.classList.remove('active'));
-                                    event.target.classList.add('active');
-                                }
+                                const navLinks = document.querySelectorAll('.nav-link');
+                                navLinks.forEach(link => link.classList.remove('active'));
+                                event.target.classList.add('active');
+                            }
                 </script>
         </body>
     </html>
