@@ -12,15 +12,14 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import model.Account;
 
 /**
  *
  * @author BB-MT
  */
-@WebServlet(name = "LoginServlet", urlPatterns = {"/login"})
-public class LoginServlet extends HttpServlet {
+@WebServlet(name = "RegisterServlet", urlPatterns = {"/register"})
+public class RegisterServlet extends HttpServlet {
 
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -39,10 +38,10 @@ public class LoginServlet extends HttpServlet {
             out.println("<!DOCTYPE html>");
             out.println("<html>");
             out.println("<head>");
-            out.println("<title>Servlet LoginServlet</title>");
+            out.println("<title>Servlet RegisterServlet</title>");
             out.println("</head>");
             out.println("<body>");
-            out.println("<h1>Servlet LoginServlet at " + request.getContextPath() + "</h1>");
+            out.println("<h1>Servlet RegisterServlet at " + request.getContextPath() + "</h1>");
             out.println("</body>");
             out.println("</html>");
         }
@@ -60,7 +59,7 @@ public class LoginServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        //processRequest(request, response);
+        processRequest(request, response);
     }
 
     /**
@@ -76,37 +75,36 @@ public class LoginServlet extends HttpServlet {
             throws ServletException, IOException {
         //processRequest(request, response);
         AccountDAO ad = new AccountDAO();
+        request.setCharacterEncoding("UTF-8"); // để hỗ trợ tiếng Việt
 
+        String name = request.getParameter("name");
         String email = request.getParameter("email");
+
+        //String phone = request.getParameter("phone");
         String password = request.getParameter("password");
+        String confirmPassword = request.getParameter("confirm-password");
 
-        Account acc = ad.getAccByEmailPass(email, password);
+        int roleID = 2;//???
+        String roleName = "Patient";
 
-        try (PrintWriter out = response.getWriter()) {
+        int result = ad.addAccount(email, name, confirmPassword, roleID, true);
 
-            if (acc == null) {
-                String error = "Đăng nhập thất bại. Kiểm tra lại email và mật khẩu!";
-                request.setAttribute("error", error);
-                request.getRequestDispatcher("login.jsp").forward(request, response);
-            } else {
-                HttpSession session = request.getSession();
-                session.setAttribute("acc", acc);
-                if (acc.getRoleId() == 1) {
-                    request.getRequestDispatcher("admin.jsp").forward(request, response);
-                }
-                if (acc.getRoleId() == 4) {
-                    request.getRequestDispatcher("bacsi.jsp").forward(request, response);
-                }
-                if (acc.getRoleId() == 3) {
-                    request.getRequestDispatcher("manager.jsp").forward(request, response);
-                }
-                if (acc.getRoleId() == 2) {
-                    request.getRequestDispatcher("admin.jsp").forward(request, response);
-                }
-                if (acc.getRoleId() == 5) {
-                    request.getRequestDispatcher("letan.jsp").forward(request, response);
-                }
-            }
+        if (result == -2) {
+            String error = "Tài khoản đã tồn tại!!";
+            request.setAttribute("errorP", error);
+            request.setAttribute("tab", "register"); // chuyen ve register login neu thanh cong
+            request.getRequestDispatcher("login.jsp").forward(request, response);
+            return;
+        } else if (result == -1) {
+            String error = "Thêm tài khoản không thành công!!";
+            request.setAttribute("errorP", error);
+            request.setAttribute("tab", "register"); // chuyen ve register login neu thanh cong
+            request.getRequestDispatcher("login.jsp").forward(request, response);
+        } else {
+            String successFull = "Bạn đã đăng ký thành công";
+            request.setAttribute("errorP", successFull);
+            request.setAttribute("tab", "register"); // chuyen ve tab login neu thanh cong
+            request.getRequestDispatcher("login.jsp").forward(request, response);
         }
     }
 

@@ -1299,10 +1299,6 @@
                 transform: translateY(-3px);
             }
 
-            .social-login-btn.facebook {
-                color: #3b5998;
-            }
-
             .social-login-btn.google {
                 color: #db4437;
             }
@@ -1482,111 +1478,12 @@
                             <a class="nav-link" href="contact">Liên hệ</a>
                         </li>
                     </ul>
-                    <button class="btn btn-primary ms-lg-4" data-bs-toggle="modal" data-bs-target="#loginModal">
+                    <a href="login.jsp" class="btn btn-primary ms-lg-4">
                         <i class="bi bi-person-fill me-2"></i>Đăng nhập
-                    </button>
+                    </a>
                 </div>
             </div>
         </nav>
-
-        <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="loginModalLabel">Chào mừng bạn trở lại</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="auth-tabs">
-                            <div class="auth-tab active" id="login-tab">Đăng nhập</div>
-                            <div class="auth-tab" id="register-tab">Đăng ký</div>
-                        </div>
-
-                        <div id="login-form" class="auth-form">
-                            <div class="form-group">
-                                <label for="login-email" class="form-label">Email</label>
-                                <input type="email" class="form-control" id="login-email" placeholder="Nhập email của bạn">
-                            </div>
-                            <div class="form-group">
-                                <label for="login-password" class="form-label">Mật khẩu</label>
-                                <input type="password" class="form-control" id="login-password" placeholder="Nhập mật khẩu">
-                            </div>
-                            <div class="forgot-password">
-                                <a href="#" data-bs-toggle="modal" data-bs-target="#forgotPasswordModal" data-bs-dismiss="modal">Quên mật khẩu?</a>
-                            </div>
-                            <button type="submit" class="btn btn-primary">Đăng nhập</button>
-
-                            <div class="auth-separator">
-                                <span></span>
-                                <p>Hoặc đăng nhập với</p>
-                                <span></span>
-                            </div>
-
-                            <div class="social-login">
-                                <a href="#" class="social-login-btn facebook">
-                                    <i class="bi bi-facebook"></i> Facebook
-                                </a>
-                                <a href="#" class="social-login-btn google">
-                                    <i class="bi bi-google"></i> Google
-                                </a>
-                            </div>
-                        </div>
-
-                        <div id="register-form" class="auth-form" style="display: none;">
-                            <div class="form-group">
-                                <label for="register-name" class="form-label">Họ và tên</label>
-                                <input type="text" class="form-control" id="register-name" placeholder="Nhập họ và tên">
-                            </div>
-                            <div class="form-group">
-                                <label for="register-email" class="form-label">Email</label>
-                                <input type="email" class="form-control" id="register-email" placeholder="Nhập email của bạn">
-                            </div>
-                            <div class="form-group">
-                                <label for="register-phone" class="form-label">Số điện thoại</label>
-                                <input type="tel" class="form-control" id="register-phone" placeholder="Nhập số điện thoại">
-                            </div>
-                            <div class="form-group">
-                                <label for="register-password" class="form-label">Mật khẩu</label>
-                                <input type="password" class="form-control" id="register-password" placeholder="Nhập mật khẩu">
-                            </div>
-                            <div class="form-group">
-                                <label for="register-confirm-password" class="form-label">Xác nhận mật khẩu</label>
-                                <input type="password" class="form-control" id="register-confirm-password" placeholder="Nhập lại mật khẩu">
-                            </div>
-                            <button type="submit" class="btn btn-primary">Đăng ký</button>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <div class="auth-footer">
-                            <p id="login-footer">Bạn chưa có tài khoản? <a href="#" id="show-register">Đăng ký ngay</a></p>
-                            <p id="register-footer" style="display: none;">Bạn đã có tài khoản? <a href="#" id="show-login">Đăng nhập</a></p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="modal fade" id="forgotPasswordModal" tabindex="-1" aria-labelledby="forgotPasswordModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="forgotPasswordModalLabel">Quên mật khẩu</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <p class="text-muted mb-4">Vui lòng nhập email của bạn để nhận hướng dẫn đặt lại mật khẩu.</p>
-                        <div class="form-group">
-                            <label for="forgot-email" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="forgot-email" placeholder="Nhập email của bạn">
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                        <button type="button" class="btn btn-primary">Gửi yêu cầu</button>
-                    </div>
-                </div>
-            </div>
-        </div>
 
         <section class="hero-section" id="home">
             <div class="container">
@@ -2362,6 +2259,23 @@
 
             counters.forEach(counter => {
                 observer.observe(counter);
+            });
+        </script>
+        <script>
+            function togglePassword() {
+                const pass = document.getElementById('login-password');
+                pass.type = pass.type === 'password' ? 'text' : 'password';
+            }
+
+            // Thêm code kiểm tra và hiển thị modal nếu có lỗi
+            document.addEventListener('DOMContentLoaded', function () {
+                var error = '<%= request.getAttribute("error") %>';
+                if (error && error !== 'null') {
+                    var loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
+                    loginModal.show();
+                    // Đảm bảo tab đăng nhập được active
+                    document.getElementById('login-tab').click();
+                }
             });
         </script>
     </body>

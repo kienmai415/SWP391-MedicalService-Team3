@@ -15,6 +15,7 @@ package dal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -29,11 +30,13 @@ import model.Role;
 import model.Specialization;
 import model.Staff;
 import org.mindrot.jbcrypt.BCrypt;
+
 /**
  *
  * @author ADMIN
  */
 public class AccountDAO extends DBContext {
+
     private PreparedStatement ps = null;
     private ResultSet rs = null;
     private String xSql = null;
@@ -54,6 +57,28 @@ public class AccountDAO extends DBContext {
             System.err.println("Error while checking email existence: " + e.getMessage());
             return false;
         }
+    }
+
+    //
+    public Account getAccByEmailPass(String email, String pass) {
+        Account a = null;
+        String sql = "SELECT id, email,username,password,role_id,status FROM dbo.accounts WHERE email = ? AND password = ?";
+
+        try {
+            PreparedStatement ps = connection.prepareStatement(sql);
+            ps.setString(1, email);
+            ps.setString(2, pass);
+
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                a = new Account(rs.getInt(1), rs.getString(2), rs.getString(3), rs.getString(4), rs.getInt(5), null, null, true);
+            }
+            rs.close();
+            ps.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return (a);
     }
 
     // Kiểm tra accountId tồn tại
@@ -252,8 +277,8 @@ public class AccountDAO extends DBContext {
 
     // Phương thức: Thêm tài khoản và thông tin chi tiết
     public boolean addAccountWithDetails(String email, String username, String password, int roleId, boolean status,
-                                         String fullName, String address, LocalDateTime dob, String gender,
-                                         String phoneNumber, String imageURL, int specializationId, int doctorLevelId) {
+            String fullName, String address, LocalDateTime dob, String gender,
+            String phoneNumber, String imageURL, int specializationId, int doctorLevelId) {
         // Thêm tài khoản vào bảng accounts
         int accountId = addAccount(email, username, password, roleId, status);
         if (accountId <= 0) {
@@ -735,8 +760,7 @@ public class AccountDAO extends DBContext {
     public void migratePasswords() {
         String sqlSelect = "SELECT id, password FROM accounts";
         String sqlUpdate = "UPDATE accounts SET password = ? WHERE id = ?";
-        try (PreparedStatement psSelect = connection.prepareStatement(sqlSelect);
-             ResultSet rs = psSelect.executeQuery()) {
+        try (PreparedStatement psSelect = connection.prepareStatement(sqlSelect); ResultSet rs = psSelect.executeQuery()) {
             while (rs.next()) {
                 int id = rs.getInt("id");
                 String plainPassword = rs.getString("password");
@@ -756,19 +780,21 @@ public class AccountDAO extends DBContext {
 
     public static void main(String[] args) {
         AccountDAO dao = new AccountDAO();
-        LocalDateTime dob = LocalDateTime.of(1990, 1, 1, 0, 0);
-        boolean success = dao.addDoctor(
-                1, // Giả sử accountId đã tồn tại
-                "Doctor Test",
-                "123 Doctor St",
-                dob,
-                "Male",
-                "0987654321",
-                "doctor.jpg",
-                1, // specializationId
-                1  // doctorLevelId
-        );
-        System.out.println("Add doctor success: " + success);
+//        LocalDateTime dob = LocalDateTime.of(1990, 1, 1, 0, 0);
+//        boolean success = dao.addDoctor(
+//                1, // Giả sử accountId đã tồn tại
+//                "Doctor Test",
+//                "123 Doctor St",
+//                dob,
+//                "Male",
+//                "0987654321",
+//                "doctor.jpg",
+//                1, // specializationId
+//                1 // doctorLevelId
+//        );
+//        System.out.println("Add doctor success: " + success);
+        int result = dao.addAccount("ghrheh", "hgwhwe", "hwerhre", 2, true);
+        System.out.println(result);
     }
 
 }

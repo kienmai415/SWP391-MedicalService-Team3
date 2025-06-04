@@ -9,10 +9,6 @@
         <servlet-class>controller.AboutServlet</servlet-class>
     </servlet>
     <servlet>
-        <servlet-name>LoginServlet</servlet-name>
-        <servlet-class>controller.LoginServlet</servlet-class>
-    </servlet>
-    <servlet>
         <servlet-name>DoctorServlet</servlet-name>
         <servlet-class>controller.DoctorServlet</servlet-class>
     </servlet>
@@ -36,6 +32,11 @@
         <servlet-name>ReceptionController</servlet-name>
         <servlet-class>controller.ReceptionController</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>LoginServlet</servlet-name>
+        <servlet-class>controller.LoginServlet</servlet-class>
+    </servlet>
+    
     <servlet-mapping>
         <servlet-name>HomeServlet</servlet-name>
         <url-pattern>/home</url-pattern>
@@ -43,10 +44,6 @@
     <servlet-mapping>
         <servlet-name>AboutServlet</servlet-name>
         <url-pattern>/about</url-pattern>
-    </servlet-mapping>
-    <servlet-mapping>
-        <servlet-name>LoginServlet</servlet-name>
-        <url-pattern>/login</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
         <servlet-name>DoctorServlet</servlet-name>
@@ -64,10 +61,11 @@
         <servlet-name>BookingServlet</servlet-name>
         <url-pattern>/booking</url-pattern>
     </servlet-mapping>
-    <servlet>
-        <servlet-name>BookingServlet</servlet-name>
-        <servlet-class>controller.BookingServlet</servlet-class>
-    </servlet>
+    <servlet-mapping>
+        <servlet-name>LoginServlet</servlet-name>
+        <url-pattern>/login</url-pattern>
+    </servlet-mapping>
+    
     <dependency>
         <groupId>jakarta.servlet</groupId>
         <artifactId>jstl</artifactId>
@@ -77,4 +75,5 @@
         <servlet-name>ReceptionController</servlet-name>
         <url-pattern>/reception</url-pattern>
     </servlet-mapping>
+    
 </web-app>
