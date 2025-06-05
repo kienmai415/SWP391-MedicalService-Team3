@@ -128,7 +128,7 @@
                         </div>
                         <div class="card">
                             <div class="card-body">
-                                <form action="<%= request.getContextPath()%>/AccountManagementServlet" method="POST" accept-charset="UTF-8">
+                                <form action="<%= request.getContextPath()%>/AccountManagementServlet" method="POST" enctype="multipart/form-data" accept-charset="UTF-8">
                                     <input type="hidden" name="action" value="add">
                                     <div class="row">
                                         <div class="col-md-6 mb-3">
@@ -176,11 +176,11 @@
                                         </div>
                                         <div class="col-md-6 mb-3">
                                             <label class="form-label">Địa chỉ</label>
-                                            <input type="text" class="form-control" name="address">
+                                            <input type="text" class="form-control" name="address" required>
                                         </div>
                                         <div class="col-md-6 mb-3">
-                                            <label class="form-label">Ảnh đại diện (URL)</label>
-                                            <input type="text" class="form-control" name="imageURL">
+                                            <label class="form-label">Ảnh đại diện</label>
+                                            <input type="file" class="form-control" name="imageFile" accept="image/jpeg,image/png">
                                         </div>
                                         <!-- Doctor-specific fields -->
                                         <div class="col-md-6 mb-3 doctor-field" style="display: none;">

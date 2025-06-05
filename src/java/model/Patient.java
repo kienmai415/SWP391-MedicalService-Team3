@@ -11,7 +11,9 @@ import java.time.LocalDateTime;
  * @author maiki
  */
 public class Patient {
+
     private int id;
+    private int accountId;
     private String imageURL;
     private String address;
     private LocalDateTime dob;
@@ -20,13 +22,14 @@ public class Patient {
     private String phoneNumber;
     private String identityNumber;
     private String insuranceNumber;
-    
+    private Account account;
 
     public Patient() {
     }
 
-    public Patient(int id, String imageURL, String address, LocalDateTime dob, String fullName, String gender, String phoneNumber, String identityNumber, String insuranceNumber) {
+    public Patient(int id, int accountId, String imageURL, String address, LocalDateTime dob, String fullName, String gender, String phoneNumber, String identityNumber, String insuranceNumber, Account account) {
         this.id = id;
+        this.accountId = accountId;
         this.imageURL = imageURL;
         this.address = address;
         this.dob = dob;
@@ -35,7 +38,7 @@ public class Patient {
         this.phoneNumber = phoneNumber;
         this.identityNumber = identityNumber;
         this.insuranceNumber = insuranceNumber;
-        
+        this.account = account;
     }
 
     public int getId() {
@@ -44,6 +47,14 @@ public class Patient {
 
     public void setId(int id) {
         this.id = id;
+    }
+
+    public int getAccountId() {
+        return accountId;
+    }
+
+    public void setAccountId(int accountId) {
+        this.accountId = accountId;
     }
 
     public String getImageURL() {
@@ -110,4 +121,12 @@ public class Patient {
         this.insuranceNumber = insuranceNumber;
     }
 
+    public Account getAccount() {
+        return account;
+    }
+
+    public void setAccount(Account account) {
+        this.account = account;
+    }
+    
 }

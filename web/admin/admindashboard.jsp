@@ -343,6 +343,9 @@
                                 <div class="card">
                                     <div class="card-body">
                                         <h5>Thông tin chi tiết</h5>
+                                        <c:if test="${not empty selectedDetail.imageURL}">
+                                            <img src="${selectedDetail.imageURL}" alt="Ảnh đại diện" style="max-width: 100px; margin-bottom: 10px;">
+                                        </c:if>
                                         <table class="table table-bordered">
                                             <tr><th>ID</th><td>${selectedAccount.id}</td></tr>
                                             <tr><th>Tên người dùng</th><td>${selectedAccount.username}</td></tr>
