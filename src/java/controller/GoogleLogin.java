@@ -52,4 +52,8 @@ public class GoogleLogin {
         return googlePojo;
 
     }
+    
+//    public static void main(String[] args) {
+//        GoogleAccount ga = getUserInfo(accessToken)
+//    }
 }

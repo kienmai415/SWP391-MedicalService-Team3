@@ -12,6 +12,7 @@ package dal;
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
+import java.security.Timestamp;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -57,6 +58,26 @@ public class AccountDAO extends DBContext {
             System.err.println("Error while checking email existence: " + e.getMessage());
             return false;
         }
+    }
+
+    public Account getAccByEmail(String email) {
+        Account a = null;
+        String xSql = "SELECT id, email,username, password,role_id,status FROM dbo.accounts WHERE email =? ";
+
+        try {
+            PreparedStatement ps = connection.prepareStatement(xSql);
+            ps.setString(1, email);
+
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                a = new Account(rs.getInt(1), rs.getString(2), rs.getString(3), rs.getString(4), rs.getInt(5), null, null, true);
+            }
+            rs.close();
+            ps.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return (a);
     }
 
     //
@@ -660,6 +681,29 @@ public class AccountDAO extends DBContext {
             return rowsAffected > 0;
         } catch (Exception e) {
             System.err.println("Error while updating account for accountId " + accountId + ": " + e.getMessage());
+            return false;
+        }
+    }
+
+    public  String getFormatDate(LocalDateTime myDate){
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        String formatDate = dtf.format(myDate);
+        return formatDate;
+    }
+    
+    public boolean updateAccountToken(String reset_token, LocalDateTime token_expiry ,String email) {
+        String sql = "UPDATE dbo.accounts SET reset_token = ?,reset_token_expiry =? WHERE email =?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, reset_token);
+            ps.setTimestamp(2, java.sql.Timestamp.valueOf(getFormatDate(token_expiry)));
+            int rowsAffected = ps.executeUpdate();
+            ps.setString(3, email);
+            if (rowsAffected == 0) {
+                System.err.println("No rows updated in accounts for accountId: ");
+            }
+            return rowsAffected > 0;
+        } catch (Exception e) {
+            System.err.println("Error while updating account for accountId " + ": " + e.getMessage());
             return false;
         }
     }
