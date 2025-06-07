@@ -30,11 +30,7 @@ public class Patient {
     public Patient() {
     }
 
-<<<<<<< HEAD
     public Patient(int id, String imageURL, String address, LocalDate dob, String fullName, String gender, String phoneNumber, String identityNumber, String insuranceNumber, String email, String pass, boolean status, String rold) {
-=======
-    public Patient(int id, int accountId, String imageURL, String address, LocalDateTime dob, String fullName, String gender, String phoneNumber, String identityNumber, String insuranceNumber, Account account) {
->>>>>>> 801ea0aa35b62e6368208b0714d948d3095d931a
         this.id = id;
         this.accountId = accountId;
         this.imageURL = imageURL;
