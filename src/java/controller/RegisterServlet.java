@@ -4,7 +4,7 @@
  */
 package controller;
 
-import dal.AccountDAO;
+import dal.PatientDAO;
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
@@ -12,7 +12,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import model.Account;
+import model.Patient;
 
 /**
  *
@@ -74,33 +74,24 @@ public class RegisterServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         //processRequest(request, response);
-        AccountDAO ad = new AccountDAO();
+        PatientDAO ad = new PatientDAO();
         request.setCharacterEncoding("UTF-8"); // để hỗ trợ tiếng Việt
 
         String name = request.getParameter("name");
         String email = request.getParameter("email");
 
-        //String phone = request.getParameter("phone");
-        String password = request.getParameter("password");
+        String phone = request.getParameter("phone");
         String confirmPassword = request.getParameter("confirm-password");
 
-        int roleID = 2;//???
-        String roleName = "Patient";
-
-        int result = ad.addAccount(email, name, confirmPassword, roleID, true);
-
-        if (result == -2) {
+        Patient p = ad.getPatientByEmail(email);
+        if (p != null) {
             String error = "Tài khoản đã tồn tại!!";
             request.setAttribute("errorP", error);
             request.setAttribute("tab", "register"); // chuyen ve register login neu thanh cong
             request.getRequestDispatcher("login.jsp").forward(request, response);
             return;
-        } else if (result == -1) {
-            String error = "Thêm tài khoản không thành công!!";
-            request.setAttribute("errorP", error);
-            request.setAttribute("tab", "register"); // chuyen ve register login neu thanh cong
-            request.getRequestDispatcher("login.jsp").forward(request, response);
         } else {
+            ad.addPatient(name, email, confirmPassword, phone, 1);
             String successFull = "Bạn đã đăng ký thành công";
             request.setAttribute("errorP", successFull);
             request.setAttribute("tab", "register"); // chuyen ve tab login neu thanh cong
