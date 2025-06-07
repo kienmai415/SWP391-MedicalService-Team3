@@ -10,9 +10,9 @@ package Iconstrant;
  */
 public class Iconstrant {
 
+    
 
-
-    public static final String GOOGLE_REDIRECT_URI = "http://localhost:8080/SWP391-MedicalHealthCareSystem/LoginServlet";
+    public static final String GOOGLE_REDIRECT_URI = "http://localhost:8080/SWP391-MedicalHealthCareSystem/login";
 
     public static final String GOOGLE_GRANT_TYPE = "authorization_code";
 

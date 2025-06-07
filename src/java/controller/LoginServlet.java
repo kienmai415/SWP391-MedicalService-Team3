@@ -36,15 +36,35 @@ public class LoginServlet extends HttpServlet {
         response.setContentType("text/html;charset=UTF-8");
         try (PrintWriter out = response.getWriter()) {
             /* TODO output your page here. You may use following sample code. */
-            out.println("<!DOCTYPE html>");
-            out.println("<html>");
-            out.println("<head>");
-            out.println("<title>Servlet LoginServlet</title>");
-            out.println("</head>");
-            out.println("<body>");
-            out.println("<h1>Servlet LoginServlet at trang này này"  + "</h1>");
-            out.println("</body>");
-            out.println("</html>");
+            String code = request.getParameter("code");
+
+            GoogleLogin gg = new GoogleLogin();
+
+            String accesToken = gg.getToken(code);
+            System.out.println(accesToken);
+            GoogleAccount ga = gg.getUserInfo(accesToken);
+            System.out.println(ga);
+
+            AccountDAO ad = new AccountDAO();
+
+            Account ac = ad.getAccByEmail(ga.getEmail());
+            System.out.println(ac);
+            if (ac != null) {
+                HttpSession session = request.getSession();
+                session.setAttribute("ac", ac);
+                request.getRequestDispatcher("patient.jsp").forward(request, response);
+            } else {
+                PasswordGenerator pg = new PasswordGenerator();
+                String pass = pg.generatePassword(6);
+//                Account acc = new Account(ga.getEmail(), pass, ga.getName(), "2", "Patient");
+//                ad.insertAccount(acc);
+
+                // Tạo session và chuyển hướng luôn sau khi tạo tài khoản mới
+                HttpSession session = request.getSession();
+                //session.setAttribute("acc", acc);
+                request.getRequestDispatcher("admin.jsp").forward(request, response);
+            }
+
         }
     }
 
@@ -104,7 +124,9 @@ public class LoginServlet extends HttpServlet {
                     request.getRequestDispatcher("admin.jsp").forward(request, response);
                 }
             }
+
         }
+        //processRequest(request, response);
     }
 
     /**

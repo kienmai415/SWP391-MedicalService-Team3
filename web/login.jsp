@@ -399,12 +399,21 @@
                 </form>
 
                 <!-- Quên mật khẩu -->
-                <form id="forgot-form" class="auth-form" action="${pageContext.request.contextPath}/forgot-password" method="post">
-                    <h4 class="forgot-title">Chào mừng bạn trở lại</h4>
+                <form id="forgot-form" class="auth-form" action="${pageContext.request.contextPath}/forgotpassword" method="post">
                     <p class="forgot-description">Vui lòng nhập email của bạn để nhận hướng dẫn đặt lại mật khẩu.</p>
                     <div class="mb-3">
                         <label class="form-label">Email</label>
                         <input type="email" class="form-control" id="forgot-email" name="email" placeholder="Nhập email của bạn" required>
+                    </div>
+                    <div>
+                        <%
+                        String errorrr = (String) request.getAttribute("errorP");
+                                if (errorrr != null) {
+                        %>
+                        <p style="color: red;"><%= errorrr %></p>
+                        <%
+                            }
+                        %>
                     </div>
                     <button type="submit" class="btn btn-forgot">Gửi yêu cầu</button>
                     <a href="#" onclick="switchTab('login')" class="back-to-login">Quay lại đăng nhập</a>
