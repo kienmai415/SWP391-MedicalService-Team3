@@ -4,7 +4,7 @@
  */
 package controller;
 
-import dal.AccountDAO;
+import dal.PatientDAO;
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
@@ -14,7 +14,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import model.GoogleAccount;
-import ultil.PasswordGenerator;
+import model.Patient;
 
 /**
  *
@@ -41,30 +41,10 @@ public class LoginServlet extends HttpServlet {
 
             GoogleLogin gg = new GoogleLogin();
 
-            String accesToken = gg.getToken(code);
+            String accesToken = GoogleLogin.getToken(code);
             System.out.println(accesToken);
-            GoogleAccount ga = gg.getUserInfo(accesToken);
+            GoogleAccount ga = GoogleLogin.getUserInfo(accesToken);
             System.out.println(ga);
-
-            AccountDAO ad = new AccountDAO();
-
-            //Account ac = ad.getAccByEmail(ga.getEmail());
-           // System.out.println(ac);
-            if (ac != null) {
-                HttpSession session = request.getSession();
-                session.setAttribute("ac", ac);
-                request.getRequestDispatcher("patient.jsp").forward(request, response);
-            } else {
-                PasswordGenerator pg = new PasswordGenerator();
-                String pass = pg.generatePassword(6);
-//                Account acc = new Account(ga.getEmail(), pass, ga.getName(), "2", "Patient");
-//                ad.insertAccount(acc);
-
-                // Tạo session và chuyển hướng luôn sau khi tạo tài khoản mới
-                HttpSession session = request.getSession();
-                //session.setAttribute("acc", acc);
-                request.getRequestDispatcher("admin.jsp").forward(request, response);
-            }
 
         }
     }
@@ -81,9 +61,9 @@ public class LoginServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        processRequest(request, response);
-        doPost(request, response);
-        //request.getRequestDispatcher("login.jsp").forward(request, response);
+//        processRequest(request, response);
+//        doPost(request, response);
+        request.getRequestDispatcher("login.jsp").forward(request, response);
     }
 
     /**
@@ -98,41 +78,35 @@ public class LoginServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         //processRequest(request, response);
-        AccountDAO ad = new AccountDAO();
+        PatientDAO ad = new PatientDAO();
 
         String email = request.getParameter("email");
         String password = request.getParameter("password");
 
-        Account acc = ad.getAccByEmailPass(email, password);
+        String role = null;
+
+        //tạo object
+        Patient p = ad.getPatientByEmailPass(email, password);
 
         try (PrintWriter out = response.getWriter()) {
 
-            if (acc == null) {
+            if (p != null) {
+                role = p.getRold();
+            }
+
+            if (role == null) {
                 String error = "Đăng nhập thất bại. Kiểm tra lại email và mật khẩu!";
                 request.setAttribute("error", error);
                 request.getRequestDispatcher("login.jsp").forward(request, response);
             } else {
-                HttpSession session = request.getSession();
-                session.setAttribute("acc", acc);
-                if (acc.getRoleId() == 1) {
-                    request.getRequestDispatcher("admin/admindashboard.jsp").forward(request, response);
-                }
-                if (acc.getRoleId() == 4) {
-                    request.getRequestDispatcher("bacsi.jsp").forward(request, response);
-                }
-                if (acc.getRoleId() == 3) {
-                    request.getRequestDispatcher("manager.jsp").forward(request, response);
-                }
-                if (acc.getRoleId() == 2) {
+
+                if (role.equals(p.getRold())) {
+                    HttpSession session = request.getSession();
+                    session.setAttribute("p", p);
                     request.getRequestDispatcher("admin.jsp").forward(request, response);
                 }
-                if (acc.getRoleId() == 5) {
-                    request.getRequestDispatcher("letan.jsp").forward(request, response);
-                }
             }
-
         }
-        //processRequest(request, response);
     }
 
     /**
