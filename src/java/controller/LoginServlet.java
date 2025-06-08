@@ -115,7 +115,7 @@ public class LoginServlet extends HttpServlet {
                 HttpSession session = request.getSession();
                 session.setAttribute("acc", acc);
                 if (acc.getRoleId() == 1) {
-                    request.getRequestDispatcher("admin.jsp").forward(request, response);
+                    request.getRequestDispatcher("admin/admindashboard.jsp").forward(request, response);
                 }
                 if (acc.getRoleId() == 4) {
                     request.getRequestDispatcher("bacsi.jsp").forward(request, response);
