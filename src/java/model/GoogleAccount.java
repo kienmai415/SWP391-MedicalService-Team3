@@ -90,19 +90,5 @@ public class GoogleAccount {
     public void setVerified_email(boolean verified_email) {
         this.verified_email = verified_email;
     }
-
-    @Override
-    public String toString() {
-        return "GoogleAccount{"
-                + "id='" + id + '\''
-                + ", email='" + email + '\''
-                + ", name='" + name + '\''
-                + ", first_name='" + first_name + '\''
-                + ", given_name='" + given_name + '\''
-                + ", family_name='" + family_name + '\''
-                + ", picture='" + picture + '\''
-                + ", verified_email=" + verified_email
-                + '}';
-    }
-
+    
 }

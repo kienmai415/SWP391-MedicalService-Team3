@@ -1,4 +1,4 @@
-/*
+ /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
@@ -8,8 +8,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import model.Patient;
 import java.sql.PreparedStatement;
-
-import java.util.Date;
 
 /**
  *
@@ -81,15 +79,16 @@ public class PatientDAO extends DBContext {
     }
 
     public int addPatient(String name, String email, String pass, String phone, int status) {
-        String sql = "INSERT INTO dbo.patient\n"
-                + "(\n"
-                + "    full_name,\n"
-                + "    phone_number,\n"
-                + "    email,\n"
-                + "    pass,\n"
-                + "    status,\n"
-                + ")\n"
-                + "VALUES(?,?,?,?,?)";
+        String sql = """
+                     INSERT INTO dbo.patient
+                     (
+                         full_name,
+                         phone_number,
+                         email,
+                         pass,
+                         status,
+                     )
+                     VALUES(?,?,?,?,?)""";
         int isUpdated = 0;
         try {
             PreparedStatement ps = connection.prepareStatement(sql);
