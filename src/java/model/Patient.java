@@ -4,32 +4,33 @@
  */
 package model;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 /**
  *
- * @author maiki
+ * @author Quy
  */
 public class Patient {
 
     private int id;
-    private int accountId;
     private String imageURL;
     private String address;
-    private LocalDateTime dob;
+    private LocalDate dob;
     private String fullName;
     private String gender;
     private String phoneNumber;
     private String identityNumber;
     private String insuranceNumber;
-    private Account account;
+    private String email;
+    private String pass;
+    private boolean status;
+    private String role;
 
     public Patient() {
     }
 
-    public Patient(int id, int accountId, String imageURL, String address, LocalDateTime dob, String fullName, String gender, String phoneNumber, String identityNumber, String insuranceNumber, Account account) {
+    public Patient(int id, String imageURL, String address, LocalDate dob, String fullName, String gender, String phoneNumber, String identityNumber, String insuranceNumber, String email, String pass, boolean status, String rold) {
         this.id = id;
-        this.accountId = accountId;
         this.imageURL = imageURL;
         this.address = address;
         this.dob = dob;
@@ -38,7 +39,28 @@ public class Patient {
         this.phoneNumber = phoneNumber;
         this.identityNumber = identityNumber;
         this.insuranceNumber = insuranceNumber;
-        this.account = account;
+        this.email = email;
+        this.pass = pass;
+        this.status = status;
+        this.role = rold;
+    }
+
+    
+
+    public String getRold() {
+        return role;
+    }
+
+    public void setRold_id(String role) {
+        this.role = role;
+    }
+
+    public boolean isStatus() {
+        return status;
+    }
+
+    public void setStatus(boolean status) {
+        this.status = status;
     }
 
     public int getId() {
@@ -47,14 +69,6 @@ public class Patient {
 
     public void setId(int id) {
         this.id = id;
-    }
-
-    public int getAccountId() {
-        return accountId;
-    }
-
-    public void setAccountId(int accountId) {
-        this.accountId = accountId;
     }
 
     public String getImageURL() {
@@ -73,11 +87,11 @@ public class Patient {
         this.address = address;
     }
 
-    public LocalDateTime getDob() {
+    public LocalDate getDob() {
         return dob;
     }
 
-    public void setDob(LocalDateTime dob) {
+    public void setDob(LocalDate dob) {
         this.dob = dob;
     }
 
@@ -121,12 +135,38 @@ public class Patient {
         this.insuranceNumber = insuranceNumber;
     }
 
-    public Account getAccount() {
-        return account;
+    public String getEmail() {
+        return email;
     }
 
-    public void setAccount(Account account) {
-        this.account = account;
+    public void setEmail(String email) {
+        this.email = email;
     }
-    
+
+    public String getPass() {
+        return pass;
+    }
+
+    public void setPass(String pass) {
+        this.pass = pass;
+    }
+
+    @Override
+    public String toString() {
+        return "Patient{"
+                + "id=" + id
+                + ", imageURL='" + imageURL + '\''
+                + ", address='" + address + '\''
+                + ", dob=" + dob
+                + ", fullName='" + fullName + '\''
+                + ", gender='" + gender + '\''
+                + ", phoneNumber='" + phoneNumber + '\''
+                + ", identityNumber='" + identityNumber + '\''
+                + ", insuranceNumber='" + insuranceNumber + '\''
+                + ", email='" + email + '\''
+                + ", pass='" + pass + '\''
+                + ", status=" + status
+                + '}';
+    }
+
 }
