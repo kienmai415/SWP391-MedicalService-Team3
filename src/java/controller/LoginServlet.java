@@ -13,7 +13,6 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-import model.Account;
 import model.GoogleAccount;
 import ultil.PasswordGenerator;
 
@@ -49,8 +48,8 @@ public class LoginServlet extends HttpServlet {
 
             AccountDAO ad = new AccountDAO();
 
-            Account ac = ad.getAccByEmail(ga.getEmail());
-            System.out.println(ac);
+            //Account ac = ad.getAccByEmail(ga.getEmail());
+           // System.out.println(ac);
             if (ac != null) {
                 HttpSession session = request.getSession();
                 session.setAttribute("ac", ac);
