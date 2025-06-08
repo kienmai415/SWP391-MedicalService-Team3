@@ -13,6 +13,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import model.GoogleAccount;
 import model.Patient;
 
 /**
@@ -60,9 +61,9 @@ public class LoginServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        processRequest(request, response);
-        doPost(request, response);
-        response.sendRedirect("login.jsp");
+//        processRequest(request, response);
+//        doPost(request, response);
+        request.getRequestDispatcher("login.jsp").forward(request, response);
     }
 
     /**
@@ -98,6 +99,7 @@ public class LoginServlet extends HttpServlet {
                 request.setAttribute("error", error);
                 request.getRequestDispatcher("login.jsp").forward(request, response);
             } else {
+
                 if (role.equals(p.getRold())) {
                     HttpSession session = request.getSession();
                     session.setAttribute("p", p);

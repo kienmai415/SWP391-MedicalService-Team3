@@ -91,11 +91,18 @@ public class RegisterServlet extends HttpServlet {
             request.getRequestDispatcher("login.jsp").forward(request, response);
             return;
         } else {
-            ad.addPatient(name, email, confirmPassword, phone, 1);
-            String successFull = "Bạn đã đăng ký thành công";
-            request.setAttribute("errorP", successFull);
-            request.setAttribute("tab", "register"); // chuyen ve tab login neu thanh cong
-            request.getRequestDispatcher("login.jsp").forward(request, response);
+            int x = ad.addPatient(name, email, confirmPassword, phone, 1);
+            if (x != 0) {
+                String successFull = "Bạn đã đăng ký thành công";
+                request.setAttribute("errorP", successFull);
+                request.setAttribute("tab", "register"); // chuyen ve tab login neu thanh cong
+                request.getRequestDispatcher("login.jsp").forward(request, response);
+            } else {
+                String successFull = "Đăng kí lỗi!";
+                request.setAttribute("errorP", successFull);
+                request.setAttribute("tab", "register"); // chuyen ve tab login neu thanh cong
+                request.getRequestDispatcher("login.jsp").forward(request, response);
+            }
         }
     }
 

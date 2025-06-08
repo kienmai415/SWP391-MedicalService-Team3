@@ -1,4 +1,4 @@
- /*
+/*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
@@ -8,6 +8,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import model.Patient;
 import java.sql.PreparedStatement;
+import java.sql.Date;
+import java.time.LocalDate;
 
 /**
  *
@@ -29,6 +31,11 @@ public class PatientDAO extends DBContext {
                 p = new Patient(rs.getInt("id"), rs.getString("imageURL"),
                         rs.getString("address"),
                         rs.getDate("dateOfBirth").toLocalDate(),
+                Date sqlDate = rs.getDate("dateOfBirth");
+                LocalDate dob = (sqlDate != null) ? sqlDate.toLocalDate() : null;
+                p = new Patient(rs.getInt("id"), rs.getString("imageURL"),
+                        rs.getString("address"),
+                        dob,
                         rs.getString("fullName"), rs.getString("gender"),
                         rs.getString("phoneNumber"),
                         rs.getString("identityNumber"),
@@ -60,6 +67,11 @@ public class PatientDAO extends DBContext {
                 p = new Patient(rs.getInt("id"), rs.getString("imageURL"),
                         rs.getString("address"),
                         rs.getDate("dateOfBirth").toLocalDate(),
+                Date sqlDate = rs.getDate("dateOfBirth");
+                LocalDate dob = (sqlDate != null) ? sqlDate.toLocalDate() : null;
+                p = new Patient(rs.getInt("id"), rs.getString("imageURL"),
+                        rs.getString("address"),
+                        dob,
                         rs.getString("fullName"), rs.getString("gender"),
                         rs.getString("phoneNumber"),
                         rs.getString("identityNumber"),
@@ -106,18 +118,19 @@ public class PatientDAO extends DBContext {
     public static void main(String[] args) {
         PatientDAO pd = new PatientDAO();
         String name = "Nguyen Van A1";
-        String email = "vana1@gmail.com1";
+        String email = "patient9@email.com";
         String pass = "123456";
         String phone = "0123456789";
         int status = 1;
-
         // Gọi hàm thêm
-        if (pd.getPatientByEmail("patient1@email.com") == null) {
+        if (pd.getPatientByEmail("patient9@email.com") == null) {
             int x = pd.addPatient(name, email, pass, phone, status);
+            System.out.println(x);
+            System.out.println("ok");
         } else {
             System.out.println("no");
         }
 
-        System.out.println(pd.getPatientByEmail("patient1@email.com"));
+        System.out.println(pd.getPatientByEmail("patient9@email.com"));
     }
 }

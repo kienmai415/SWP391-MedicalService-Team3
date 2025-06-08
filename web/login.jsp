@@ -295,14 +295,6 @@
     </head>
     <body>
 
-        <%
-    String success = (String) request.getAttribute("successMessage");
-    if (success != null) {
-        %>
-        <div class="toast"><%= success %></div>
-        <%
-            }
-        %>
         <div class="container">
             <div class="auth-box">
                 <h5 class="text-center mb-4">Chào mừng bạn trở lại</h5>
@@ -316,7 +308,7 @@
                 <form id="login-form" class="auth-form active" action="login" method="post">
                     <div class="mb-3">
                         <label for="login-email" class="form-label">Email</label>
-                        <input type="email" class="form-control" id="login-email" name="email" placeholder="Nhập email của bạn" required>
+                        <input type="email" class="form-control" id="login-email" name="email" placeholder="Nhập email của bạn" required autofocus>
                     </div>
                     <div class="mb-3">
                         <label for="login-password" class="form-label">Mật khẩu</label>
@@ -367,7 +359,7 @@
                     </div>
                     <div class="mb-3">
                         <label for="register-name" class="form-label">Họ và tên</label>
-                        <input type="text" class="form-control" id="register-name" name="name" onkeyup="validateForm(this.id, 'name')" placeholder="Nhập họ và tên" required>
+                        <input type="text" class="form-control" id="register-name" name="name" onkeyup="validateForm(this.id, 'name')" placeholder="Nhập họ và tên" required autofocus>
                         <div id="register-name_error" class="text-danger"></div>
                     </div>
                     <div class="mb-3">
@@ -547,8 +539,8 @@
                 // Gọi hàm để hiển thị đúng tab
                 switchTab(tab);
             };
-        </script>
 
+        </script>
 
     </body>
 </html>
