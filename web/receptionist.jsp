@@ -291,7 +291,7 @@
                         <h2 class="header-title">
                             <i class="fas fa-calendar-check me-2"></i> Quản lý lịch hẹn
                         </h2>
-
+                        
                         <c:if test="${not empty message}">
                             <div class="alert alert-success">${message}</div>
                         </c:if>
@@ -300,7 +300,8 @@
                         </c:if>
 
                         <div class="card">
-                            <div class="card-header">
+                            <div class="card-header"  style="display: flex ;justify-content: space-between;">
+                                
                                 <h5 class="mb-0">Danh sách lịch hẹn</h5>
                             </div>
                             <div class="card-body">
@@ -315,7 +316,7 @@
                                                 <th>Bác sĩ</th>
                                                 <th>Trạng thái</th>
                                                 <th>Thao tác</th>
-                                                <th></th>
+                                                <th>Chi tiết</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -324,27 +325,27 @@
                                                     <c:forEach items="${listApp}" var="i">
                                                         <tr>
                                                             <td>${i.id}</td>
-                                                            <td><fmt:formatDate value="${i.date_appointment}" pattern="dd/MM/yyyy"/></td>
+
+                                                            <td>${i.getShiftSlot().getDate()}</td>
+                                                            
+                                                            <td> ${fn:substring(i.getShiftSlot().getSlotStartTime(), 0, 8)}</td>
                                                             <td>
-                                                                ${fn:substring(i.start_time, 0, 5)} - ${fn:substring(i.end_time, 0, 5)}
-                                                            </td>
-                                                            <td>
-                                                                <strong>${i.patient_id}</strong>
+                                                                <strong>${i.getPatient().getFullName()}</strong>
                                                             </td>
 
-                                                            <td>${i.doctor_id}</td>
+                                                            <td>${i.getDoctor().getFullName()}</td>
                                                             <td>
                                                                 <span class="badge
-                                                                      ${i.confirmation_status == 'Pending' ? 'bg-warning' : 
-                                                                        i.confirmation_status == 'Đã xác nhận' ? 'bg-success' : 
-                                                                        i.confirmation_status == 'Đã hủy' ? 'bg-danger' : 'bg-secondary'}">
-                                                                          ${i.confirmation_status}
+                                                                      ${i.confirmationStatus == 'Pending' ? 'bg-warning' : 
+                                                                        i.confirmationStatus == 'Đã xác nhận' ? 'bg-success' : 
+                                                                        i.confirmationStatus == 'Đã hủy' ? 'bg-danger' : 'bg-secondary'}">
+                                                                          ${i.confirmationStatus}
                                                                       </span>
                                                                 </td>
 
 
                                                                 <td>
-                                                                    <c:if test="${i.confirmation_status == 'Pending'}">
+                                                                    <c:if test="${i.confirmationStatus == 'Pending'}">
                                                                         <form action="ReceptionServlet" method="post" style="display: inline;">
                                                                             <input type="hidden" name="action" value="confirm"/>
                                                                             <input type="hidden" name="id" value="${i.id}"/>
@@ -360,11 +361,11 @@
                                                                             </button>
                                                                         </form>
                                                                     </c:if>
-                                                                    <c:if test="${i.confirmation_status != 'Pending'}">
+                                                                    <c:if test="${i.confirmationStatus != 'Pending'}">
                                                                         <span>—</span>
                                                                     </c:if>
                                                                 </td>
-                                                                
+
                                                                 <td>
                                                                     <input type="submit" value="Chi tiết">
                                                                 </td>
@@ -397,6 +398,9 @@
                             </div>
                         </div>
 
+
+
+
                         <!-- History Tab -->
                         <div id="history" class="tab-content">
                             <h2 class="header-title">
@@ -409,6 +413,10 @@
                             </div>
                         </div>
 
+
+
+
+
                         <!-- Shifts Tab -->
                         <div id="shifts" class="tab-content">
                             <h2 class="header-title">
@@ -420,6 +428,9 @@
                                 </div>
                             </div>
                         </div>
+
+
+
 
                         <!-- Support Tab -->
                         <div id="support" class="tab-content">

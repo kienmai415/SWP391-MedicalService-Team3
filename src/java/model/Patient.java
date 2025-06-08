@@ -4,28 +4,31 @@
  */
 package model;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 /**
  *
- * @author maiki
+ * @author laptop368
  */
 public class Patient {
     private int id;
     private String imageURL;
     private String address;
-    private LocalDateTime dob;
+    private LocalDate dob;
     private String fullName;
     private String gender;
     private String phoneNumber;
     private String identityNumber;
     private String insuranceNumber;
-    
+    private String email;
+    private String pass;
+    private boolean status;
+    private String role;
 
     public Patient() {
     }
 
-    public Patient(int id, String imageURL, String address, LocalDateTime dob, String fullName, String gender, String phoneNumber, String identityNumber, String insuranceNumber) {
+    public Patient(int id, String imageURL, String address, LocalDate dob, String fullName, String gender, String phoneNumber, String identityNumber, String insuranceNumber, String email, String pass, boolean status, String role) {
         this.id = id;
         this.imageURL = imageURL;
         this.address = address;
@@ -35,7 +38,10 @@ public class Patient {
         this.phoneNumber = phoneNumber;
         this.identityNumber = identityNumber;
         this.insuranceNumber = insuranceNumber;
-        
+        this.email = email;
+        this.pass = pass;
+        this.status = status;
+        this.role = role;
     }
 
     public int getId() {
@@ -62,11 +68,11 @@ public class Patient {
         this.address = address;
     }
 
-    public LocalDateTime getDob() {
+    public LocalDate getDob() {
         return dob;
     }
 
-    public void setDob(LocalDateTime dob) {
+    public void setDob(LocalDate dob) {
         this.dob = dob;
     }
 
@@ -110,4 +116,44 @@ public class Patient {
         this.insuranceNumber = insuranceNumber;
     }
 
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getPass() {
+        return pass;
+    }
+
+    public void setPass(String pass) {
+        this.pass = pass;
+    }
+
+    public boolean isStatus() {
+        return status;
+    }
+
+    public void setStatus(boolean status) {
+        this.status = status;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
+    }
+
+    @Override
+    public String toString() {
+        return "Patient{" + "id=" + id + ", imageURL=" + imageURL + ", address=" + address + ", dob=" + dob + ", fullName=" + fullName + ", gender=" + gender + ", phoneNumber=" + phoneNumber + ", identityNumber=" + identityNumber + ", insuranceNumber=" + insuranceNumber + ", email=" + email + ", pass=" + pass + ", status=" + status + ", role=" + role + '}';
+    }
+
+    
+    
+    
 }

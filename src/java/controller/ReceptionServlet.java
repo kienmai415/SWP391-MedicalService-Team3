@@ -6,7 +6,7 @@ package controller;
 
 //import DAO.BookingDAO;
 //import Model.Booking;
-import dal.appointment_schedulesDAO;
+import dal.AppointmentScheduleDAO;
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
@@ -18,7 +18,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
-import model.appointment_schedules;
+import model.AppointmentSchedule;
 
 /**
  *
@@ -43,7 +43,7 @@ public class ReceptionServlet extends HttpServlet {
 //        }
 //        request.getRequestDispatcher("receptionist.jsp").forward(request, response);
 
-//        appointment_schedulesDAO dao = new appointment_schedulesDAO();
+//        AppointmentScheduleDAO dao = new AppointmentScheduleDAO();
 //        ArrayList<appointment_schedules> list = dao.getAllSchedules();
 //        
 //        request.setAttribute("activeTab", "appointments");
@@ -53,8 +53,8 @@ public class ReceptionServlet extends HttpServlet {
         String action = request.getParameter("action");
         if ("viewAppointments".equals(action)) {
             // 1. Lấy listApp từ DB/DAO
-            appointment_schedulesDAO dao = new appointment_schedulesDAO();
-            ArrayList<appointment_schedules> list = dao.getAllSchedules();
+            AppointmentScheduleDAO dao = new AppointmentScheduleDAO();
+            ArrayList<AppointmentSchedule> list = dao.getAllSchedules();
             request.setAttribute("listApp", list);
 
             // 2. Đánh dấu tab “appointments” là đang active
@@ -64,7 +64,7 @@ public class ReceptionServlet extends HttpServlet {
             request.getRequestDispatcher("receptionist.jsp").forward(request, response);
         } else {
             // Nếu action không phải viewAppointments, có thể redirect về dashboard chính
-//            appointment_schedulesDAO dao = new appointment_schedulesDAO();
+//            AppointmentScheduleDAO dao = new AppointmentScheduleDAO();
 //            ArrayList<appointment_schedules> list = dao.getAllSchedules();
 //            request.setAttribute("listApp", list);
             request.getRequestDispatcher("receptionist.jsp").forward(request, response);

@@ -23,7 +23,7 @@ public class DoctorLevelDao extends DBContext{
             while (rs.next()) {
                 DoctorLevel d = new DoctorLevel();
                 d.setId(rs.getInt("id"));
-                d.setLevelName(rs.getString("level_name"));
+//                d.setLevelName(rs.getString("level_name"));
                 d.setExaminationFee(rs.getDouble("examination_fee"));
                 list.add(d);
             }
