@@ -22,6 +22,7 @@ public class Patient {
     private String identityNumber;
     private String insuranceNumber;
     private String email;
+    private String userName;
     private String pass;
     private boolean status;
     private String role;
@@ -29,7 +30,7 @@ public class Patient {
     public Patient() {
     }
 
-    public Patient(int id, String imageURL, String address, LocalDate dob, String fullName, String gender, String phoneNumber, String identityNumber, String insuranceNumber, String email, String pass, boolean status, String rold) {
+    public Patient(int id, String imageURL, String address, LocalDate dob, String fullName, String gender, String phoneNumber, String identityNumber, String insuranceNumber, String email, String userName, String pass, boolean status, String role) {
         this.id = id;
         this.imageURL = imageURL;
         this.address = address;
@@ -40,21 +41,34 @@ public class Patient {
         this.identityNumber = identityNumber;
         this.insuranceNumber = insuranceNumber;
         this.email = email;
+        this.userName = userName;
         this.pass = pass;
         this.status = status;
-        this.role = rold;
+        this.role = role;
+    }
+
+    public String getUserName() {
+        return userName;
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
     }
 
     
 
-    public String getRold() {
-        return role;
-    }
+    
 
-    public void setRold_id(String role) {
-        this.role = role;
-    }
-
+    
+    
     public boolean isStatus() {
         return status;
     }

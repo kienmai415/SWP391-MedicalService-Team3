@@ -22,11 +22,11 @@
     </servlet>
     <servlet>
         <servlet-name>Customer</servlet-name>
-        <servlet-class>Controller.admin.PatientManage</servlet-class>
+        <servlet-class>controller.admin.PatientManage</servlet-class>
     </servlet>
     <servlet>
         <servlet-name>RecepController</servlet-name>
-        <servlet-class>Controller.RecepController</servlet-class>
+        <servlet-class>controller.RecepController</servlet-class>
     </servlet>
     <servlet>
         <servlet-name>ReceptionController</servlet-name>

@@ -8,8 +8,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import model.Patient;
 import java.sql.PreparedStatement;
-import java.sql.Date;
 import java.time.LocalDate;
+import java.sql.Date;
 
 /**
  *
@@ -27,12 +27,9 @@ public class PatientDAO extends DBContext {
 
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
-
-                p = new Patient(rs.getInt("id"), rs.getString("imageURL"),
-                        rs.getString("address"),
-                        rs.getDate("dateOfBirth").toLocalDate(),
                 Date sqlDate = rs.getDate("dateOfBirth");
                 LocalDate dob = (sqlDate != null) ? sqlDate.toLocalDate() : null;
+
                 p = new Patient(rs.getInt("id"), rs.getString("imageURL"),
                         rs.getString("address"),
                         dob,
@@ -41,6 +38,7 @@ public class PatientDAO extends DBContext {
                         rs.getString("identityNumber"),
                         rs.getString("insuranceNumber"),
                         rs.getString("email"),
+                        rs.getString("username"),
                         rs.getString("password"),
                         rs.getInt("status") == 1,
                         rs.getString("role")
@@ -63,10 +61,6 @@ public class PatientDAO extends DBContext {
 
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
-
-                p = new Patient(rs.getInt("id"), rs.getString("imageURL"),
-                        rs.getString("address"),
-                        rs.getDate("dateOfBirth").toLocalDate(),
                 Date sqlDate = rs.getDate("dateOfBirth");
                 LocalDate dob = (sqlDate != null) ? sqlDate.toLocalDate() : null;
                 p = new Patient(rs.getInt("id"), rs.getString("imageURL"),
@@ -77,6 +71,7 @@ public class PatientDAO extends DBContext {
                         rs.getString("identityNumber"),
                         rs.getString("insuranceNumber"),
                         rs.getString("email"),
+                        rs.getString("username"),
                         rs.getString("password"),
                         rs.getInt("status") == 1,
                         rs.getString("role")

@@ -4,7 +4,6 @@
  */
 package controller;
 
-import dal.AccountDAO;
 import emailservice.EmailSender;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -12,7 +11,6 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import model.Account;
 
 /**
  *
@@ -74,38 +72,8 @@ public class RequestPassword extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         //processRequest(request, response);
-        AccountDAO ad = new AccountDAO();
         String email = request.getParameter("email");
 
-        Account acc = ad.getAccByEmail(email);
-
-        if (acc == null) {
-            String error = "Tài khoản đã tồn tại!!";
-            request.setAttribute("errorP", error);
-            request.setAttribute("tab", "forgot"); // chuyen ve register login neu thanh cong
-            request.getRequestDispatcher("login.jsp").forward(request, response);
-            return;
-        }
-
-        EmailSender es = new EmailSender();
-        String token = es.generateToken();
-        // để tạm trang login 
-        String linkRest = "http://localhost:8080/SWP391-MedicalHealthCareSystem/login?token" + token;
-
-        boolean isUpdate = ad.updateAccountToken(token, es.expireDateTime(), acc.getEmail());
-
-        if (!isUpdate) {
-            request.setAttribute("mess", "Email không tồn tại!");
-            request.getRequestDispatcher("login.jsp").forward(request, response);
-            return;
-        }
-
-        boolean isSend = es.sendEmail(email, linkRest, acc.getUsername());
-        if (!isSend) {
-            request.setAttribute("mess", "Email không tồn tại!");
-            request.getRequestDispatcher("login.jsp").forward(request, response);
-            return;
-        }
     }
 
     /**
