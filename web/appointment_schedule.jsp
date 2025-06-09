@@ -41,7 +41,7 @@
                             <td>${a.shiftSlot.slotStartTime}</td>
                             <td>${a.doctor.fullName}</td>
                             <td>
-                                <a href="AppointmentInformation?pid=${a.patient.id}" class="btn btn-outline-primary btn-sm">
+                                <a href="AppointmentScheduleServlet?action=view&pid=${a.patient.id}" class="btn btn-outline-primary btn-sm">
                                     <i class="fas fa-eye"></i>
                                 </a>
                             </td>
