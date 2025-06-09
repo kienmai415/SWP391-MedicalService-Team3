@@ -214,6 +214,63 @@ public class AppointmentScheduleDAO extends DBContext {
         }
         return listAp.isEmpty() ? null : listAp;
     }
+//phân trang
+    public List<AppointmentSchedule> getAppointmentsWithPaging(int pageIndex, int pageSize) {
+        List<AppointmentSchedule> list = new ArrayList<>();
+        String sql = """
+        SELECT app.id, ds.date, ds.slotStartTime,
+               pa.fullName AS patientName,
+               dt.fullName AS doctorName,
+               app.confirmationStatus
+        FROM appointmentSchedule app
+        JOIN doctorShiftSlot ds ON app.doctorShiftId = ds.id
+        JOIN patient pa ON app.patientId = pa.id
+        JOIN doctor dt ON app.doctorId = dt.id
+        ORDER BY ds.date DESC
+        OFFSET ? ROWS FETCH NEXT ? ROWS ONLY
+    """;
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, (pageIndex - 1) * pageSize);
+            ps.setInt(2, pageSize);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                AppointmentSchedule ap = new AppointmentSchedule();
+                ap.setId(rs.getInt("id"));
+                ap.setConfirmationStatus(rs.getString("confirmationStatus"));
+
+                DoctorShiftSlot shift = new DoctorShiftSlot();
+                shift.setDate(rs.getDate("date").toLocalDate());
+                shift.setSlotStartTime(rs.getTime("slotStartTime").toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm")));
+                ap.setShiftSlot(shift);
+
+                Doctor doctor = new Doctor();
+                doctor.setFullName(rs.getString("doctorName"));
+                ap.setDoctor(doctor);
+
+                Patient patient = new Patient();
+                patient.setFullName(rs.getString("patientName"));
+                ap.setPatient(patient);
+
+                list.add(ap);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    public int countTotalAppointments() {
+        String sql = "SELECT COUNT(*) FROM appointmentSchedule";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
 
     public AppointmentSchedule addAppointmentSchedules(AppointmentSchedule APP) {
         DBContext dbc = DBContext.getInstance();

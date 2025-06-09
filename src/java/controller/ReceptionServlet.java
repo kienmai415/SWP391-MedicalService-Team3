@@ -52,17 +52,37 @@ public class ReceptionServlet extends HttpServlet {
 //        request.getRequestDispatcher("receptionist.jsp").forward(request, response);
         String action = request.getParameter("action");
         if ("viewAppointments".equals(action)) {
-            // 1. Lấy listApp từ DB/DAO
-            AppointmentScheduleDAO dao = new AppointmentScheduleDAO();
-            ArrayList<AppointmentSchedule> list = dao.getAllSchedules();
-            request.setAttribute("listApp", list);
+            int pageIndex = 1; // mặc định trang đầu
+            int pageSize = 2;  // số bản ghi mỗi trang
 
-            // 2. Đánh dấu tab “appointments” là đang active
+            // Lấy chỉ số trang từ request
+            String pageRaw = request.getParameter("page");
+            if (pageRaw != null) {
+                try {
+                    pageIndex = Integer.parseInt(pageRaw);
+                } catch (NumberFormatException e) {
+                    pageIndex = 1;
+                }
+            }
+
+            AppointmentScheduleDAO dao = new AppointmentScheduleDAO();
+
+            // Lấy danh sách theo phân trang
+            List<AppointmentSchedule> list = dao.getAppointmentsWithPaging(pageIndex, pageSize);
+
+            // Tính tổng số trang
+            int total = dao.countTotalAppointments();
+            int totalPage = (int) Math.ceil((double) total / pageSize);
+
+            // Gửi dữ liệu sang JSP
+            request.setAttribute("listApp", list);
+            request.setAttribute("page", pageIndex);
+            request.setAttribute("totalPage", totalPage);
             request.setAttribute("activeTab", "appointments");
 
-            // 3. Forward lại về dashboard.jsp (JSP chứa các tab)
             request.getRequestDispatcher("receptionist.jsp").forward(request, response);
-
+            
+            
         } else if ("searchAppointments".equals(action)) {
             AppointmentScheduleDAO dao = new AppointmentScheduleDAO();
             List<AppointmentSchedule> list;
@@ -76,6 +96,7 @@ public class ReceptionServlet extends HttpServlet {
             request.setAttribute("listApp", list);
             request.setAttribute("activeTab", "appointments");
             request.getRequestDispatcher("receptionist.jsp").forward(request, response);
+
         } else if ("viewDetail".equals(action)) {
             int appointmentId = Integer.parseInt(request.getParameter("id"));
 
@@ -88,6 +109,9 @@ public class ReceptionServlet extends HttpServlet {
             } else {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND, "Lịch hẹn không tồn tại.");
             }
+
+        } else if ("feedback".equals(action)) {
+
         } else {
             request.getRequestDispatcher("receptionist.jsp").forward(request, response);
         }

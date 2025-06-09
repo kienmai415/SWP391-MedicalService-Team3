@@ -2,6 +2,7 @@
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 
 <!DOCTYPE html>
 <html lang="vi">
@@ -409,8 +410,10 @@
                                                             </td>
 
                                                             <td>
-                                                                <a href="ReceptionServlet?action=viewDetail&id=${i.id}">
-                                                                    <button class="btn btn-outline-success custom-detail-btn">Chi tiết</button>
+                                                                <a href="ReceptionServlet?action=viewDetail&id=${i.id}" title="Xem chi tiết lịch hẹn">
+                                                                    <button class="btn btn-outline-success custom-detail-btn">Chi tiết
+                                                                        <i class="bi bi-eye"></i> 
+                                                                    </button>
                                                                 </a>
                                                             </td>
                                                         </tr>
@@ -424,6 +427,28 @@
                                             </c:choose>
                                         </tbody>
                                     </table>
+                                    <!-- PHÂN TRANG -->
+                                    <div style="text-align: center; margin-top: 20px;">
+                                        <c:if test="${page > 1}">
+                                            <a href="ReceptionServlet?action=viewAppointments&page=${page - 1}" class="btn btn-outline-secondary m-1">
+                                                ← 
+                                            </a>
+                                        </c:if>
+
+                                        <c:forEach var="i" begin="1" end="${totalPage}">
+                                            <a href="ReceptionServlet?action=viewAppointments&page=${i}"
+                                               class="btn ${i == page ? 'btn-success' : 'btn-outline-success'} m-1">
+                                                ${i}
+                                            </a>
+                                        </c:forEach>
+
+                                        <c:if test="${page < totalPage}">
+                                            <a href="ReceptionServlet?action=viewAppointments&page=${page + 1}" class="btn btn-outline-secondary m-1">
+                                                 →
+                                            </a>
+                                        </c:if>
+                                    </div>
+
                                 </div>
                             </div>
                         </div>
