@@ -4,13 +4,16 @@
  */
 package controller;
 
-import emailservice.EmailSender;
+import dal.PatientDAO;
+import emailService.EmailSender;
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import model.Patient;
+import ultil.PasswordGenerator;
 
 /**
  *
@@ -73,7 +76,31 @@ public class RequestPassword extends HttpServlet {
             throws ServletException, IOException {
         //processRequest(request, response);
         String email = request.getParameter("email");
+        PatientDAO pd = new PatientDAO();
 
+        Patient p = pd.getPatientByEmail(email);
+        if (p != null) {
+            PasswordGenerator pg = new PasswordGenerator();
+            String newPass = pg.generatePassword(10);
+            boolean updated = pd.updatePassword(email, newPass);
+            if (updated) {
+                EmailSender es = new EmailSender();
+                es.sendEmail(email, p.getFullName(), newPass);
+
+                request.setAttribute("errorP", "Bạn hãy kiểm tra mail để lấy lại mật khẩu mới để đăng nhập");
+                request.setAttribute("tab", "forgot"); // chuyen ve tab login neu thanh cong
+                request.getRequestDispatcher("login.jsp").forward(request, response);
+            } else {
+                request.setAttribute("errorP", "Không thể cập nhật mật khẩu. Vui lòng thử lại sau.");
+                request.setAttribute("tab", "forgot");
+                request.getRequestDispatcher("login.jsp").forward(request, response);
+            }
+        } else {
+            // Email không tồn tại trong cơ sở dữ liệu
+            request.setAttribute("errorP", "Không tồn tại tài khoản");
+            request.setAttribute("tab", "forgot");
+            request.getRequestDispatcher("login.jsp").forward(request, response);
+        }
     }
 
     /**

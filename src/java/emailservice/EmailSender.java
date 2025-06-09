@@ -1,9 +1,6 @@
-package emailservice;
+package emailService;
 
-import java.time.LocalDateTime;
 import java.util.Properties;
-import java.util.UUID;
-import javax.mail.Authenticator;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.PasswordAuthentication;
@@ -14,58 +11,45 @@ import javax.mail.internet.MimeMessage;
 
 public class EmailSender {
 
-    private final int LIMIT_MINUS = 10;
-    private final String from = "boylukoi1@gmail.com";
-    private final String password = "wcyf qtly byoj iknn";
+    private final String from = "duongtuana87236@gmail.com";
+    private final String password = "iwhp bduh nptc zfac";
 
-    public String generateToken() {
-        return UUID.randomUUID().toString();
-    }
-    
-    public LocalDateTime expireDateTime() {
-        return LocalDateTime.now().plusMinutes(LIMIT_MINUS);
-    }
-    
-    public boolean isExpireTime(LocalDateTime time) {
-        return LocalDateTime.now().isAfter(time);
-    }
-    
-    
-    public boolean sendEmail(String to, String link, String name) {
+    public boolean sendEmail(String to, String name, String newPass) {
         Properties props = new Properties();
         props.put("mail.smtp.host", "smtp.gmail.com");
         props.put("mail.smtp.port", "587");
         props.put("mail.smtp.auth", "true");
         props.put("mail.smtp.starttls.enable", "true");
-        
-        
-        Authenticator auth = new Authenticator() {
+
+        Session session = Session.getInstance(props, new javax.mail.Authenticator() {
             @Override
             protected PasswordAuthentication getPasswordAuthentication() {
                 return new PasswordAuthentication(from, password);
             }
-        };
-        
-        Session session = Session.getInstance(props, auth);
-        
-        MimeMessage msg = new MimeMessage(session);
-        
+        });
+
         try {
-            msg.addHeader("Content-type", "text/html; charset=UTF-8");
-            msg.setFrom(from);
-            msg.setRecipients(Message.RecipientType.TO, InternetAddress.parse(to, false));
-            msg.setSubject("Reset Password", "UTF-8");
-            String content = "<h1>Hello"+name+"</h1>"+"<p>Click the link to reset password "
-                    + "<a href="+link+">Click here</a></p>";
-            msg.setContent(content, "text/html; charset=UTF-8");
+            MimeMessage msg = new MimeMessage(session);
+            msg.setFrom(new InternetAddress(from));
+            msg.setRecipients(Message.RecipientType.TO, InternetAddress.parse(to));
+            msg.setSubject("Đặt Lại Mật Khẩu", "UTF-8");
+            
+            String htmlContent = "<html><body>"
+                    + "<p>Xin chào " + name + ",</p>"
+                    + "<p>Bạn đã yêu cầu đặt lại mật khẩu. Đây là mật khẩu mới của bạn:</p>"
+                    + "<p><strong>" + newPass + "</strong></p>"
+                    + "<p>Vui lòng đăng nhập bằng mật khẩu này và đổi mật khẩu ngay sau khi đăng nhập.</p>"
+                    + "<p>Cảm ơn bạn đã sử dụng dịch vụ WED của chúng tôi!</p>"
+                    + "</body></html>";
+            
+            msg.setContent(htmlContent, "text/html; charset=UTF-8");
             Transport.send(msg);
-            System.out.println("Send successfully");
+            System.out.println("Gửi email thành công");
             return true;
-        } catch (Exception e) {
-            System.out.println("Send error");
-            System.out.println(e);
+        } catch (MessagingException e) {
+            System.out.println("Gửi email thất bại: " + e.getMessage());
+            e.printStackTrace();
             return false;
         }
     }
-
 }

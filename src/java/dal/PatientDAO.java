@@ -110,22 +110,38 @@ public class PatientDAO extends DBContext {
         return isUpdated;
     }
 
+    public boolean updatePassword(String email, String pass) {
+        int isUpdated = 0;
+        String sql = "UPDATE dbo.patient SET password=? WHERE email =?";
+
+        try {
+            PreparedStatement ps = connection.prepareStatement(sql);
+            ps.setString(1, pass);
+            ps.setString(2, email);
+            isUpdated = ps.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return isUpdated != 0;
+    }
+
     public static void main(String[] args) {
         PatientDAO pd = new PatientDAO();
-        String name = "Nguyen Van A1";
-        String email = "patient9@email.com";
-        String pass = "123456";
-        String phone = "0123456789";
-        int status = 1;
-        // Gọi hàm thêm
-        if (pd.getPatientByEmail("patient9@email.com") == null) {
-            int x = pd.addPatient(name, email, pass, phone, status);
-            System.out.println(x);
-            System.out.println("ok");
-        } else {
-            System.out.println("no");
-        }
-
-        System.out.println(pd.getPatientByEmail("patient9@email.com"));
+        //        String name = "Nguyen Van A1";
+        //        String email = "patient9@email.com";
+        //        String pass = "123456";
+        //        String phone = "0123456789";
+        //        int status = 1;
+        //        // Gọi hàm thêm
+        //        if (pd.getPatientByEmail("patient9@email.com") == null) {
+        //            int x = pd.addPatient(name, email, pass, phone, status);
+        //            System.out.println(x);
+        //            System.out.println("ok");
+        //        } else {
+        //            System.out.println("no");
+        //        }
+        //
+        //        System.out.println(pd.getPatientByEmail("patient9@email.com"));
+        boolean update = pd.updatePassword("zunazardy@gmail.com", "123456");
     }
 }
