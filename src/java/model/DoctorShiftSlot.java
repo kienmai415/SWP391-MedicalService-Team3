@@ -5,12 +5,14 @@
 package model;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 /**
  *
  * @author laptop368
  */
 public class DoctorShiftSlot {
+
     private int id;
     private int doctorId;
     private String slotStartTime;
@@ -73,5 +75,4 @@ public class DoctorShiftSlot {
         return "DoctorShiftSlot{" + "id=" + id + ", doctorId=" + doctorId + ", slotStartTime=" + slotStartTime + ", date=" + date + ", isBooked=" + isBooked + '}';
     }
 
-    
 }
