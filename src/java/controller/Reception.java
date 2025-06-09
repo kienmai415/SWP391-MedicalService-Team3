@@ -5,8 +5,6 @@
 
 package controller;
 
-import DAO.BookingDAO;
-import Model.Booking;
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;

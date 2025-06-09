@@ -13,7 +13,6 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-import model.GoogleAccount;
 import model.Patient;
 
 /**
@@ -37,15 +36,15 @@ public class LoginServlet extends HttpServlet {
         response.setContentType("text/html;charset=UTF-8");
         try (PrintWriter out = response.getWriter()) {
             /* TODO output your page here. You may use following sample code. */
-            String code = request.getParameter("code");
-
-            GoogleLogin gg = new GoogleLogin();
-
-            String accesToken = GoogleLogin.getToken(code);
-            System.out.println(accesToken);
-            GoogleAccount ga = GoogleLogin.getUserInfo(accesToken);
-            System.out.println(ga);
-
+            out.println("<!DOCTYPE html>");
+            out.println("<html>");
+            out.println("<head>");
+            out.println("<title>Servlet LoginServlet</title>");
+            out.println("</head>");
+            out.println("<body>");
+            out.println("<h1>Servlet LoginServlet at trang này này"  + "</h1>");
+            out.println("</body>");
+            out.println("</html>");
         }
     }
 
@@ -91,7 +90,7 @@ public class LoginServlet extends HttpServlet {
         try (PrintWriter out = response.getWriter()) {
 
             if (p != null) {
-                role = p.getRold();
+                role = p.getRole();
             }
 
             if (role == null) {
@@ -100,7 +99,7 @@ public class LoginServlet extends HttpServlet {
                 request.getRequestDispatcher("login.jsp").forward(request, response);
             } else {
 
-                if (role.equals(p.getRold())) {
+                if (role.equals(p.getRole())) {
                     HttpSession session = request.getSession();
                     session.setAttribute("p", p);
                     request.getRequestDispatcher("admin.jsp").forward(request, response);

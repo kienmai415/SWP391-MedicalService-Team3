@@ -6,13 +6,12 @@ package model;
 
 /**
  *
- * @author maiki
+ * @author laptop368
  */
 public class Specialization {
-
-private int id;
-private String name;
-private String description;
+    private int id;
+    private String name;
+    private String description;
 
     public Specialization() {
     }
@@ -47,6 +46,9 @@ private String description;
         this.description = description;
     }
 
-        }
-
-
+    @Override
+    public String toString() {
+        return "Specialization{" + "id=" + id + ", name=" + name + ", description=" + description + '}';
+    }
+    
+}

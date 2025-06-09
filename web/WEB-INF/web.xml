@@ -22,11 +22,11 @@
     </servlet>
     <servlet>
         <servlet-name>Customer</servlet-name>
-        <servlet-class>Controller.admin.PatientManage</servlet-class>
+        <servlet-class>controller.admin.PatientManage</servlet-class>
     </servlet>
     <servlet>
         <servlet-name>RecepController</servlet-name>
-        <servlet-class>Controller.RecepController</servlet-class>
+        <servlet-class>controller.RecepController</servlet-class>
     </servlet>
     <servlet>
         <servlet-name>ReceptionController</servlet-name>
@@ -39,6 +39,10 @@
     <servlet>
         <servlet-name>RequestPassword</servlet-name>
         <servlet-class>controller.RequestPassword</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>AppointmentScheduleServlet</servlet-name>
+        <servlet-class>controller.AppointmentScheduleServlet</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>HomeServlet</servlet-name>
@@ -80,5 +84,9 @@
     <servlet-mapping>
         <servlet-name>RequestPassword</servlet-name>
         <url-pattern>/forgotpassword</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>AppointmentScheduleServlet</servlet-name>
+        <url-pattern>/AppointmentScheduleServlet</url-pattern>
     </servlet-mapping>
 </web-app>

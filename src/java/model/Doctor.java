@@ -4,42 +4,47 @@
  */
 package model;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 /**
  *
- * @author maiki
+ * @author laptop368
  */
 public class Doctor {
     private int id;
-    private int accountId;
     private String imageURL;
-    private String address;
-    private LocalDateTime dob;
+    private String email;
+    private String username;
+    private String password;
+    private String role;
     private String fullName;
+    private LocalDate dob;
     private String gender;
+    private String address;
     private String phoneNumber;
-    private int doctorLevelId; 
-    private int specializationId;
-    private Account account;
+    private boolean status;
+    private Specialization specialization;   
+    private DoctorLevel doctorLevel; 
+
     public Doctor() {
     }
 
-    public Doctor(int id, int accountId, String imageURL, String address, LocalDateTime dob, String fullName, String gender, String phoneNumber, int doctorLevelId, int specializationId, Account account) {
+    public Doctor(int id, String imageURL, String email, String username, String password, String role, String fullName, LocalDate dob, String gender, String address, String phoneNumber, boolean status, Specialization specialization, DoctorLevel doctorLevel) {
         this.id = id;
-        this.accountId = accountId;
         this.imageURL = imageURL;
-        this.address = address;
-        this.dob = dob;
+        this.email = email;
+        this.username = username;
+        this.password = password;
+        this.role = role;
         this.fullName = fullName;
+        this.dob = dob;
         this.gender = gender;
+        this.address = address;
         this.phoneNumber = phoneNumber;
-        this.doctorLevelId = doctorLevelId;
-        this.specializationId = specializationId;
-        this.account = account;
+        this.status = status;
+        this.specialization = specialization;
+        this.doctorLevel = doctorLevel;
     }
-
-    
 
     public int getId() {
         return id;
@@ -47,14 +52,6 @@ public class Doctor {
 
     public void setId(int id) {
         this.id = id;
-    }
-
-    public int getAccountId() {
-        return accountId;
-    }
-
-    public void setAccountId(int accountId) {
-        this.accountId = accountId;
     }
 
     public String getImageURL() {
@@ -65,20 +62,36 @@ public class Doctor {
         this.imageURL = imageURL;
     }
 
-    public String getAddress() {
-        return address;
+    public String getEmail() {
+        return email;
     }
 
-    public void setAddress(String address) {
-        this.address = address;
+    public void setEmail(String email) {
+        this.email = email;
     }
 
-    public LocalDateTime getDob() {
-        return dob;
+    public String getUsername() {
+        return username;
     }
 
-    public void setDob(LocalDateTime dob) {
-        this.dob = dob;
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
     }
 
     public String getFullName() {
@@ -89,12 +102,28 @@ public class Doctor {
         this.fullName = fullName;
     }
 
+    public LocalDate getDob() {
+        return dob;
+    }
+
+    public void setDob(LocalDate dob) {
+        this.dob = dob;
+    }
+
     public String getGender() {
         return gender;
     }
 
     public void setGender(String gender) {
         this.gender = gender;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
     }
 
     public String getPhoneNumber() {
@@ -105,27 +134,36 @@ public class Doctor {
         this.phoneNumber = phoneNumber;
     }
 
-    public int getDoctorLevelId() {
-        return doctorLevelId;
+    public boolean isStatus() {
+        return status;
     }
 
-    public void setDoctorLevelId(int doctorLevelId) {
-        this.doctorLevelId = doctorLevelId;
+    public void setStatus(boolean status) {
+        this.status = status;
     }
 
-    public int getSpecializationId() {
-        return specializationId;
+    public Specialization getSpecialization() {
+        return specialization;
     }
 
-    public void setSpecializationId(int specializationId) {
-        this.specializationId = specializationId;
+    public void setSpecialization(Specialization specialization) {
+        this.specialization = specialization;
     }
+
+    public DoctorLevel getDoctorLevel() {
+        return doctorLevel;
+    }
+
+    public void setDoctorLevel(DoctorLevel doctorLevel) {
+        this.doctorLevel = doctorLevel;
+    }
+
+    @Override
+    public String toString() {
+        return "Doctor{" + "id=" + id + ", imageURL=" + imageURL + ", email=" + email + ", username=" + username + ", password=" + password + ", role=" + role + ", fullName=" + fullName + ", dob=" + dob + ", gender=" + gender + ", address=" + address + ", phoneNumber=" + phoneNumber + ", status=" + status + ", specialization=" + specialization + ", doctorLevel=" + doctorLevel + '}';
+    }
+
     
-    public Account getAccount() { 
-        return account; 
-    }
     
-    public void setAccount(Account account) { 
-        this.account = account; 
-    }
+    
 }
