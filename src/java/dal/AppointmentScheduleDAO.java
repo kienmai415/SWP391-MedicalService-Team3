@@ -7,8 +7,11 @@ package dal;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import model.AppointmentSchedule;
 import model.Doctor;
 import model.DoctorShiftSlot;
@@ -29,8 +32,7 @@ public class AppointmentScheduleDAO extends DBContext {
         	ds.slotStartTime ,
         	pa.fullName as patientName , 
         	dt.fullName as  doctorName,
-        	app.confirmationStatus ,
-                app.confirmationStatus 
+        	app.confirmationStatus  
                      
         	from appointmentSchedule app
         	JOIN doctorShiftSlot ds on app.doctorShiftId = ds.id
@@ -56,7 +58,6 @@ public class AppointmentScheduleDAO extends DBContext {
                 Patient apPatient = new Patient();
                 apPatient.setFullName(patientName);
 //                apPatient.setId(patientId);
-
 //                int slotId = rs.getInt("doctorShiftId");
 
                 DoctorShiftSlot apSlot = new DoctorShiftSlot();
@@ -69,6 +70,7 @@ public class AppointmentScheduleDAO extends DBContext {
                 AppointmentSchedule app = new AppointmentSchedule(apId, apConfirm, apDoctor, apPatient, apSlot);
 
                 listAp.add(app);
+
             }
 
         } catch (Exception e) {
@@ -79,34 +81,107 @@ public class AppointmentScheduleDAO extends DBContext {
 
     public AppointmentSchedule getAppointmentSchedulesById(int id) {
         DBContext dbc = DBContext.getInstance();
-        String sql = "select * from appointmentSchedule WHERE id = ?";
+        String sql = """
+                   SELECT app.id, ds.date, ds.slotStartTime, app.confirmationStatus,
+                                    pa.fullName AS patientName, pa.email AS patientEmail, pa.phoneNumber AS patientPhone,
+                                    pa.gender AS patientGender, pa.address AS patientAddress,
+                                    dt.fullName AS doctorName, dt.email AS doctorEmail, dt.phoneNumber AS doctorPhone,
+                                    dt.gender AS doctorGender, dt.address AS doctorAddress
+                             FROM appointmentSchedule app
+                             JOIN doctorShiftSlot ds ON app.doctorShiftId = ds.id
+                             JOIN patient pa ON app.patientId = pa.id
+                             JOIN doctor dt ON app.doctorId = dt.id
+                             WHERE app.id = ?
+                     """;
         try {
             PreparedStatement preparedStatement = dbc.connection.prepareStatement(sql);
             preparedStatement.setInt(1, id);
             ResultSet rs = preparedStatement.executeQuery();
             if (rs.next()) {
-                int apId = rs.getInt("id");
-                String apConfirm = rs.getString("confirmationStatus"); // đảm bảo đúng tên cột trong DB
 
-                int doctorId = rs.getInt("doctorId");
-                Doctor apDoctor = new Doctor();
-                apDoctor.setId(doctorId);
+                AppointmentSchedule ap = new AppointmentSchedule();
+                ap.setId(rs.getInt("id"));
+                ap.setConfirmationStatus(rs.getString("confirmationStatus"));
 
-                int patientId = rs.getInt("patientId");
-                Patient apPatient = new Patient();
-                apPatient.setId(patientId);
+                DoctorShiftSlot shift = new DoctorShiftSlot();
+                shift.setDate(rs.getDate("date").toLocalDate());
 
-                int slotId = rs.getInt("doctorShiftId");
-                DoctorShiftSlot apSlot = new DoctorShiftSlot();
-                apSlot.setId(slotId);
+                LocalTime time = rs.getTime("slotStartTime").toLocalTime();
+                String formattedTime = time.format(DateTimeFormatter.ofPattern("HH:mm"));
+                shift.setSlotStartTime(formattedTime);
+                ap.setShiftSlot(shift);
 
-                return new AppointmentSchedule(apId, apConfirm, apDoctor, apPatient, apSlot);
+                Patient patient = new Patient();
+                patient.setFullName(rs.getString("patientName"));
+                patient.setEmail(rs.getString("patientEmail"));
+                patient.setPhoneNumber(rs.getString("patientPhone"));
+                patient.setGender(rs.getString("patientGender"));
+                patient.setAddress(rs.getString("patientAddress"));
+                ap.setPatient(patient);
+
+                Doctor doctor = new Doctor();
+                doctor.setFullName(rs.getString("doctorName"));
+                doctor.setEmail(rs.getString("doctorEmail"));
+                doctor.setPhoneNumber(rs.getString("doctorPhone"));
+                doctor.setGender(rs.getString("doctorGender"));
+                doctor.setAddress(rs.getString("doctorAddress"));
+                ap.setDoctor(doctor);
+                return ap;
 
             }
         } catch (Exception e) {
             return null;
         }
         return null;
+    }
+
+    public List<AppointmentSchedule> getAppointmentSchedulesByName(String name) {
+        List<AppointmentSchedule> resultList = new ArrayList<>();
+        DBContext dbc = DBContext.getInstance();
+        String sql = """
+        select 
+            app.id ,
+            ds.date ,
+            ds.slotStartTime ,
+            pa.fullName as patientName , 
+            dt.fullName as doctorName,
+            app.confirmationStatus 
+        from appointmentSchedule app
+        JOIN doctorShiftSlot ds on app.doctorShiftId = ds.id
+        JOIN patient pa ON app.patientId = pa.id
+        JOIN doctor dt on app.doctorId = dt.id
+        where dt.fullName like ? or pa.fullName like ?
+    """;
+
+        try {
+            PreparedStatement preparedStatement = dbc.connection.prepareStatement(sql);
+            String Aname = "%" + name + "%";
+            preparedStatement.setString(1, Aname);
+            preparedStatement.setString(2, Aname);
+            ResultSet rs = preparedStatement.executeQuery();
+
+            while (rs.next()) {
+                int apId = rs.getInt("id");
+                String apConfirm = rs.getString("confirmationStatus");
+
+                Doctor apDoctor = new Doctor();
+                apDoctor.setFullName(rs.getString("doctorName"));
+
+                Patient apPatient = new Patient();
+                apPatient.setFullName(rs.getString("patientName"));
+
+                DoctorShiftSlot apSlot = new DoctorShiftSlot();
+                apSlot.setSlotStartTime(rs.getString("slotStartTime"));
+                apSlot.setDate(rs.getDate("date").toLocalDate());
+
+                AppointmentSchedule ap = new AppointmentSchedule(apId, apConfirm, apDoctor, apPatient, apSlot);
+                resultList.add(ap);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return resultList;
     }
 
     public ArrayList<AppointmentSchedule> get(String sql) {

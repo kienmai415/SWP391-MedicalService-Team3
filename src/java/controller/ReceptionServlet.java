@@ -62,14 +62,35 @@ public class ReceptionServlet extends HttpServlet {
 
             // 3. Forward lại về dashboard.jsp (JSP chứa các tab)
             request.getRequestDispatcher("receptionist.jsp").forward(request, response);
+
+        } else if ("searchAppointments".equals(action)) {
+            AppointmentScheduleDAO dao = new AppointmentScheduleDAO();
+            List<AppointmentSchedule> list;
+            String keyword = request.getParameter("keyword");
+
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                list = (List<AppointmentSchedule>) dao.getAppointmentSchedulesByName(keyword.trim());
+            } else {
+                list = dao.getAllSchedules();
+            }
+            request.setAttribute("listApp", list);
+            request.setAttribute("activeTab", "appointments");
+            request.getRequestDispatcher("receptionist.jsp").forward(request, response);
+        } else if ("viewDetail".equals(action)) {
+            int appointmentId = Integer.parseInt(request.getParameter("id"));
+
+            AppointmentScheduleDAO dao = new AppointmentScheduleDAO();
+            AppointmentSchedule ap = dao.getAppointmentSchedulesById(appointmentId);
+
+            if (ap != null) {
+                request.setAttribute("appointment", ap);
+                request.getRequestDispatcher("appointmentDetail.jsp").forward(request, response);
+            } else {
+                response.sendError(HttpServletResponse.SC_NOT_FOUND, "Lịch hẹn không tồn tại.");
+            }
         } else {
-            // Nếu action không phải viewAppointments, có thể redirect về dashboard chính
-//            AppointmentScheduleDAO dao = new AppointmentScheduleDAO();
-//            ArrayList<appointment_schedules> list = dao.getAllSchedules();
-//            request.setAttribute("listApp", list);
             request.getRequestDispatcher("receptionist.jsp").forward(request, response);
         }
-
     }
 
     @Override

@@ -9,13 +9,12 @@ package model;
  * @author laptop368
  */
 public class AppointmentSchedule {
+
     private int id;
     private String confirmationStatus;
     private Doctor doctor;
     private Patient patient;
     private DoctorShiftSlot shiftSlot;
-    
-    
     
     public AppointmentSchedule() {
     }
@@ -72,6 +71,5 @@ public class AppointmentSchedule {
     public String toString() {
         return "AppointmentSchedule{" + "id=" + id + ", confirmationStatus=" + confirmationStatus + ", doctor=" + doctor + ", patient=" + patient + ", shiftSlot=" + shiftSlot + '}';
     }
-    
     
 }
