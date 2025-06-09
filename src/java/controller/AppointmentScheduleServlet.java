@@ -56,10 +56,21 @@ public class AppointmentScheduleServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
     throws ServletException, IOException {
+        String action = request.getParameter("action");
         AppointmentScheduleDAO dao = new AppointmentScheduleDAO();
-        List<AppointmentSchedule> listAppointment = dao.getListAppointment();
-        request.setAttribute("ListAppointment", listAppointment);
+        
+        if("view".equals(action)){
+            int patientId = Integer.parseInt(request.getParameter("pid"));
+            List<AppointmentSchedule> appointmentById = dao.getListAppointmentById(patientId);
+            AppointmentSchedule appointmentInfo = appointmentById.get(0);
+            request.setAttribute("appointmentInfo", appointmentInfo);
+            request.getRequestDispatcher("appointment_info.jsp").forward(request, response);
+        }
+        else{      
+        List<AppointmentSchedule> listAppByDoctor = dao.getListAppointmentByDoctorId(1);
+        request.setAttribute("ListAppointment", listAppByDoctor);
         request.getRequestDispatcher("appointment_schedule.jsp").forward(request, response);
+        } 
     } 
      
 
