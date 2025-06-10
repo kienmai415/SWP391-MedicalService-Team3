@@ -431,7 +431,7 @@
                                     <div style="text-align: center; margin-top: 20px;">
                                         <c:if test="${page > 1}">
                                             <a href="ReceptionServlet?action=viewAppointments&page=${page - 1}" class="btn btn-outline-secondary m-1">
-                                                ← 
+                                                <
                                             </a>
                                         </c:if>
 
@@ -444,7 +444,7 @@
 
                                         <c:if test="${page < totalPage}">
                                             <a href="ReceptionServlet?action=viewAppointments&page=${page + 1}" class="btn btn-outline-secondary m-1">
-                                                 →
+                                                 >
                                             </a>
                                         </c:if>
                                     </div>
