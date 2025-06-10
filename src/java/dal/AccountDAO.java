@@ -15,767 +15,600 @@ package dal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import model.Account;
+import model.User;
 import model.Doctor;
-import model.DoctorLevel;
 import model.Patient;
-import model.Role;
 import model.Specialization;
-import model.Staff;
+import model.DoctorLevel;
 import org.mindrot.jbcrypt.BCrypt;
+import java.sql.Date;
+import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  *
- * @author ADMIN
+ * @author maiki
  */
 public class AccountDAO extends DBContext {
 
-    private PreparedStatement ps = null;
-    private ResultSet rs = null;
-    private String xSql = null;
-
     public AccountDAO() {
-        // Kế thừa connection từ DBContext
+        super(); // Gọi constructor của DBContext để khởi tạo connection
     }
 
-    // Kiểm tra email đã tồn tại
-    public boolean emailExists(String email) {
-        String sql = "SELECT 1 FROM accounts WHERE email = ?";
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setString(1, email);
+    public List<Object> getAccounts(String email, String role, String status) {
+        List<Object> accounts = new ArrayList<>();
+        StringBuilder sql = new StringBuilder();
+        List<Object> params = new ArrayList<>();
+
+        // Chuẩn hóa role
+        String normalizedRole = "all";
+        if (role != null && !role.isEmpty()) {
+            switch (role) {
+                case "2":
+                    normalizedRole = "Patient";
+                    break;
+                case "3":
+                    normalizedRole = "Manager";
+                    break;
+                case "4":
+                    normalizedRole = "Doctor";
+                    break;
+                case "5":
+                    normalizedRole = "Receptionist";
+                    break;
+            }
+        }
+
+        // Chuẩn hóa status
+        String normalizedStatus = "all";
+        if (status != null && !status.isEmpty()) {
+            normalizedStatus = status.equals("activated") ? "1" : status.equals("deactivated") ? "0" : "all";
+        }
+
+        // Xây dựng query dựa trên role và status
+        if ("Manager".equals(normalizedRole) || "Receptionist".equals(normalizedRole)) {
+            sql.append("SELECT id, username, email, role, status FROM users WHERE 1=1");
+            if (!"all".equals(normalizedRole)) {
+                sql.append(" AND role = ?");
+                params.add(normalizedRole);
+            }
+            if (!"all".equals(normalizedStatus)) {
+                if (params.isEmpty()) {
+                    sql.append(" WHERE status = ?");
+                } else {
+                    sql.append(" AND status = ?");
+                }
+                params.add(Integer.parseInt(normalizedStatus));
+            }
+        } else if ("Doctor".equals(normalizedRole)) {
+            sql.append("SELECT id, username, email, role, status FROM doctor WHERE role = 'Doctor'");
+            if (!"all".equals(normalizedStatus)) {
+                sql.append(" AND status = ?");
+                params.add(Integer.parseInt(normalizedStatus));
+            }
+        } else if ("Patient".equals(normalizedRole)) {
+            sql.append("SELECT id, username, email, role, status FROM patient WHERE role = 'Patient'");
+            if (!"all".equals(normalizedStatus)) {
+                sql.append(" AND status = ?");
+                params.add(Integer.parseInt(normalizedStatus));
+            }
+        } else { // role is "all"
+            sql.append("SELECT id, username, email, role, status FROM users WHERE role IN ('Manager', 'Receptionist')");
+            if (!"all".equals(normalizedStatus)) {
+                sql.append(" AND status = ?");
+                params.add(Integer.parseInt(normalizedStatus));
+            }
+            sql.append(" UNION SELECT id, username, email, role, status FROM doctor WHERE role = 'Doctor'");
+            if (!"all".equals(normalizedStatus)) {
+                if (params.size() == 1) {
+                    sql.append(" AND status = ?");
+                } else {
+                    sql.append(" WHERE status = ?");
+                }
+                params.add(Integer.parseInt(normalizedStatus));
+            }
+            sql.append(" UNION SELECT id, username, email, role, status FROM patient WHERE role = 'Patient'");
+            if (!"all".equals(normalizedStatus)) {
+                if (params.size() == 2) {
+                    sql.append(" AND status = ?");
+                } else {
+                    sql.append(" WHERE status = ?");
+                }
+                params.add(Integer.parseInt(normalizedStatus));
+            }
+        }
+
+        // Thêm điều kiện email
+        if (email != null && !email.trim().isEmpty()) {
+            if (params.isEmpty()) {
+                sql.append(" WHERE email LIKE ?");
+            } else {
+                sql.append(" AND email LIKE ?");
+            }
+            params.add("%" + email + "%");
+        }
+
+        sql.append(" ORDER BY id");
+
+        System.out.println("SQL Query: " + sql.toString());
+        System.out.println("Parameters: " + params);
+
+        try (PreparedStatement ps = connection.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
             try (ResultSet rs = ps.executeQuery()) {
-                return rs.next();
+                while (rs.next()) {
+                    String accountRole = rs.getString("role");
+                    if ("Manager".equals(accountRole) || "Receptionist".equals(accountRole)) {
+                        User user = new User();
+                        user.setId(rs.getInt("id"));
+                        user.setUsername(rs.getString("username"));
+                        user.setEmail(rs.getString("email"));
+                        user.setRole(accountRole);
+                        user.setStatus(rs.getBoolean("status"));
+                        accounts.add(user);
+                    } else if ("Doctor".equals(accountRole)) {
+                        Doctor doctor = new Doctor();
+                        doctor.setId(rs.getInt("id"));
+                        doctor.setUsername(rs.getString("username"));
+                        doctor.setEmail(rs.getString("email"));
+                        doctor.setRole(accountRole);
+                        doctor.setStatus(rs.getBoolean("status"));
+                        accounts.add(doctor);
+                    } else if ("Patient".equals(accountRole)) {
+                        Patient patient = new Patient();
+                        patient.setId(rs.getInt("id"));
+                        patient.setUserName(rs.getString("username"));
+                        patient.setEmail(rs.getString("email"));
+                        patient.setRole(accountRole);
+                        patient.setStatus(rs.getBoolean("status"));
+                        accounts.add(patient);
+                    }
+                }
             }
         } catch (Exception e) {
-            System.err.println("Error while checking email existence: " + e.getMessage());
-            return false;
+            System.err.println("Lỗi khi truy vấn cơ sở dữ liệu: " + e.getMessage());
         }
+        return accounts;
     }
 
-    // Kiểm tra accountId tồn tại
-    private boolean accountExists(int accountId) {
-        String sql = "SELECT 1 FROM accounts WHERE id = ?";
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setInt(1, accountId);
+    public int getTotalAccounts(String email, String role, String status) {
+        int total = 0;
+        StringBuilder sql = new StringBuilder();
+        List<Object> params = new ArrayList<>();
+
+        // Chuẩn hóa role
+        if (role != null && !role.isEmpty()) {
+            switch (role) {
+                case "2":
+                    role = "Patient";
+                    break;
+                case "3":
+                    role = "Manager";
+                    break;
+                case "4":
+                    role = "Doctor";
+                    break;
+                case "5":
+                    role = "Receptionist";
+                    break;
+                default:
+                    role = "all";
+            }
+        } else {
+            role = "all";
+        }
+
+        // Chuẩn hóa status
+        if (status != null && !status.isEmpty()) {
+            status = status.equals("activated") ? "1" : status.equals("deactivated") ? "0" : "all";
+        } else {
+            status = "all";
+        }
+
+        sql.append("SELECT COUNT(*) FROM (");
+        sql.append("  SELECT id FROM users WHERE role IN ('Manager', 'Receptionist')");
+        if (!role.equals("all") && (role.equals("Manager") || role.equals("Receptionist"))) {
+            sql.append(" AND role = ?");
+            params.add(role);
+        }
+        if (!status.equals("all")) {
+            sql.append(" AND status = ?");
+            params.add(Integer.parseInt(status));
+        }
+        if (email != null && !email.trim().isEmpty()) {
+            sql.append(" AND email LIKE ?");
+            params.add("%" + email + "%");
+        }
+
+        sql.append(" UNION ");
+        sql.append("  SELECT id FROM doctor WHERE role = 'Doctor'");
+        if (!role.equals("all") && role.equals("Doctor")) {
+            sql.append(" AND role = ?");
+            params.add(role);
+        }
+        if (!status.equals("all")) {
+            sql.append(" AND status = ?");
+            params.add(Integer.parseInt(status));
+        }
+        if (email != null && !email.trim().isEmpty()) {
+            sql.append(" AND email LIKE ?");
+            params.add("%" + email + "%");
+        }
+
+        sql.append(" UNION ");
+        sql.append("  SELECT id FROM patient WHERE role = 'Patient'");
+        if (!role.equals("all") && role.equals("Patient")) {
+            sql.append(" AND role = ?");
+            params.add(role);
+        }
+        if (!status.equals("all")) {
+            sql.append(" AND status = ?");
+            params.add(Integer.parseInt(status));
+        }
+        if (email != null && !email.trim().isEmpty()) {
+            sql.append(" AND email LIKE ?");
+            params.add("%" + email + "%");
+        }
+        sql.append(") AS accounts");
+
+        System.out.println("SQL Count Query: " + sql.toString());
+        System.out.println("Count Parameters: " + params);
+
+        try (PreparedStatement ps = connection.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
             try (ResultSet rs = ps.executeQuery()) {
-                return rs.next();
+                if (rs.next()) {
+                    total = rs.getInt(1);
+                }
             }
         } catch (Exception e) {
-            System.err.println("Error while checking account existence for accountId " + accountId + ": " + e.getMessage());
-            return false;
+            System.err.println("Lỗi khi đếm số lượng tài khoản: " + e.getMessage());
         }
+        return total;
     }
 
-    // Kiểm tra staff tồn tại
-    private boolean staffExists(int accountId) {
-        String sql = "SELECT 1 FROM staffs WHERE account_id = ?";
+    // Cập nhật trạng thái tài khoản và trả về thông tin
+    public Map<String, Object> updateAccountStatus(int id, int status) {
+        Map<String, Object> result = new HashMap<>();
+        String sql = "UPDATE users SET status = ? WHERE id = ?";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setInt(1, accountId);
-            try (ResultSet rs = ps.executeQuery()) {
-                return rs.next();
-            }
-        } catch (Exception e) {
-            System.err.println("Error while checking staff existence for accountId " + accountId + ": " + e.getMessage());
-            return false;
-        }
-    }
-
-    // Kiểm tra doctor tồn tại
-    private boolean doctorExists(int accountId) {
-        String sql = "SELECT 1 FROM doctors WHERE account_id = ?";
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setInt(1, accountId);
-            try (ResultSet rs = ps.executeQuery()) {
-                return rs.next();
-            }
-        } catch (Exception e) {
-            System.err.println("Error while checking doctor existence for accountId " + accountId + ": " + e.getMessage());
-            return false;
-        }
-    }
-
-    // Kiểm tra specializationId tồn tại
-    private boolean specializationExists(int specializationId) {
-        String sql = "SELECT 1 FROM specializations WHERE id = ?";
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setInt(1, specializationId);
-            try (ResultSet rs = ps.executeQuery()) {
-                return rs.next();
-            }
-        } catch (Exception e) {
-            System.err.println("Error while checking specialization existence for specializationId " + specializationId + ": " + e.getMessage());
-            return false;
-        }
-    }
-
-    // Kiểm tra doctorLevelId tồn tại
-    private boolean doctorLevelExists(int doctorLevelId) {
-        String sql = "SELECT 1 FROM doctor_levels WHERE id = ?";
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setInt(1, doctorLevelId);
-            try (ResultSet rs = ps.executeQuery()) {
-                return rs.next();
-            }
-        } catch (Exception e) {
-            System.err.println("Error while checking doctor level existence for doctorLevelId " + doctorLevelId + ": " + e.getMessage());
-            return false;
-        }
-    }
-
-    // Thêm tài khoản mới
-    public int addAccount(String email, String username, String password, int roleId, boolean status) {
-        String sql = "INSERT INTO accounts (email, username, password, role_id, status) VALUES (?, ?, ?, ?, ?)";
-        try (PreparedStatement ps = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
-            if (emailExists(email)) {
-                System.err.println("Email already exists: " + email);
-                return -2; // Email đã tồn tại
-            }
-            String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
-            ps.setString(1, email);
-            ps.setString(2, username);
-            ps.setString(3, hashedPassword);
-            ps.setInt(4, roleId);
-            ps.setBoolean(5, status);
+            ps.setInt(1, status); // 0 cho vô hiệu hóa, 1 cho kích hoạt
+            ps.setInt(2, id);
             int rowsAffected = ps.executeUpdate();
             if (rowsAffected > 0) {
-                try (ResultSet rs = ps.getGeneratedKeys()) {
-                    if (rs.next()) {
-                        return rs.getInt(1);
-                    }
+                result.put("success", true);
+                result.put("message", status == 0 ? "Tài khoản đã được vô hiệu hóa." : "Tài khoản đã được kích hoạt.");
+                result.put("messageType", "success");
+                // Cập nhật bảng doctor nếu id tồn tại
+                sql = "UPDATE doctor SET status = ? WHERE id = ?";
+                try (PreparedStatement psDoctor = connection.prepareStatement(sql)) {
+                    psDoctor.setInt(1, status);
+                    psDoctor.setInt(2, id);
+                    psDoctor.executeUpdate(); // Không cần kiểm tra rowsAffected
                 }
+                // Cập nhật bảng patient nếu id tồn tại
+                sql = "UPDATE patient SET status = ? WHERE id = ?";
+                try (PreparedStatement psPatient = connection.prepareStatement(sql)) {
+                    psPatient.setInt(1, status);
+                    psPatient.setInt(2, id);
+                    psPatient.executeUpdate(); // Không cần kiểm tra rowsAffected
+                }
+            } else {
+                result.put("success", false);
+                result.put("message", "Không tìm thấy tài khoản để cập nhật.");
+                result.put("messageType", "danger");
             }
-            System.err.println("Failed to insert account for email: " + email);
-            return -1;
         } catch (Exception e) {
-            System.err.println("Error while adding account for email " + email + ": " + e.getMessage());
-            throw new RuntimeException("Error while adding account: " + e.getMessage(), e);
+            result.put("success", false);
+            result.put("message", "Lỗi khi cập nhật trạng thái: " + e.getMessage());
+            result.put("messageType", "danger");
         }
+        return result;
     }
 
-    // Thêm thông tin Staff
-    public boolean addStaff(int accountId, String fullName, String address, LocalDateTime dob, String gender, String phoneNumber, String imageURL) {
-        String sql = "INSERT INTO staffs (account_id, full_name, address, date_of_birth, gender, phone_number, imageURL) VALUES (?, ?, ?, ?, ?, ?, ?)";
+    // Lấy thông tin cơ bản của tài khoản dựa trên id
+    public Object getAccountById(int id) {
+        String sql = "SELECT id, username, email, role, status FROM users WHERE id = ? "
+                + "UNION "
+                + "SELECT id, username, email, role, status FROM doctor WHERE id = ? "
+                + "UNION "
+                + "SELECT id, username, email, role, status FROM patient WHERE id = ? "
+                + "LIMIT 1";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            if (!accountExists(accountId)) {
-                System.err.println("Account does not exist for accountId: " + accountId);
-                return false;
-            }
-            if (fullName == null || fullName.trim().isEmpty() || phoneNumber == null || !phoneNumber.matches("\\d{10}")) {
-                System.err.println("Invalid input for staff: fullName=" + fullName + ", phoneNumber=" + phoneNumber);
-                return false; // Kiểm tra đầu vào
-            }
-            ps.setInt(1, accountId);
-            ps.setString(2, fullName);
-            ps.setString(3, address);
-            ps.setObject(4, dob);
-            ps.setString(5, gender);
-            ps.setString(6, phoneNumber);
-            ps.setString(7, imageURL);
-            int rowsAffected = ps.executeUpdate();
-            if (rowsAffected == 0) {
-                System.err.println("No rows inserted in staffs for accountId: " + accountId);
-            }
-            return rowsAffected > 0;
-        } catch (Exception e) {
-            System.err.println("Error while adding staff for accountId " + accountId + ": " + e.getMessage());
-            throw new RuntimeException("Error while adding staff: " + e.getMessage(), e);
-        }
-    }
-
-    // Thêm thông tin Doctor
-    public boolean addDoctor(int accountId, String fullName, String address, LocalDateTime dob, String gender, String phoneNumber, String imageURL, int specializationId, int doctorLevelId) {
-        String sql = "INSERT INTO doctors (account_id, full_name, address, date_of_birth, gender, phone_number, imageURL, doctor_level_id, specialization_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            if (!accountExists(accountId) || !specializationExists(specializationId) || !doctorLevelExists(doctorLevelId)) {
-                System.err.println("Invalid data for adding doctor: accountId=" + accountId + ", specializationId=" + specializationId + ", doctorLevelId=" + doctorLevelId);
-                return false;
-            }
-            if (fullName == null || fullName.trim().isEmpty() || phoneNumber == null || !phoneNumber.matches("\\d{10}")) {
-                System.err.println("Invalid input for doctor: fullName=" + fullName + ", phoneNumber=" + phoneNumber);
-                return false; // Kiểm tra đầu vào
-            }
-            ps.setInt(1, accountId);
-            ps.setString(2, fullName);
-            ps.setString(3, address);
-            ps.setObject(4, dob);
-            ps.setString(5, gender);
-            ps.setString(6, phoneNumber);
-            ps.setString(7, imageURL);
-            ps.setInt(8, doctorLevelId);
-            ps.setInt(9, specializationId);
-            int rowsAffected = ps.executeUpdate();
-            if (rowsAffected == 0) {
-                System.err.println("No rows inserted in doctors for accountId: " + accountId);
-            }
-            return rowsAffected > 0;
-        } catch (Exception e) {
-            System.err.println("Error while adding doctor for accountId " + accountId + ": " + e.getMessage());
-            throw new RuntimeException("Error while adding doctor: " + e.getMessage(), e);
-        }
-    }
-
-    // Thêm thông tin Patient
-    public boolean addPatient(int accountId, String fullName, String address, LocalDateTime dob, String gender, String phoneNumber, String imageURL, String identityNumber, String insuranceNumber) {
-        String sql = "INSERT INTO patients (account_id, full_name, address, date_of_birth, gender, phone_number, imageURL, identity_number, insurance_number) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            if (!accountExists(accountId)) {
-                System.err.println("Account does not exist for accountId: " + accountId);
-                return false;
-            }
-            if (fullName == null || fullName.trim().isEmpty() || phoneNumber == null || !phoneNumber.matches("\\d{10}")) {
-                System.err.println("Invalid input for patient: fullName=" + fullName + ", phoneNumber=" + phoneNumber);
-                return false; // Kiểm tra đầu vào
-            }
-            ps.setInt(1, accountId);
-            ps.setString(2, fullName);
-            ps.setString(3, address);
-            ps.setObject(4, dob);
-            ps.setString(5, gender);
-            ps.setString(6, phoneNumber);
-            ps.setString(7, imageURL);
-            ps.setString(8, identityNumber);
-            ps.setString(9, insuranceNumber);
-            int rowsAffected = ps.executeUpdate();
-            if (rowsAffected == 0) {
-                System.err.println("No rows inserted in patients for accountId: " + accountId);
-            }
-            return rowsAffected > 0;
-        } catch (Exception e) {
-            System.err.println("Error while adding patient for accountId " + accountId + ": " + e.getMessage());
-            return false;
-        }
-    }
-
-    // Phương thức: Thêm tài khoản và thông tin chi tiết
-    public boolean addAccountWithDetails(String email, String username, String password, int roleId, boolean status,
-            String fullName, String address, LocalDateTime dob, String gender,
-            String phoneNumber, String imageURL, int specializationId, int doctorLevelId) {
-        // Thêm tài khoản vào bảng accounts
-        int accountId = addAccount(email, username, password, roleId, status);
-        if (accountId <= 0) {
-            System.err.println("Failed to add account for email: " + email);
-            return false;
-        }
-
-        // Thêm thông tin chi tiết tùy theo vai trò
-        boolean detailsAdded = false;
-        if (roleId == 4) { // Doctor
-            detailsAdded = addDoctor(accountId, fullName, address, dob, gender, phoneNumber, imageURL, specializationId, doctorLevelId);
-        } else if (roleId == 3 || roleId == 5) { // Manager hoặc Receptionist
-            detailsAdded = addStaff(accountId, fullName, address, dob, gender, phoneNumber, imageURL);
-        } else {
-            System.err.println("Invalid roleId: " + roleId);
-            return false;
-        }
-
-        if (!detailsAdded) {
-            System.err.println("Failed to add details for accountId: " + accountId);
-            return false;
-        }
-
-        return true;
-    }
-
-    // Lấy tất cả vai trò
-    public List<Role> getAllRoles() {
-        List<Role> roles = new ArrayList<>();
-        String sql = "SELECT id, name FROM roles";
-        try (PreparedStatement ps = connection.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) {
-                Role role = new Role();
-                role.setId(rs.getInt("id"));
-                role.setRoleName(rs.getString("name"));
-                roles.add(role);
-            }
-        } catch (Exception e) {
-            System.err.println("Error while fetching roles: " + e.getMessage());
-        }
-        return roles;
-    }
-
-    // Lấy tất cả tài khoản
-    public List<Account> getAllAccounts() {
-        List<Account> accounts = new ArrayList<>();
-        String sql = "SELECT a.id, a.email, a.username, a.status, r.id as roleId "
-                + "FROM accounts a "
-                + "JOIN roles r ON a.role_id = r.id "
-                + "LEFT JOIN staffs s ON a.id = s.account_id "
-                + "LEFT JOIN doctors d ON a.id = d.account_id "
-                + "LEFT JOIN patients p ON a.id = p.account_id WHERE r.id != 1";
-        try (PreparedStatement ps = connection.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) {
-                Account account = new Account();
-                account.setId(rs.getInt("id"));
-                account.setEmail(rs.getString("email"));
-                account.setUsername(rs.getString("username"));
-                account.setRoleId(rs.getInt("roleId"));
-                account.setStatus(rs.getBoolean("status"));
-                accounts.add(account);
-            }
-        } catch (Exception e) {
-            System.err.println("Error while fetching all accounts: " + e.getMessage());
-        }
-        return accounts;
-    }
-
-    // Lấy chi tiết tài khoản cơ bản
-    public Account getAccountDetails(int accountId) {
-        String sql = "SELECT a.id, a.email, a.username, a.password, a.role_id, a.reset_token, a.reset_token_expiry, a.status "
-                + "FROM accounts a "
-                + "WHERE a.id = ?";
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setInt(1, accountId);
+            ps.setInt(1, id);
+            ps.setInt(2, id);
+            ps.setInt(3, id);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    Account account = new Account();
-                    account.setId(rs.getInt("id"));
-                    account.setEmail(rs.getString("email"));
-                    account.setUsername(rs.getString("username"));
-                    account.setPassword(rs.getString("password"));
-                    account.setRoleId(rs.getInt("role_id"));
-                    account.setResetToken(rs.getString("reset_token"));
-                    account.setResetTokenExpiry(rs.getTimestamp("reset_token_expiry") != null
-                            ? rs.getTimestamp("reset_token_expiry").toLocalDateTime() : null);
-                    account.setStatus(rs.getBoolean("status"));
-                    return account;
-                }
-            }
-        } catch (Exception e) {
-            System.err.println("Error while fetching account details for accountId " + accountId + ": " + e.getMessage());
-        }
-        return null;
-    }
-
-    // Lấy chi tiết tài khoản theo vai trò
-    public Object getAccountDetailsByRole(int accountId) {
-        String sql = "SELECT a.role_id, "
-                + "d.id AS doctor_id, d.account_id AS doctor_account_id, d.full_name AS doctor_fullName, d.address AS doctor_address, d.date_of_birth AS doctor_dob, d.gender AS doctor_gender, d.phone_number AS doctor_phone, d.imageURL AS doctor_imageURL, d.doctor_level_id, d.specialization_id, "
-                + "p.id AS patient_id, p.full_name AS patient_fullName, p.address AS patient_address, p.date_of_birth AS patient_dob, p.gender AS patient_gender, p.phone_number AS patient_phone, p.imageURL AS patient_imageURL, p.identity_number, p.insurance_number, "
-                + "s.id AS staff_id, s.account_id AS staff_account_id, s.full_name AS staff_fullName, s.address AS staff_address, s.date_of_birth AS staff_dob, s.gender AS staff_gender, s.phone_number AS staff_phone, s.imageURL AS staff_imageURL "
-                + "FROM accounts a "
-                + "LEFT JOIN doctors d ON a.id = d.account_id "
-                + "LEFT JOIN patients p ON a.id = p.account_id "
-                + "LEFT JOIN staffs s ON a.id = s.account_id "
-                + "WHERE a.id = ?";
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setInt(1, accountId);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    int roleId = rs.getInt("role_id");
-                    if (roleId == 4) { // Doctor
+                    String role = rs.getString("role");
+                    if ("Manager".equals(role) || "Receptionist".equals(role)) {
+                        User user = new User();
+                        user.setId(rs.getInt("id"));
+                        user.setUsername(rs.getString("username"));
+                        user.setEmail(rs.getString("email"));
+                        user.setRole(role);
+                        user.setStatus(rs.getBoolean("status"));
+                        return user;
+                    } else if ("Doctor".equals(role)) {
                         Doctor doctor = new Doctor();
-                        doctor.setId(rs.getInt("doctor_id"));
-                        doctor.setAccountId(rs.getInt("doctor_account_id"));
-                        doctor.setFullName(rs.getString("doctor_fullName"));
-                        doctor.setAddress(rs.getString("doctor_address"));
-                        doctor.setDob(rs.getTimestamp("doctor_dob") != null
-                                ? rs.getTimestamp("doctor_dob").toLocalDateTime() : null);
-                        doctor.setGender(rs.getString("doctor_gender"));
-                        doctor.setPhoneNumber(rs.getString("doctor_phone"));
-                        doctor.setImageURL(rs.getString("doctor_imageURL"));
-                        doctor.setDoctorLevelId(rs.getInt("doctor_level_id"));
-                        doctor.setSpecializationId(rs.getInt("specialization_id"));
+                        doctor.setId(rs.getInt("id"));
+                        doctor.setUsername(rs.getString("username"));
+                        doctor.setEmail(rs.getString("email"));
+                        doctor.setRole(role);
+                        doctor.setStatus(rs.getBoolean("status"));
                         return doctor;
-                    } else if (roleId == 2) { // Patient
+                    } else if ("Patient".equals(role)) {
                         Patient patient = new Patient();
-                        patient.setId(rs.getInt("patient_id"));
-                        patient.setFullName(rs.getString("patient_fullName"));
-                        patient.setAddress(rs.getString("patient_address"));
-                        patient.setDob(rs.getTimestamp("patient_dob") != null
-                                ? rs.getTimestamp("patient_dob").toLocalDateTime() : null);
-                        patient.setGender(rs.getString("patient_gender"));
-                        patient.setPhoneNumber(rs.getString("patient_phone"));
-                        patient.setImageURL(rs.getString("patient_imageURL"));
-                        patient.setIdentityNumber(rs.getString("identity_number"));
-                        patient.setInsuranceNumber(rs.getString("insurance_number"));
+                        patient.setId(rs.getInt("id"));
+                        patient.setUserName(rs.getString("username"));
+                        patient.setEmail(rs.getString("email"));
+                        patient.setRole(role);
+                        patient.setStatus(rs.getBoolean("status"));
                         return patient;
-                    } else if (roleId == 3 || roleId == 5) { // Manager or Receptionist
-                        Staff staff = new Staff();
-                        staff.setId(rs.getInt("staff_id"));
-                        staff.setAccountId(rs.getInt("staff_account_id"));
-                        staff.setFullName(rs.getString("staff_fullName"));
-                        staff.setAddress(rs.getString("staff_address"));
-                        staff.setDob(rs.getTimestamp("staff_dob") != null
-                                ? rs.getTimestamp("staff_dob").toLocalDateTime() : null);
-                        staff.setGender(rs.getString("staff_gender"));
-                        staff.setPhoneNumber(rs.getString("staff_phone"));
-                        staff.setImageURL(rs.getString("staff_imageURL"));
-                        return staff;
                     }
                 }
             }
         } catch (Exception e) {
-            System.err.println("Error while fetching account details by role for accountId " + accountId + ": " + e.getMessage());
+            System.err.println("Lỗi khi lấy thông tin tài khoản: " + e.getMessage());
         }
         return null;
     }
 
-    // Đếm tổng số tài khoản (loại bỏ Admin)
-    public int getTotalAccounts() {
-        String sql = "SELECT COUNT(*) FROM accounts a WHERE a.role_id != (SELECT id FROM roles WHERE name = 'Admin')";
-        try (PreparedStatement ps = connection.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
-            if (rs.next()) {
-                return rs.getInt(1);
-            }
-        } catch (Exception e) {
-            System.err.println("Error while counting total accounts: " + e.getMessage());
-        }
-        return 0;
-    }
-
-    // Lấy tài khoản theo trang
-    public List<Account> getAccountsByPage(int page, int pageSize) {
-        List<Account> accounts = new ArrayList<>();
-        int offset = (page - 1) * pageSize;
-        String sql = "SELECT a.id, a.email, a.username, a.status, a.role_id "
-                + "FROM accounts a "
-                + "WHERE a.role_id != (SELECT id FROM roles WHERE name = 'Admin') "
-                + "ORDER BY a.id "
-                + "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setInt(1, offset);
-            ps.setInt(2, pageSize);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    Account account = new Account();
-                    account.setId(rs.getInt("id"));
-                    account.setEmail(rs.getString("email"));
-                    account.setUsername(rs.getString("username"));
-                    account.setRoleId(rs.getInt("role_id"));
-                    account.setStatus(rs.getBoolean("status"));
-                    accounts.add(account);
+    // Lấy chi tiết của tài khoản dựa trên id và role
+    public Object getAccountDetailById(int id) {
+        String sql = "";
+        try {
+            // Lấy role trước để xác định bảng chi tiết
+            String roleSql = "SELECT role FROM users WHERE id = ? UNION SELECT role FROM doctor WHERE id = ? UNION SELECT role FROM patient WHERE id = ? LIMIT 1";
+            String role = null;
+            try (PreparedStatement rolePs = connection.prepareStatement(roleSql)) {
+                rolePs.setInt(1, id);
+                rolePs.setInt(2, id);
+                rolePs.setInt(3, id);
+                try (ResultSet rs = rolePs.executeQuery()) {
+                    if (rs.next()) {
+                        role = rs.getString("role");
+                    }
                 }
             }
-        } catch (Exception e) {
-            System.err.println("Error while fetching accounts by page: page=" + page + ", pageSize=" + pageSize + ", error: " + e.getMessage());
-        }
-        return accounts;
-    }
 
-    // Đếm tổng số tài khoản theo email
-    public int getTotalAccountsByEmail(String email) {
-        String sql = "SELECT COUNT(*) FROM accounts a WHERE a.role_id != (SELECT id FROM roles WHERE name = 'Admin')"
-                + " AND a.email LIKE ?";
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setString(1, "%" + email + "%");
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1);
+            if ("Manager".equals(role) || "Receptionist".equals(role)) {
+                sql = "SELECT fullName, address, dob, gender, phoneNumber FROM users WHERE id = ?";
+                try (PreparedStatement ps = connection.prepareStatement(sql)) {
+                    ps.setInt(1, id);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (rs.next()) {
+                            User user = new User();
+                            user.setFullName(rs.getString("fullName"));
+                            user.setAddress(rs.getString("address"));
+                            java.sql.Date sqlDate = rs.getDate("dob");
+                            user.setDob(sqlDate != null ? sqlDate.toLocalDate() : null); // Chuyển đổi sang LocalDate
+                            user.setGender(rs.getString("gender"));
+                            user.setPhoneNumber(rs.getString("phoneNumber"));
+                            return user;
+                        }
+                    }
                 }
-            }
-        } catch (Exception e) {
-            System.err.println("Error while counting accounts by email: email=" + email + ", error: " + e.getMessage());
-        }
-        return 0;
-    }
-
-    // Lấy tài khoản theo trang với tìm kiếm theo email
-    public List<Account> getAccountsByPageWithSearch(int page, int pageSize, String email) {
-        List<Account> accounts = new ArrayList<>();
-        int offset = (page - 1) * pageSize;
-        String sql = "SELECT a.id, a.email, a.username, a.status, a.role_id "
-                + "FROM accounts a "
-                + "WHERE a.role_id != (SELECT id FROM roles WHERE name = 'Admin') "
-                + "AND a.email LIKE ? "
-                + "ORDER BY a.id "
-                + "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setString(1, "%" + email + "%");
-            ps.setInt(2, offset);
-            ps.setInt(3, pageSize);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    Account account = new Account();
-                    account.setId(rs.getInt("id"));
-                    account.setEmail(rs.getString("email"));
-                    account.setUsername(rs.getString("username"));
-                    account.setRoleId(rs.getInt("role_id"));
-                    account.setStatus(rs.getBoolean("status"));
-                    accounts.add(account);
+            } else if ("Doctor".equals(role)) {
+                sql = "SELECT d.fullName, d.address, d.dob, d.gender, d.phoneNumber, s.id AS specializationId, s.name AS specializationName, dl.id AS doctorLevelId, dl.name AS doctorLevelName "
+                        + "FROM doctor d "
+                        + "LEFT JOIN specialization s ON d.specializationId = s.id "
+                        + "LEFT JOIN doctorLevel dl ON d.doctorLevelId = dl.id "
+                        + "WHERE d.id = ?";
+                try (PreparedStatement ps = connection.prepareStatement(sql)) {
+                    ps.setInt(1, id);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (rs.next()) {
+                            Doctor doctor = new Doctor();
+                            doctor.setFullName(rs.getString("fullName"));
+                            doctor.setAddress(rs.getString("address"));
+                            java.sql.Date sqlDate = rs.getDate("dob");
+                            doctor.setDob(sqlDate != null ? sqlDate.toLocalDate() : null); // Chuyển đổi sang LocalDate
+                            doctor.setGender(rs.getString("gender"));
+                            doctor.setPhoneNumber(rs.getString("phoneNumber"));
+                            doctor.setSpecialization(new Specialization(rs.getInt("specializationId"), rs.getString("specializationName")));
+                            doctor.setDoctorLevel(new DoctorLevel(rs.getInt("doctorLevelId"), rs.getString("doctorLevelName")));
+                            return doctor;
+                        }
+                    }
                 }
-            }
-        } catch (Exception e) {
-            System.err.println("Error while fetching accounts by page with search: page=" + page + ", pageSize=" + pageSize + ", email=" + email + ", error: " + e.getMessage());
-        }
-        return accounts;
-    }
-
-    // Đếm tổng số tài khoản với bộ lọc
-    public int getTotalAccountsWithFilter(String email, Integer roleId, Boolean status) {
-        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM accounts a WHERE a.role_id != (SELECT id FROM roles WHERE name = 'Admin')");
-        List<Object> params = new ArrayList<>();
-        if (email != null && !email.isEmpty()) {
-            sql.append(" AND a.email LIKE ?");
-            params.add("%" + email + "%");
-        }
-        if (roleId != null) {
-            sql.append(" AND a.role_id = ?");
-            params.add(roleId);
-        }
-        if (status != null) {
-            sql.append(" AND a.status = ?");
-            params.add(status ? 1 : 0);
-        }
-        System.out.println("Executing count SQL: " + sql.toString() + " with params: " + params); // Thêm log SQL
-        try (PreparedStatement ps = connection.prepareStatement(sql.toString())) {
-            for (int i = 0; i < params.size(); i++) {
-                ps.setObject(i + 1, params.get(i));
-            }
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    int count = rs.getInt(1);
-                    System.out.println("Total accounts count: " + count); // Thêm log số lượng
-                    return count;
-                }
-            }
-        } catch (Exception e) {
-            System.err.println("Error while counting accounts with filter: email=" + email + ", roleId=" + roleId + ", status=" + status + ", error: " + e.getMessage());
-        }
-        return 0;
-    }
-
-    // Lấy tài khoản theo trang với bộ lọc
-    public List<Account> getAccountsByPageWithFilter(int page, int pageSize, String email, Integer roleId, Boolean status) {
-        List<Account> accounts = new ArrayList<>();
-        int offset = (page - 1) * pageSize;
-        StringBuilder sql = new StringBuilder(
-                "SELECT a.id, a.email, a.username, a.status, a.role_id "
-                + "FROM accounts a "
-                + "WHERE a.role_id != (SELECT id FROM roles WHERE name = 'Admin') ");
-        List<Object> params = new ArrayList<>();
-        if (email != null && !email.isEmpty()) {
-            sql.append(" AND a.email LIKE ?");
-            params.add("%" + email + "%");
-        }
-        if (roleId != null) {
-            sql.append(" AND a.role_id = ?");
-            params.add(roleId);
-        }
-        if (status != null) {
-            sql.append(" AND a.status = ?");
-            params.add(status ? 1 : 0);
-        }
-        sql.append(" ORDER BY a.id OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
-        params.add(offset);
-        params.add(pageSize);
-        System.out.println("Executing SQL: " + sql.toString() + " with params: " + params); // Thêm log SQL
-        try (PreparedStatement ps = connection.prepareStatement(sql.toString())) {
-            for (int i = 0; i < params.size(); i++) {
-                ps.setObject(i + 1, params.get(i));
-            }
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    Account account = new Account();
-                    account.setId(rs.getInt("id"));
-                    account.setEmail(rs.getString("email"));
-                    account.setUsername(rs.getString("username"));
-                    account.setRoleId(rs.getInt("role_id"));
-                    account.setStatus(rs.getBoolean("status"));
-                    accounts.add(account);
-                    System.out.println("Account fetched: ID=" + account.getId() + ", RoleID=" + account.getRoleId()); // Thêm log từng tài khoản
-                }
-            }
-        } catch (Exception e) {
-            System.err.println("Error while fetching accounts with filter: page=" + page + ", pageSize=" + pageSize + ", email=" + email + ", roleId=" + roleId + ", status=" + status + ", error: " + e.getMessage());
-        }
-        System.out.println("Total accounts fetched: " + accounts.size()); // Thêm log tổng số tài khoản
-        return accounts;
-    }
-
-    // Lấy danh sách Doctor Levels
-    public List<DoctorLevel> getDoctorLevels() {
-        List<DoctorLevel> levels = new ArrayList<>();
-        String sql = "SELECT id, level_name, examination_fee FROM doctor_levels";
-        try (PreparedStatement ps = connection.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) {
-                DoctorLevel level = new DoctorLevel();
-                level.setId(rs.getInt("id"));
-                level.setLevelName(rs.getString("level_name"));
-                level.setExaminationFee(rs.getDouble("examination_fee"));
-                levels.add(level);
-            }
-        } catch (Exception e) {
-            System.err.println("Error while fetching doctor levels: " + e.getMessage());
-        }
-        return levels;
-    }
-
-    // Lấy danh sách Specializations
-    public List<Specialization> getSpecializations() {
-        List<Specialization> specs = new ArrayList<>();
-        String sql = "SELECT id, name, description FROM specializations";
-        try (PreparedStatement ps = connection.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) {
-                Specialization spec = new Specialization();
-                spec.setId(rs.getInt("id"));
-                spec.setName(rs.getString("name"));
-                spec.setDescription(rs.getString("description"));
-                specs.add(spec);
-            }
-        } catch (Exception e) {
-            System.err.println("Error while fetching specializations: " + e.getMessage());
-        }
-        return specs;
-    }
-
-    // Cập nhật tài khoản
-    public boolean updateAccount(int accountId, String username, String email, boolean status) {
-        String sql = "UPDATE accounts SET username = ?, email = ?, status = ? WHERE id = ?";
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            if (!accountExists(accountId)) {
-                System.err.println("Account does not exist for accountId: " + accountId);
-                return false;
-            }
-            ps.setString(1, username);
-            ps.setString(2, email);
-            ps.setBoolean(3, status);
-            ps.setInt(4, accountId);
-            int rowsAffected = ps.executeUpdate();
-            if (rowsAffected == 0) {
-                System.err.println("No rows updated in accounts for accountId: " + accountId);
-            }
-            return rowsAffected > 0;
-        } catch (Exception e) {
-            System.err.println("Error while updating account for accountId " + accountId + ": " + e.getMessage());
-            return false;
-        }
-    }
-
-    // Cập nhật thông tin Staff
-    public boolean updateStaff(int accountId, String fullName, String address, LocalDateTime dob, String gender, String phoneNumber, String imageURL) {
-        // Kiểm tra xem bản ghi có tồn tại trong bảng staffs không
-        if (staffExists(accountId)) {
-            // Nếu tồn tại, thực hiện UPDATE
-            String sql = "UPDATE staffs SET full_name = ?, address = ?, date_of_birth = ?, gender = ?, phone_number = ?, imageURL = ? WHERE account_id = ?";
-            try (PreparedStatement ps = connection.prepareStatement(sql)) {
-                ps.setString(1, fullName);
-                ps.setString(2, address);
-                ps.setObject(3, dob);
-                ps.setString(4, gender);
-                ps.setString(5, phoneNumber);
-                ps.setString(6, imageURL);
-                ps.setInt(7, accountId);
-                int rowsAffected = ps.executeUpdate();
-                if (rowsAffected == 0) {
-                    System.err.println("No rows updated in staffs for accountId: " + accountId);
-                }
-                return rowsAffected > 0;
-            } catch (Exception e) {
-                System.err.println("Error while updating staff for accountId " + accountId + ": " + e.getMessage());
-                return false;
-            }
-        } else {
-            // Nếu không tồn tại, thực hiện INSERT
-            return addStaff(accountId, fullName, address, dob, gender, phoneNumber, imageURL);
-        }
-    }
-
-    // Cập nhật thông tin Doctor
-    public boolean updateDoctor(int accountId, String fullName, String address, LocalDateTime dob, String gender, String phoneNumber, String imageURL, int doctorLevelId, int specializationId) {
-        // Kiểm tra xem bản ghi có tồn tại trong bảng doctors không
-        if (doctorExists(accountId)) {
-            // Nếu tồn tại, thực hiện UPDATE
-            String sql = "UPDATE doctors SET full_name = ?, address = ?, date_of_birth = ?, gender = ?, phone_number = ?, imageURL = ?, doctor_level_id = ?, specialization_id = ? WHERE account_id = ?";
-            try (PreparedStatement ps = connection.prepareStatement(sql)) {
-                ps.setString(1, fullName);
-                ps.setString(2, address);
-                ps.setObject(3, dob);
-                ps.setString(4, gender);
-                ps.setString(5, phoneNumber);
-                ps.setString(6, imageURL);
-                ps.setInt(7, doctorLevelId);
-                ps.setInt(8, specializationId);
-                ps.setInt(9, accountId);
-                int rowsAffected = ps.executeUpdate();
-                if (rowsAffected == 0) {
-                    System.err.println("No rows updated in doctors for accountId: " + accountId);
-                }
-                return rowsAffected > 0;
-            } catch (Exception e) {
-                System.err.println("Error while updating doctor for accountId " + accountId + ": " + e.getMessage());
-                return false;
-            }
-        } else {
-            // Nếu không tồn tại, thực hiện INSERT
-            return addDoctor(accountId, fullName, address, dob, gender, phoneNumber, imageURL, specializationId, doctorLevelId);
-        }
-    }
-
-    // Thay đổi trạng thái tài khoản
-    public boolean changeAccountStatus(int accountId, boolean newStatus) {
-        String sql = "UPDATE accounts SET status = ? WHERE id = ?";
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setBoolean(1, newStatus);
-            ps.setInt(2, accountId);
-            int rowsAffected = ps.executeUpdate();
-            System.out.println("changeAccountStatus - accountId: " + accountId + ", newStatus: " + newStatus + ", Rows affected: " + rowsAffected);
-            return rowsAffected > 0;
-        } catch (Exception e) {
-            System.err.println("Error while changing account status for accountId " + accountId + ": " + e.getMessage());
-            return false;
-        }
-    }
-
-    // Xác thực người dùng
-    public boolean authenticate(String email, String inputPassword) {
-        String sql = "SELECT password FROM accounts WHERE email = ?";
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setString(1, email);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    String storedHash = rs.getString("password");
-                    return BCrypt.checkpw(inputPassword, storedHash);
-                }
-            }
-        } catch (Exception e) {
-            System.err.println("Error while authenticating user with email " + email + ": " + e.getMessage());
-        }
-        return false;
-    }
-
-    // Di chuyển mật khẩu plain text sang dạng mã hóa
-    public void migratePasswords() {
-        String sqlSelect = "SELECT id, password FROM accounts";
-        String sqlUpdate = "UPDATE accounts SET password = ? WHERE id = ?";
-        try (PreparedStatement psSelect = connection.prepareStatement(sqlSelect); ResultSet rs = psSelect.executeQuery()) {
-            while (rs.next()) {
-                int id = rs.getInt("id");
-                String plainPassword = rs.getString("password");
-                if (!plainPassword.startsWith("$2a$")) { // Kiểm tra nếu chưa mã hóa
-                    String hashedPassword = BCrypt.hashpw(plainPassword, BCrypt.gensalt());
-                    try (PreparedStatement psUpdate = connection.prepareStatement(sqlUpdate)) {
-                        psUpdate.setString(1, hashedPassword);
-                        psUpdate.setInt(2, id);
-                        psUpdate.executeUpdate();
+            } else if ("Patient".equals(role)) {
+                sql = "SELECT fullName, address, dob, gender, phoneNumber, identityNumber, insuranceNumber FROM patient WHERE id = ?";
+                try (PreparedStatement ps = connection.prepareStatement(sql)) {
+                    ps.setInt(1, id);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (rs.next()) {
+                            Patient patient = new Patient();
+                            patient.setFullName(rs.getString("fullName"));
+                            patient.setAddress(rs.getString("address"));
+                            java.sql.Date sqlDate = rs.getDate("dob");
+                            patient.setDob(sqlDate != null ? sqlDate.toLocalDate() : null); // Chuyển đổi sang LocalDate
+                            patient.setGender(rs.getString("gender"));
+                            patient.setPhoneNumber(rs.getString("phoneNumber"));
+                            patient.setIdentityNumber(rs.getString("identityNumber"));
+                            patient.setInsuranceNumber(rs.getString("insuranceNumber"));
+                            return patient;
+                        }
                     }
                 }
             }
         } catch (Exception e) {
-            System.err.println("Error while migrating passwords: " + e.getMessage());
+            System.err.println("Lỗi khi lấy chi tiết tài khoản: " + e.getMessage());
+        }
+        return null;
+    }
+
+    // Thêm phương thức để lấy danh sách specialization
+    public List<Specialization> getSpecializations() {
+        List<Specialization> specializations = new ArrayList<>();
+        String sql = "SELECT id, name FROM specialization";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    specializations.add(new Specialization(rs.getInt("id"), rs.getString("name")));
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Lỗi khi lấy danh sách chuyên khoa: " + e.getMessage());
+        }
+        return specializations;
+    }
+
+    // Thêm phương thức để lấy danh sách doctorLevel
+    public List<DoctorLevel> getDoctorLevels() {
+        List<DoctorLevel> doctorLevels = new ArrayList<>();
+        String sql = "SELECT id, name FROM doctorLevel";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    doctorLevels.add(new DoctorLevel(rs.getInt("id"), rs.getString("name")));
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Lỗi khi lấy danh sách trình độ: " + e.getMessage());
+        }
+        return doctorLevels;
+    }
+
+    // Thêm phương thức để thêm tài khoản
+    public boolean addAccount(User user) {
+        String sql = "INSERT INTO users (email, username, password, role, fullName, dob, gender, address, phoneNumber, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        try (Connection conn = super.getConnection(); PreparedStatement ps = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
+            System.out.println("Executing SQL for User: " + sql);
+            System.out.println("Parameters - Email: " + user.getEmail() + ", Username: " + user.getUsername()
+                    + ", Password: " + user.getPassword() + ", Role: " + user.getRole()
+                    + ", FullName: " + user.getFullName() + ", DOB: " + user.getDob()
+                    + ", Gender: " + user.getGender() + ", Address: " + user.getAddress()
+                    + ", Phone: " + user.getPhoneNumber() + ", Status: " + user.isStatus());
+            ps.setString(1, user.getEmail());
+            ps.setString(2, user.getUsername());
+            ps.setString(3, user.getPassword());
+            ps.setString(4, user.getRole());
+            ps.setString(5, user.getFullName());
+            ps.setObject(6, user.getDob());
+            ps.setString(7, user.getGender());
+            ps.setString(8, user.getAddress());
+            ps.setString(9, user.getPhoneNumber());
+            ps.setBoolean(10, user.isStatus());
+            int rowsAffected = ps.executeUpdate();
+            if (rowsAffected > 0) {
+                try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
+                    if (generatedKeys.next()) {
+                        user.setId(generatedKeys.getInt(1));
+                        System.out.println("Successfully inserted User with ID: " + user.getId());
+                    }
+                }
+                return true;
+            } else {
+                System.out.println("No rows affected for User insertion.");
+            }
+            return false;
+        } catch (Exception e) {
+            System.err.println("Lỗi khi thêm tài khoản User: " + e.getMessage());
+            return false;
         }
     }
 
-    public static void main(String[] args) {
-        AccountDAO dao = new AccountDAO();
-        LocalDateTime dob = LocalDateTime.of(1990, 1, 1, 0, 0);
-        boolean success = dao.addDoctor(
-                1, // Giả sử accountId đã tồn tại
-                "Doctor Test",
-                "123 Doctor St",
-                dob,
-                "Male",
-                "0987654321",
-                "doctor.jpg",
-                1, // specializationId
-                1 // doctorLevelId
-        );
-        System.out.println("Add doctor success: " + success);
+    public boolean addAccount(Doctor doctor) {
+        String sql = "INSERT INTO doctor (email, username, password, role, fullName, dob, gender, address, phoneNumber, specializationId, doctorLevelId, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        try (Connection conn = super.getConnection(); PreparedStatement ps = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
+            System.out.println("Executing SQL for Doctor: " + sql);
+            System.out.println("Parameters - Email: " + doctor.getEmail() + ", Username: " + doctor.getUsername()
+                    + ", Password: " + doctor.getPassword() + ", Role: " + doctor.getRole()
+                    + ", FullName: " + doctor.getFullName() + ", DOB: " + doctor.getDob()
+                    + ", Gender: " + doctor.getGender() + ", Address: " + doctor.getAddress()
+                    + ", Phone: " + doctor.getPhoneNumber() + ", SpecializationId: " + doctor.getSpecialization().getId()
+                    + ", DoctorLevelId: " + doctor.getDoctorLevel().getId() + ", Status: " + doctor.isStatus());
+            ps.setString(1, doctor.getEmail());
+            ps.setString(2, doctor.getUsername());
+            ps.setString(3, doctor.getPassword());
+            ps.setString(4, doctor.getRole());
+            ps.setString(5, doctor.getFullName());
+            ps.setObject(6, doctor.getDob());
+            ps.setString(7, doctor.getGender());
+            ps.setString(8, doctor.getAddress());
+            ps.setString(9, doctor.getPhoneNumber());
+            ps.setInt(10, doctor.getSpecialization().getId());
+            ps.setInt(11, doctor.getDoctorLevel().getId());
+            ps.setBoolean(12, doctor.isStatus());
+            int rowsAffected = ps.executeUpdate();
+            if (rowsAffected > 0) {
+                try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
+                    if (generatedKeys.next()) {
+                        doctor.setId(generatedKeys.getInt(1));
+                        System.out.println("Successfully inserted Doctor with ID: " + doctor.getId());
+                    }
+                }
+                return true;
+            } else {
+                System.out.println("No rows affected for Doctor insertion.");
+            }
+            return false;
+        } catch (Exception e) {
+            System.err.println("Lỗi khi thêm tài khoản Doctor: " + e.getMessage());
+            return false;
+        }
     }
-
+    // Hàm main để test phương thức getAccounts, lấy tất cả tài khoản
+//    public static void main(String[] args) {
+//        AccountDAO accountDAO = new AccountDAO();
+//
+//        // Kiểm tra kết nối database
+//        if (accountDAO.connection != null) {
+//            System.out.println("Kết nối database thành công!");
+//        } else {
+//            System.out.println("Kết nối database thất bại!");
+//            return;
+//        }
+//
+//        try {
+//            // Test phương thức getAccounts để lấy tất cả tài khoản
+//            String email = null; // Không lọc theo email
+//            String role = "all"; // Lấy tất cả vai trò
+//            String status = "all"; // Lấy tất cả trạng thái
+//
+//            System.out.println("Test lấy tất cả tài khoản:");
+//            List<Object> accounts = accountDAO.getAccounts(email, role, status);
+//
+//            if (accounts.isEmpty()) {
+//                System.out.println("Không có tài khoản nào trong database.");
+//            } else {
+//                for (Object account : accounts) {
+//                    if (account instanceof User) {
+//                        User user = (User) account;
+//                        System.out.printf("ID: %d, Username: %s, Email: %s, Role: %s, Status: %s%n",
+//                                user.getId(), user.getUsername(), user.getEmail(), user.getRole(),
+//                                user.isStatus() ? "Hoạt động" : "Vô hiệu hóa");
+//                    } else if (account instanceof Doctor) {
+//                        Doctor doctor = (Doctor) account;
+//                        System.out.printf("ID: %d, Username: %s, Email: %s, Role: %s, Status: %s%n",
+//                                doctor.getId(), doctor.getUsername(), doctor.getEmail(), doctor.getRole(),
+//                                doctor.isStatus() ? "Hoạt động" : "Vô hiệu hóa");
+//                    } else if (account instanceof Patient) {
+//                        Patient patient = (Patient) account;
+//                        System.out.printf("ID: %d, Username: %s, Email: %s, Role: %s, Status: %s%n",
+//                                patient.getId(), patient.getUserName(), patient.getEmail(), patient.getRole(),
+//                                patient.isStatus() ? "Hoạt động" : "Vô hiệu hóa");
+//                    }
+//                }
+//            }
+//
+//            // Test số lượng tài khoản
+//            int totalAccounts = accountDAO.getTotalAccounts(email, role, status);
+//            System.out.println("Tổng số tài khoản: " + totalAccounts);
+//
+//        } catch (Exception e) {
+//            System.err.println("Lỗi khi truy vấn cơ sở dữ liệu: " + e.getMessage());
+//            e.printStackTrace();
+//        }
+//        
+//    }
 }

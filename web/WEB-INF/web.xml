@@ -36,6 +36,10 @@
         <servlet-name>ReceptionController</servlet-name>
         <servlet-class>controller.ReceptionController</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>AccountManagementServlet</servlet-name>
+        <servlet-class>controller.AccountManagementServlet</servlet-class>
+    </servlet>
     <servlet-mapping>
         <servlet-name>HomeServlet</servlet-name>
         <url-pattern>/home</url-pattern>
@@ -72,5 +76,10 @@
     <servlet-mapping>
         <servlet-name>ReceptionController</servlet-name>
         <url-pattern>/reception</url-pattern>
+    </servlet-mapping>
+    
+    <servlet-mapping>
+        <servlet-name>AccountManagementServlet</servlet-name>
+        <url-pattern>/AccountManagementServlet</url-pattern>
     </servlet-mapping>
 </web-app>

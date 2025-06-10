@@ -5,13 +5,15 @@
 package model;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 
 /**
  *
  * @author maiki
  */
-public class Doctor {
+public class User {
+
     private int id;
     private String imageURL;
     private String email;
@@ -24,13 +26,11 @@ public class Doctor {
     private String address;
     private String phoneNumber;
     private boolean status;
-    private Specialization specialization;   
-    private DoctorLevel doctorLevel; 
 
-    public Doctor() {
+    public User() {
     }
 
-    public Doctor(int id, String imageURL, String email, String username, String password, String role, String fullName, LocalDate dob, String gender, String address, String phoneNumber, boolean status, Specialization specialization, DoctorLevel doctorLevel) {
+    public User(int id, String imageURL, String email, String username, String password, String role, String fullName, LocalDate dob, String gender, String address, String phoneNumber, boolean status) {
         this.id = id;
         this.imageURL = imageURL;
         this.email = email;
@@ -43,8 +43,6 @@ public class Doctor {
         this.address = address;
         this.phoneNumber = phoneNumber;
         this.status = status;
-        this.specialization = specialization;
-        this.doctorLevel = doctorLevel;
     }
 
     public int getId() {
@@ -143,25 +141,13 @@ public class Doctor {
         this.status = status;
     }
 
-    public Specialization getSpecialization() {
-        return specialization;
-    }
-
-    public void setSpecialization(Specialization specialization) {
-        this.specialization = specialization;
-    }
-
-    public DoctorLevel getDoctorLevel() {
-        return doctorLevel;
-    }
-
-    public void setDoctorLevel(DoctorLevel doctorLevel) {
-        this.doctorLevel = doctorLevel;
-    }
-
     @Override
     public String toString() {
-        return "Doctor{" + "id=" + id + ", imageURL=" + imageURL + ", email=" + email + ", username=" + username + ", password=" + password + ", role=" + role + ", fullName=" + fullName + ", dob=" + dob + ", gender=" + gender + ", address=" + address + ", phoneNumber=" + phoneNumber + ", status=" + status + ", specialization=" + specialization + ", doctorLevel=" + doctorLevel + '}';
+        return "User{" + "id=" + id + ", imageURL=" + imageURL + ", email=" + email + ", username=" + username + ", password=" + password + ", role=" + role + ", fullName=" + fullName + ", dob=" + dob + ", gender=" + gender + ", address=" + address + ", phoneNumber=" + phoneNumber + ", status=" + status + '}';
     }
+    
 
+    
+
+    
 }

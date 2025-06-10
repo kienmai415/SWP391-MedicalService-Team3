@@ -9,20 +9,26 @@ package model;
  * @author maiki
  */
 public class DoctorLevel {
-    
 
     private int id;
-    private String levelName;
+    private String name;
     private double examinationFee;
 
     public DoctorLevel() {
     }
 
-    public DoctorLevel(int id, String levelName, double examinationFee) {
+    public DoctorLevel(int id, String name, double examinationFee) {
         this.id = id;
-        this.levelName = levelName;
+        this.name = name;
         this.examinationFee = examinationFee;
     }
+
+    public DoctorLevel(int id, String name) {
+        this.id = id;
+        this.name = name;
+    }
+
+    
 
     public int getId() {
         return id;
@@ -32,12 +38,12 @@ public class DoctorLevel {
         this.id = id;
     }
 
-    public String getLevelName() {
-        return levelName;
+    public String getName() {
+        return name;
     }
 
-    public void setLevelName(String levelName) {
-        this.levelName = levelName;
+    public void setName(String name) {
+        this.name = name;
     }
 
     public double getExaminationFee() {
@@ -47,7 +53,11 @@ public class DoctorLevel {
     public void setExaminationFee(double examinationFee) {
         this.examinationFee = examinationFee;
     }
-    
+
+    @Override
+    public String toString() {
+        return "DoctorLevel{" + "id=" + id + ", name=" + name + ", examinationFee=" + examinationFee + '}';
+    }
+
+
 }
-
-
