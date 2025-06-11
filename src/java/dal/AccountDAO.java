@@ -480,7 +480,7 @@ public class AccountDAO extends DBContext {
 
     // Thêm phương thức để thêm tài khoản
     public boolean addAccount(User user) {
-        String sql = "INSERT INTO users (email, username, password, role, fullName, dob, gender, address, phoneNumber, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO users (email, username, password, role, fullName, dateOfBirth, gender, address, phoneNumber, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = super.getConnection(); PreparedStatement ps = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
             System.out.println("Executing SQL for User: " + sql);
             System.out.println("Parameters - Email: " + user.getEmail() + ", Username: " + user.getUsername()
@@ -518,7 +518,7 @@ public class AccountDAO extends DBContext {
     }
 
     public boolean addAccount(Doctor doctor) {
-        String sql = "INSERT INTO doctor (email, username, password, role, fullName, dob, gender, address, phoneNumber, specializationId, doctorLevelId, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO doctor (email, username, password, role, fullName, dateOfBirth, gender, address, phoneNumber, specializationId, doctorLevelId, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = super.getConnection(); PreparedStatement ps = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
             System.out.println("Executing SQL for Doctor: " + sql);
             System.out.println("Parameters - Email: " + doctor.getEmail() + ", Username: " + doctor.getUsername()
@@ -611,4 +611,56 @@ public class AccountDAO extends DBContext {
 //        }
 //        
 //    }
+    // Hàm main để test phương thức addAccount
+    public static void main(String[] args) {
+        AccountDAO accountDAO = new AccountDAO();
+
+        // Kiểm tra kết nối database
+        if (accountDAO.connection != null) {
+            System.out.println("Kết nối database thành công!");
+        } else {
+            System.out.println("Kết nối database thất bại!");
+            return;
+        }
+
+        try {
+            // Test thêm tài khoản Doctor
+            Doctor doctor = new Doctor();
+            doctor.setEmail("doctor@example.com");
+            doctor.setUsername("doctor");
+            doctor.setPassword("password123");
+            doctor.setRole("Doctor");
+            doctor.setFullName("Nguyen Van H");
+            doctor.setDob(LocalDate.of(1990, 1, 1));
+            doctor.setGender("Nam");
+            doctor.setAddress("Ha Noi");
+            doctor.setPhoneNumber("0901234567");
+            doctor.setStatus(true);
+            doctor.setSpecialization(new Specialization(1, "")); // Giả sử specializationId = 1
+            doctor.setDoctorLevel(new DoctorLevel(1, ""));      // Giả sử doctorLevelId = 1
+
+            boolean addResult = accountDAO.addAccount(doctor);
+            System.out.println("Thêm tài khoản Doctor thành công: " + addResult);
+
+            // Test thêm tài khoản User (Manager)
+            User user = new User();
+            user.setEmail("manager@example.com");
+            user.setUsername("manager");
+            user.setPassword("password123");
+            user.setRole("Manager");
+            user.setFullName("Tran Van I");
+            user.setDob(LocalDate.of(1985, 5, 15));
+            user.setGender("Nam");
+            user.setAddress("Ho Chi Minh");
+            user.setPhoneNumber("0912345678");
+            user.setStatus(true);
+
+            addResult = accountDAO.addAccount(user);
+            System.out.println("Thêm tài khoản Manager thành công: " + addResult);
+
+        } catch (Exception e) {
+            System.err.println("Lỗi khi test thêm tài khoản: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
 }

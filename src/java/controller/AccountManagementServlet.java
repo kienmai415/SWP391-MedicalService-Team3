@@ -157,10 +157,10 @@ public class AccountManagementServlet extends HttpServlet {
             String doctorLevelId = request.getParameter("doctorLevelId");
 
             System.out.println("Attempting to add account with role: " + role);
-            System.out.println("Details - Email: " + email + ", Username: " + username + ", Password: " + password +
-                    ", FullName: " + fullName + ", DOB: " + dobStr + ", Gender: " + gender +
-                    ", Address: " + address + ", Phone: " + phoneNumber +
-                    ", SpecializationId: " + specializationId + ", DoctorLevelId: " + doctorLevelId);
+            System.out.println("Details - Email: " + email + ", Username: " + username + ", Password: " + password
+                    + ", FullName: " + fullName + ", DOB: " + dobStr + ", Gender: " + gender
+                    + ", Address: " + address + ", Phone: " + phoneNumber
+                    + ", SpecializationId: " + specializationId + ", DoctorLevelId: " + doctorLevelId);
 
             AccountDAO accountDAO = new AccountDAO();
             boolean success = false;
@@ -209,34 +209,46 @@ public class AccountManagementServlet extends HttpServlet {
                     messageType = "success";
                 } else {
                     message = "Thêm tài khoản thất bại! Kiểm tra log.";
+                    // In stack trace để debug
+                    System.err.println("Add User failed. Stack trace:");
+                    new Exception().printStackTrace();
                 }
             } else if ("Doctor".equals(role)) {
-                if (specializationId != null && doctorLevelId != null) {
-                    Doctor doctor = new Doctor();
-                    doctor.setEmail(email);
-                    doctor.setUsername(username);
-                    doctor.setPassword(password);
-                    doctor.setRole(role);
-                    doctor.setFullName(fullName);
-                    doctor.setDob(dob);
-                    doctor.setGender(gender);
-                    doctor.setAddress(address);
-                    doctor.setPhoneNumber(phoneNumber);
-                    doctor.setStatus(true);
-                    doctor.setSpecialization(new Specialization(Integer.parseInt(specializationId), ""));
-                    doctor.setDoctorLevel(new DoctorLevel(Integer.parseInt(doctorLevelId), ""));
-                    success = accountDAO.addAccount(doctor);
-                    System.out.println("Add Doctor result: " + success);
-                    if (success) {
-                        message = "Thêm tài khoản Bác sĩ thành công!";
-                        messageType = "success";
+                if (specializationId != null && doctorLevelId != null && !specializationId.isEmpty() && !doctorLevelId.isEmpty()) {
+                    int specId = Integer.parseInt(specializationId);
+                    int levelId = Integer.parseInt(doctorLevelId);
+                    if (specId > 0 && levelId > 0) { // Kiểm tra ID hợp lệ
+                        Doctor doctor = new Doctor();
+                        doctor.setEmail(email);
+                        doctor.setUsername(username);
+                        doctor.setPassword(password);
+                        doctor.setRole(role);
+                        doctor.setFullName(fullName);
+                        doctor.setDob(dob);
+                        doctor.setGender(gender);
+                        doctor.setAddress(address);
+                        doctor.setPhoneNumber(phoneNumber);
+                        doctor.setStatus(true);
+                        doctor.setSpecialization(new Specialization(specId, "", "")); // Chỉ gán ID, name và description sẽ được lấy từ DB
+                        doctor.setDoctorLevel(new DoctorLevel(levelId, "", 0.0));   // Chỉ gán ID, name và fee sẽ được lấy từ DB
+                        success = accountDAO.addAccount(doctor);
+                        System.out.println("Add Doctor result: " + success);
+                        if (success) {
+                            message = "Thêm tài khoản Bác sĩ thành công!";
+                            messageType = "success";
+                        } else {
+                            message = "Thêm tài khoản thất bại! Kiểm tra log.";
+                            // In stack trace để debug
+                            System.err.println("Add Doctor failed. Stack trace:");
+                            new Exception().printStackTrace();
+                        }
                     } else {
-                        message = "Thêm tài khoản thất bại! Kiểm tra log.";
+                        System.out.println("SpecializationId or DoctorLevelId is invalid (0 or negative)!");
+                        message = "ID chuyên khoa hoặc trình độ không hợp lệ!";
                     }
                 } else {
-                    System.out.println("SpecializationId or DoctorLevelId is null!");
+                    System.out.println("SpecializationId or DoctorLevelId is null or empty!");
                     message = "Thiếu thông tin chuyên khoa hoặc trình độ!";
-                    messageType = "danger";
                 }
             }
 
@@ -247,10 +259,10 @@ public class AccountManagementServlet extends HttpServlet {
             String filterEmail = request.getParameter("filterEmail");
             String filterRole = request.getParameter("filterRole");
             String filterStatus = request.getParameter("filterStatus");
-            response.sendRedirect(request.getContextPath() + "/AccountManagementServlet?action=list&showSection=account-management" +
-                    (filterEmail != null ? "&filterEmail=" + filterEmail : "") +
-                    (filterRole != null ? "&filterRole=" + filterRole : "") +
-                    (filterStatus != null ? "&filterStatus=" + filterStatus : ""));
+            response.sendRedirect(request.getContextPath() + "/AccountManagementServlet?action=list&showSection=account-management"
+                    + (filterEmail != null ? "&filterEmail=" + filterEmail : "")
+                    + (filterRole != null ? "&filterRole=" + filterRole : "")
+                    + (filterStatus != null ? "&filterStatus=" + filterStatus : ""));
             return;
         }
 
