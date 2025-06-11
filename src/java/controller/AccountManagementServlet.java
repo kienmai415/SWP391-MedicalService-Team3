@@ -162,6 +162,16 @@ public class AccountManagementServlet extends HttpServlet {
                     + ", Address: " + address + ", Phone: " + phoneNumber
                     + ", SpecializationId: " + specializationId + ", DoctorLevelId: " + doctorLevelId);
 
+            // Validate các trường
+            String validationMessage = validateInput(username, email, password, fullName, dobStr, phoneNumber, role, specializationId, doctorLevelId);
+            if (validationMessage != null) {
+                HttpSession session = request.getSession();
+                session.setAttribute("message", validationMessage);
+                session.setAttribute("messageType", "danger");
+                response.sendRedirect(request.getContextPath() + "/admin/addaccount.jsp?showSection=add-account");
+                return;
+            }
+
             AccountDAO accountDAO = new AccountDAO();
             boolean success = false;
             String message = "";
@@ -171,6 +181,16 @@ public class AccountManagementServlet extends HttpServlet {
             try {
                 if (dobStr != null && !dobStr.isEmpty()) {
                     dob = LocalDate.parse(dobStr);
+                    // Kiểm tra ngày sinh không phải tương lai
+                    LocalDate currentDate = LocalDate.now(); // 02:00 AM +07, 12/06/2025
+                    if (dob.isAfter(currentDate)) {
+                        message = "Ngày sinh không được là tương lai!";
+                        HttpSession session = request.getSession();
+                        session.setAttribute("message", message);
+                        session.setAttribute("messageType", messageType);
+                        response.sendRedirect(request.getContextPath() + "/admin/addaccount.jsp?showSection=add-account");
+                        return;
+                    }
                 } else {
                     System.out.println("DOB is null or empty!");
                     message = "Ngày sinh không hợp lệ!";
@@ -209,15 +229,12 @@ public class AccountManagementServlet extends HttpServlet {
                     messageType = "success";
                 } else {
                     message = "Thêm tài khoản thất bại! Kiểm tra log.";
-                    // In stack trace để debug
-                    System.err.println("Add User failed. Stack trace:");
-                    new Exception().printStackTrace();
                 }
             } else if ("Doctor".equals(role)) {
                 if (specializationId != null && doctorLevelId != null && !specializationId.isEmpty() && !doctorLevelId.isEmpty()) {
                     int specId = Integer.parseInt(specializationId);
                     int levelId = Integer.parseInt(doctorLevelId);
-                    if (specId > 0 && levelId > 0) { // Kiểm tra ID hợp lệ
+                    if (specId > 0 && levelId > 0) {
                         Doctor doctor = new Doctor();
                         doctor.setEmail(email);
                         doctor.setUsername(username);
@@ -229,8 +246,8 @@ public class AccountManagementServlet extends HttpServlet {
                         doctor.setAddress(address);
                         doctor.setPhoneNumber(phoneNumber);
                         doctor.setStatus(true);
-                        doctor.setSpecialization(new Specialization(specId, "", "")); // Chỉ gán ID, name và description sẽ được lấy từ DB
-                        doctor.setDoctorLevel(new DoctorLevel(levelId, "", 0.0));   // Chỉ gán ID, name và fee sẽ được lấy từ DB
+                        doctor.setSpecialization(new Specialization(specId, ""));
+                        doctor.setDoctorLevel(new DoctorLevel(levelId, ""));
                         success = accountDAO.addAccount(doctor);
                         System.out.println("Add Doctor result: " + success);
                         if (success) {
@@ -238,9 +255,6 @@ public class AccountManagementServlet extends HttpServlet {
                             messageType = "success";
                         } else {
                             message = "Thêm tài khoản thất bại! Kiểm tra log.";
-                            // In stack trace để debug
-                            System.err.println("Add Doctor failed. Stack trace:");
-                            new Exception().printStackTrace();
                         }
                     } else {
                         System.out.println("SpecializationId or DoctorLevelId is invalid (0 or negative)!");
@@ -280,5 +294,75 @@ public class AccountManagementServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         doGet(request, response);
+    }
+
+    // Hàm validate các trường
+    private String validateInput(String username, String email, String password, String fullName, String dobStr, String phoneNumber, String role, String specializationId, String doctorLevelId) {
+        // Validate username: tối thiểu 4 ký tự, chỉ chữ thường và số, không khoảng cách
+        if (username == null || username.length() < 4 || !Pattern.matches("^[a-z0-9]+$", username)) {
+            return "Tên người dùng phải có ít nhất 4 ký tự, chỉ chứa chữ thường và số, không khoảng cách!";
+        }
+
+        // Validate email: không rỗng
+        if (email == null || email.trim().isEmpty()) {
+            return "Email không được rỗng!";
+        }
+
+        // Validate password: 8-31 ký tự, chứa ít nhất 1 chữ cái, 1 số, 1 ký tự đặc biệt
+        if (password == null || password.length() < 8 || password.length() > 31
+                || !Pattern.matches("^(?=.*[A-Za-z])(?=.*\\d)(?=.*[!@#$%^&*])[A-Za-z\\d!@#$%^&*]+$", password)) {
+            return "Mật khẩu phải có 8-31 ký tự, chứa ít nhất 1 chữ cái, 1 số, và 1 ký tự đặc biệt (!@#$%^&*)!";
+        }
+
+        // Validate fullName: chỉ chữ cái (bao gồm dấu tiếng Việt), khoảng trắng không vượt quá 4 ký tự
+        if (fullName == null || !Pattern.matches("^[\\p{L}\\s]{1,50}$", fullName)) {
+            return "Họ tên chỉ chấp nhận chữ cái (bao gồm dấu), tối đa 50 ký tự!";
+        }
+        // Kiểm tra độ dài khoảng trắng tối đa 4 ký tự
+        int spaceCount = 0;
+        for (int i = 0; i < fullName.length() - 1; i++) {
+            if (fullName.charAt(i) == ' ' && fullName.charAt(i + 1) == ' ') {
+                spaceCount++;
+                int j = i + 1;
+                while (j < fullName.length() - 1 && fullName.charAt(j) == ' ' && spaceCount < 4) {
+                    spaceCount++;
+                    j++;
+                }
+                if (spaceCount > 4) {
+                    return "Khoảng trắng giữa các từ không được vượt quá 4 ký tự!";
+                }
+                i = j - 1; // Bỏ qua các khoảng trắng đã đếm
+            }
+        }
+
+        // Validate dob: chỉ chấp nhận quá khứ và hiện tại
+        if (dobStr != null && !dobStr.isEmpty()) {
+            try {
+                LocalDate dob = LocalDate.parse(dobStr);
+                LocalDate currentDate = LocalDate.now(); // 02:00 AM +07, 12/06/2025
+                if (dob.isAfter(currentDate)) {
+                    return "Ngày sinh không được là tương lai!";
+                }
+            } catch (DateTimeParseException e) {
+                return "Định dạng ngày sinh không đúng (yyyy-MM-dd)!";
+            }
+        }
+
+        // Validate phoneNumber: chính xác 10 số, chỉ chữ số
+        if (phoneNumber == null || !Pattern.matches("^[0-9]{10}$", phoneNumber)) {
+            return "Số điện thoại phải là 10 chữ số!";
+        }
+
+        // Validate specializationId và doctorLevelId nếu là Doctor
+        if ("Doctor".equals(role)) {
+            if (specializationId == null || specializationId.trim().isEmpty() || Integer.parseInt(specializationId) <= 0) {
+                return "ID chuyên khoa không hợp lệ!";
+            }
+            if (doctorLevelId == null || doctorLevelId.trim().isEmpty() || Integer.parseInt(doctorLevelId) <= 0) {
+                return "ID trình độ không hợp lệ!";
+            }
+        }
+
+        return null; // Validate thành công
     }
 }
