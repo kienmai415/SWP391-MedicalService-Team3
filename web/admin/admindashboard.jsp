@@ -1,13 +1,12 @@
-
 <%-- 
     Document   : admindashboard
     Created on : 28 thg 5, 2025, 23:43:22
     Author     : maiki
 --%>
 
-<!DOCTYPE html>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+
 <html lang="vi">
     <head>
         <meta charset="UTF-8">
@@ -101,20 +100,9 @@
             .action-section.active {
                 display: block;
             }
-            .pagination {
-                justify-content: center;
-                margin-top: 20px;
-            }
-            .pagination .page-item.active .page-link {
-                background-color: #4a7c59;
-                border-color: #4a7c59;
-                color: white;
-            }
-            .pagination .page-link {
-                color: #4a7c59;
-            }
-            .pagination .page-link:hover {
-                background-color: #e9ecef;
+            .alert {
+                margin-bottom: 15px;
+                display: none; /* Ẩn mặc định, hiển thị bằng JavaScript */
             }
         </style>
     </head>
@@ -126,8 +114,11 @@
                 document.getElementById(sectionId).classList.add('active');
                 document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
                 const link = document.querySelector(`[data-section="${sectionId}"]`);
-                if (link)
+                if (link) {
                     link.classList.add('active');
+                }
+                // Cập nhật URL với showSection
+                window.history.pushState({}, document.title, window.location.pathname + "?showSection=" + sectionId);
             }
 
             function hideAllSections() {
@@ -138,15 +129,25 @@
             window.onload = function () {
                 console.log("window.onload called");
                 const messageType = '${messageType}';
-                if (messageType === 'success') {
-                    document.querySelectorAll('form').forEach(form => form.reset());
+                if (messageType && messageType !== 'null') {
+                    const alert = document.querySelector('.alert');
+                    if (alert) {
+                        alert.style.display = 'block';
+                        alert.className = 'alert alert-' + messageType;
+                        alert.textContent = '${message}';
+                        setTimeout(() => {
+                            alert.style.display = 'none';
+                        }, 3000);
+                    }
                 }
-                const showSection = '${showSection}';
-                console.log("showSection value: " + showSection);
+                // Lấy showSection từ URL hoặc attribute
+                const urlParams = new URLSearchParams(window.location.search);
+                let showSection = urlParams.get('showSection') || '${showSection}';
+                console.log("showSection value from URL or attribute: " + showSection);
                 if (showSection) {
                     showSection(showSection);
                 } else {
-                    showSection('dashboard');
+                    showSection('dashboard'); // Mặc định là dashboard
                 }
             };
         </script>
@@ -160,13 +161,13 @@
                             <small class="text-light">Quản lý hệ thống</small>
                         </div>
                         <nav class="nav flex-column">
-                            <a class="nav-link active" href="<%= request.getContextPath()%>/AccountManagementServlet" data-section="dashboard" onclick="showSection('dashboard')">
+                            <a class="nav-link" href="<%= request.getContextPath()%>/AccountManagementServlet?showSection=dashboard" data-section="dashboard" onclick="showSection('dashboard'); return false;">
                                 <i class="fas fa-tachometer-alt me-2"></i> Trang chủ
                             </a>
-                            <a class="nav-link" href="<%= request.getContextPath()%>/AccountManagementServlet?action=list" data-section="account-management" onclick="showSection('account-management')">
+                            <a class="nav-link" href="<%= request.getContextPath()%>/AccountManagementServlet?action=list&showSection=account-management" data-section="account-management" onclick="showSection('account-management'); return false;">
                                 <i class="fas fa-users me-2"></i> Quản lý tài khoản
                             </a>
-                            <a class="nav-link" href="<%= request.getContextPath()%>/AccountManagementServlet?action=statistics" data-section="statistics" onclick="showSection('statistics')">
+                            <a class="nav-link" href="<%= request.getContextPath()%>/AccountManagementServlet?showSection=statistics" data-section="statistics" onclick="showSection('statistics'); return false;">
                                 <i class="fas fa-chart-bar me-2"></i> Thống kê
                             </a>
                         </nav>
@@ -178,7 +179,7 @@
                     <div class="main-content">
                         <!-- Messages -->
                         <c:if test="${not empty message}">
-                            <div class="alert alert-${messageType}">
+                            <div class="alert">
                                 ${message}
                             </div>
                         </c:if>
@@ -202,7 +203,7 @@
                             <div class="d-flex justify-content-between align-items-center mb-4">
                                 <h2><i class="fas fa-users text-primary"></i> Quản lý tài khoản</h2>
                                 <div>
-                                    <a href="<%= request.getContextPath()%>/AccountManagementServlet?action=add" class="btn btn-success me-2">
+                                    <a href="<%= request.getContextPath()%>/AccountManagementServlet?action=add&showSection=account-management" class="btn btn-success me-2">
                                         <i class="fas fa-plus"></i> Thêm tài khoản
                                     </a>
                                     <a href="<%= request.getContextPath()%>/AccountManagementServlet?showSection=dashboard" class="btn btn-primary">
@@ -225,7 +226,7 @@
                                             <div class="col-md-4">
                                                 <label class="form-label">Trạng thái</label>
                                                 <select class="form-select" name="status">
-                                                    <option value="all" ${filterStatus == 'all' || empty filterStatus ? 'selected' : ''}>Tất cả trạng thái</option>
+                                                    <option value="all" ${empty filterStatus || filterStatus == 'all' ? 'selected' : ''}>Tất cả trạng thái</option>
                                                     <option value="activated" ${filterStatus == 'activated' ? 'selected' : ''}>Hoạt động</option>
                                                     <option value="deactivated" ${filterStatus == 'deactivated' ? 'selected' : ''}>Vô hiệu hóa</option>
                                                 </select>
@@ -233,7 +234,7 @@
                                             <div class="col-md-4">
                                                 <label class="form-label">Vai trò</label>
                                                 <select class="form-select" name="role">
-                                                    <option value="all" ${filterRole == 'all' || empty filterRole ? 'selected' : ''}>Tất cả vai trò</option>
+                                                    <option value="all" ${empty filterRole || filterRole == 'all' ? 'selected' : ''}>Tất cả vai trò</option>
                                                     <option value="2" ${filterRole == '2' ? 'selected' : ''}>Bệnh nhân</option>
                                                     <option value="4" ${filterRole == '4' ? 'selected' : ''}>Bác sĩ</option>
                                                     <option value="3" ${filterRole == '3' ? 'selected' : ''}>Quản lý</option>
@@ -267,7 +268,16 @@
                                                 <c:forEach var="account" items="${accounts}">
                                                     <tr>
                                                         <td>${account.id}</td>
-                                                        <td>${account.username}</td>
+                                                        <td>
+                                                            <c:choose>
+                                                                <c:when test="${account['class'].simpleName == 'Patient'}">
+                                                                    ${account.userName}
+                                                                </c:when>
+                                                                <c:otherwise>
+                                                                    ${account.username}
+                                                                </c:otherwise>
+                                                            </c:choose>
+                                                        </td>
                                                         <td>${account.email}</td>
                                                         <td>
                                                             <span class="badge ${account.status ? 'bg-success' : 'bg-danger'}">
@@ -275,17 +285,17 @@
                                                             </span>
                                                         </td>
                                                         <td>
-                                                            <a href="<%= request.getContextPath()%>/AccountManagementServlet?action=view&id=${account.id}&showSection=account-detail" class="btn btn-sm btn-info">
+                                                            <a href="<%= request.getContextPath()%>/AccountManagementServlet?action=view&id=${account.id}&showSection=account-detail&filterEmail=${filterEmail}&filterRole=${filterRole}&filterStatus=${filterStatus}" class="btn btn-sm btn-info">
                                                                 <i class="fas fa-eye"></i> Xem chi tiết
                                                             </a>
                                                             <c:choose>
                                                                 <c:when test="${account.status}">
-                                                                    <a href="<%= request.getContextPath()%>/AccountManagementServlet?action=deactivate&id=${account.id}&showSection=account-management&page=${currentPage}" class="btn btn-sm btn-danger">
+                                                                    <a href="<%= request.getContextPath()%>/AccountManagementServlet?action=deactivate&id=${account.id}&showSection=account-management&filterEmail=${filterEmail}&filterRole=${filterRole}&filterStatus=${filterStatus}" class="btn btn-sm btn-danger">
                                                                         <i class="fas fa-trash"></i> Vô hiệu hóa
                                                                     </a>
                                                                 </c:when>
                                                                 <c:otherwise>
-                                                                    <a href="<%= request.getContextPath()%>/AccountManagementServlet?action=activate&id=${account.id}&showSection=account-management&page=${currentPage}" class="btn btn-sm btn-success">
+                                                                    <a href="<%= request.getContextPath()%>/AccountManagementServlet?action=activate&id=${account.id}&showSection=account-management&filterEmail=${filterEmail}&filterRole=${filterRole}&filterStatus=${filterStatus}" class="btn btn-sm btn-success">
                                                                         <i class="fas fa-check"></i> Kích hoạt
                                                                     </a>
                                                                 </c:otherwise>
@@ -301,30 +311,6 @@
                                             </tbody>
                                         </table>
                                     </div>
-                                    <!-- Phân trang -->
-                                    <nav aria-label="Page navigation">
-                                        <ul class="pagination">
-                                            <c:if test="${currentPage > 1}">
-                                                <li class="page-item">
-                                                    <a class="page-link" href="<%= request.getContextPath()%>/AccountManagementServlet?action=list&showSection=account-management&page=${currentPage - 1}&email=${filterEmail}&role=${filterRole}&status=${filterStatus}" aria-label="Previous">
-                                                        <span aria-hidden="true">«</span>
-                                                    </a>
-                                                </li>
-                                            </c:if>
-                                            <c:forEach begin="1" end="${totalPages}" var="i">
-                                                <li class="page-item ${currentPage == i ? 'active' : ''}">
-                                                    <a class="page-link" href="<%= request.getContextPath()%>/AccountManagementServlet?action=list&showSection=account-management&page=${i}&email=${filterEmail}&role=${filterRole}&status=${filterStatus}">${i}</a>
-                                                </li>
-                                            </c:forEach>
-                                            <c:if test="${currentPage < totalPages}">
-                                                <li class="page-item">
-                                                    <a class="page-link" href="<%= request.getContextPath()%>/AccountManagementServlet?action=list&showSection=account-management&page=${currentPage + 1}&email=${filterEmail}&role=${filterRole}&status=${filterStatus}" aria-label="Next">
-                                                        <span aria-hidden="true">»</span>
-                                                    </a>
-                                                </li>
-                                            </c:if>
-                                        </ul>
-                                    </nav>
                                 </div>
                             </div>
                         </div>
@@ -334,7 +320,7 @@
                             <div class="d-flex justify-content-between align-items-center mb-4">
                                 <h2><i class="fas fa-eye text-info"></i> Chi tiết tài khoản</h2>
                                 <div>
-                                    <a href="<%= request.getContextPath()%>/AccountManagementServlet?action=list&showSection=account-management" class="btn btn-primary me-2">
+                                    <a href="<%= request.getContextPath()%>/AccountManagementServlet?action=list&showSection=account-management&filterEmail=${filterEmail}&filterRole=${filterRole}&filterStatus=${filterStatus}" class="btn btn-primary me-2">
                                         <i class="fas fa-arrow-left"></i> Quay lại
                                     </a>
                                 </div>
@@ -343,40 +329,38 @@
                                 <div class="card">
                                     <div class="card-body">
                                         <h5>Thông tin chi tiết</h5>
-                                        <c:if test="${not empty selectedDetail.imageURL}">
-                                            <img src="${selectedDetail.imageURL}" alt="Ảnh đại diện" style="max-width: 100px; margin-bottom: 10px;">
-                                        </c:if>
                                         <table class="table table-bordered">
                                             <tr><th>ID</th><td>${selectedAccount.id}</td></tr>
-                                            <tr><th>Tên người dùng</th><td>${selectedAccount.username}</td></tr>
+                                            <tr><th>Tên người dùng</th><td>
+                                                    <c:choose>
+                                                        <c:when test="${selectedAccount['class'].simpleName == 'Patient'}">
+                                                            ${selectedAccount.userName}
+                                                        </c:when>
+                                                        <c:otherwise>
+                                                            ${selectedAccount.username}
+                                                        </c:otherwise>
+                                                    </c:choose>
+                                                </td></tr>
                                             <tr><th>Email</th><td>${selectedAccount.email}</td></tr>
                                                     <c:if test="${selectedDetail != null}">
                                                         <c:choose>
-                                                            <c:when test="${selectedDetail['class'].name == 'model.Doctor'}">
+                                                            <c:when test="${selectedDetail['class'].simpleName == 'Doctor'}">
                                                         <tr><th>Họ tên</th><td>${selectedDetail.fullName}</td></tr>
                                                         <tr><th>Địa chỉ</th><td>${selectedDetail.address}</td></tr>
                                                         <tr><th>Ngày sinh</th><td>${selectedDetail.dob}</td></tr>
                                                         <tr><th>Giới tính</th><td>${selectedDetail.gender}</td></tr>
                                                         <tr><th>Số điện thoại</th><td>${selectedDetail.phoneNumber}</td></tr>
-                                                        <tr><th>Chuyên khoa</th><td>
-                                                                <c:forEach var="spec" items="${specializations}">
-                                                                    <c:if test="${spec.id == selectedDetail.specializationId}">${spec.name}</c:if>
-                                                                </c:forEach>
-                                                            </td></tr>
-                                                        <tr><th>Trình độ</th><td>
-                                                                <c:forEach var="level" items="${doctorLevels}">
-                                                                    <c:if test="${level.id == selectedDetail.doctorLevelId}">${level.levelName}</c:if>
-                                                                </c:forEach>
-                                                            </td></tr>
+                                                        <tr><th>Chuyên khoa</th><td>${selectedDetail.specialization.name}</td></tr>
+                                                        <tr><th>Trình độ</th><td>${selectedDetail.doctorLevel.name}</td></tr>
                                                         </c:when>
-                                                        <c:when test="${selectedDetail['class'].name == 'model.Staff'}">
+                                                        <c:when test="${selectedDetail['class'].simpleName == 'User'}">
                                                         <tr><th>Họ tên</th><td>${selectedDetail.fullName}</td></tr>
                                                         <tr><th>Địa chỉ</th><td>${selectedDetail.address}</td></tr>
                                                         <tr><th>Ngày sinh</th><td>${selectedDetail.dob}</td></tr>
                                                         <tr><th>Giới tính</th><td>${selectedDetail.gender}</td></tr>
                                                         <tr><th>Số điện thoại</th><td>${selectedDetail.phoneNumber}</td></tr>
                                                             </c:when>
-                                                            <c:when test="${selectedDetail['class'].name == 'model.Patient'}">
+                                                            <c:when test="${selectedDetail['class'].simpleName == 'Patient'}">
                                                         <tr><th>Họ tên</th><td>${selectedDetail.fullName}</td></tr>
                                                         <tr><th>Địa chỉ</th><td>${selectedDetail.address}</td></tr>
                                                         <tr><th>Ngày sinh</th><td>${selectedDetail.dob}</td></tr>
@@ -395,11 +379,11 @@
                                                     </span>
                                                 </td>
                                             </tr>
-                                            <c:if test="${selectedAccount.roleId != 2}">
+                                            <c:if test="${selectedAccount.role != 'Patient'}">
                                                 <tr>
                                                     <th>Thao tác</th>
                                                     <td>
-                                                        <a href="<%= request.getContextPath()%>/AccountManagementServlet?action=update&id=${selectedAccount.id}" class="btn btn-warning">
+                                                        <a href="<%= request.getContextPath()%>/AccountManagementServlet?action=update&id=${selectedAccount.id}&showSection=account-detail&filterEmail=${filterEmail}&filterRole=${filterRole}&filterStatus=${filterStatus}" class="btn btn-warning">
                                                             <i class="fas fa-edit"></i> Cập nhật tài khoản
                                                         </a>
                                                     </td>

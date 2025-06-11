@@ -43,6 +43,8 @@
     <servlet>
         <servlet-name>AppointmentScheduleServlet</servlet-name>
         <servlet-class>controller.AppointmentScheduleServlet</servlet-class>
+        <servlet-name>AccountManagementServlet</servlet-name>
+        <servlet-class>controller.AccountManagementServlet</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>HomeServlet</servlet-name>
@@ -88,5 +90,9 @@
     <servlet-mapping>
         <servlet-name>AppointmentScheduleServlet</servlet-name>
         <url-pattern>/AppointmentScheduleServlet</url-pattern>
+    
+    <servlet-mapping>
+        <servlet-name>AccountManagementServlet</servlet-name>
+        <url-pattern>/AccountManagementServlet</url-pattern>
     </servlet-mapping>
 </web-app>
