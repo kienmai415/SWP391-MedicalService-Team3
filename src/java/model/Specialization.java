@@ -9,6 +9,7 @@ package model;
  * @author laptop368
  */
 public class Specialization {
+
     private int id;
     private String name;
     private String description;
@@ -21,6 +22,13 @@ public class Specialization {
         this.name = name;
         this.description = description;
     }
+
+    public Specialization(int id, String name) {
+        this.id = id;
+        this.name = name;
+    }
+
+    
 
     public int getId() {
         return id;
@@ -51,4 +59,6 @@ public class Specialization {
         return "Specialization{" + "id=" + id + ", name=" + name + ", description=" + description + '}';
     }
     
+
+
 }
