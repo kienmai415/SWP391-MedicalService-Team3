@@ -18,72 +18,94 @@
             body {
                 background: linear-gradient(135deg, #2d5a27 0%, #4a7c59 50%, #6b8e23 100%);
                 min-height: 100vh;
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                font-family: 'Poppins', sans-serif;
+                color: #333;
             }
             .sidebar {
                 background: rgba(45, 90, 39, 0.95);
                 min-height: 100vh;
-                box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+                box-shadow: 4px 0 15px rgba(0, 0, 0, 0.2);
+                transition: all 0.3s ease;
             }
             .sidebar .nav-link {
-                color: #ffffff;
-                padding: 15px 20px;
-                border-radius: 8px;
-                margin: 5px 10px;
+                color: #fff;
+                padding: 15px 25px;
+                border-radius: 10px;
+                margin: 8px 15px;
                 transition: all 0.3s ease;
-                cursor: pointer;
+                font-size: 16px;
             }
             .sidebar .nav-link:hover,
             .sidebar .nav-link.active {
-                background: rgba(255,255,255,0.2);
-                color: #ffffff;
-                transform: translateX(5px);
+                background: rgba(255, 255, 255, 0.3);
+                color: #fff;
+                transform: translateX(8px);
             }
             .main-content {
-                background: rgba(255,255,255,0.95);
-                border-radius: 15px;
-                box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+                background: rgba(255, 255, 255, 0.95);
+                border-radius: 20px;
+                box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
                 margin: 20px;
                 padding: 30px;
             }
             .card {
                 border: none;
                 border-radius: 15px;
-                box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-                transition: transform 0.3s ease;
+                box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+                transition: transform 0.3s ease, box-shadow 0.3s ease;
             }
             .card:hover {
                 transform: translateY(-5px);
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
             }
             .btn-success {
                 background: linear-gradient(45deg, #28a745, #20c997);
                 border: none;
                 border-radius: 25px;
-                padding: 10px 25px;
+                padding: 12px 30px;
+                font-weight: 500;
             }
             .btn-primary {
                 background: linear-gradient(45deg, #007bff, #0056b3);
                 border: none;
                 border-radius: 25px;
+                padding: 12px 30px;
+                font-weight: 500;
             }
-            .btn-warning {
-                background: linear-gradient(45deg, #ffc107, #e0a800);
+            .btn-info {
+                background: linear-gradient(45deg, #17a2b8, #138496);
                 border: none;
                 border-radius: 25px;
+                padding: 10px 20px;
+                font-weight: 500;
+                color: #fff;
+            }
+            .btn-info:hover {
+                background: linear-gradient(45deg, #138496, #17a2b8);
             }
             .btn-danger {
                 background: linear-gradient(45deg, #dc3545, #c82333);
                 border: none;
                 border-radius: 25px;
+                padding: 10px 20px;
+                font-weight: 500;
+            }
+            .btn-success {
+                background: linear-gradient(45deg, #28a745, #20c997);
+                border: none;
+                border-radius: 25px;
+                padding: 10px 20px;
+                font-weight: 500;
             }
             .table {
                 border-radius: 10px;
                 overflow: hidden;
-                box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+                box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
             }
             .table thead {
                 background: linear-gradient(45deg, #2d5a27, #4a7c59);
-                color: white;
+                color: #fff;
+                font-weight: 600;
             }
             .form-control, .form-select {
                 border-radius: 10px;
@@ -92,7 +114,7 @@
             }
             .form-control:focus, .form-select:focus {
                 border-color: #4a7c59;
-                box-shadow: 0 0 0 0.2rem rgba(74, 124, 89, 0.25);
+                box-shadow: 0 0 0 0.25rem rgba(74, 124, 89, 0.25);
             }
             .action-section {
                 display: none;
@@ -100,9 +122,10 @@
             .action-section.active {
                 display: block;
             }
-            .alert {
-                margin-bottom: 15px;
-                display: none; /* Ẩn mặc định, hiển thị bằng JavaScript */
+            .badge {
+                padding: 8px 12px;
+                font-size: 14px;
+                border-radius: 20px;
             }
         </style>
     </head>
@@ -129,16 +152,8 @@
             window.onload = function () {
                 console.log("window.onload called");
                 const messageType = '${messageType}';
-                if (messageType && messageType !== 'null') {
-                    const alert = document.querySelector('.alert');
-                    if (alert) {
-                        alert.style.display = 'block';
-                        alert.className = 'alert alert-' + messageType;
-                        alert.textContent = '${message}';
-                        setTimeout(() => {
-                            alert.style.display = 'none';
-                        }, 3000);
-                    }
+                if (messageType === 'success') {
+                    document.querySelectorAll('form').forEach(form => form.reset());
                 }
                 // Lấy showSection từ URL hoặc attribute
                 const urlParams = new URLSearchParams(window.location.search);
@@ -179,8 +194,9 @@
                     <div class="main-content">
                         <!-- Messages -->
                         <c:if test="${not empty message}">
-                            <div class="alert">
+                            <div class="alert alert-${messageType} alert-dismissible fade show" role="alert">
                                 ${message}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                             </div>
                         </c:if>
 
@@ -188,12 +204,12 @@
                         <div id="dashboard" class="action-section ${showSection == 'dashboard' ? 'active' : ''}">
                             <div class="d-flex justify-content-between align-items-center mb-4">
                                 <h2><i class="fas fa-tachometer-alt text-success"></i> Trang chủ</h2>
-                                <span class="badge bg-success fs-6">Admin</span>
+                                <span class="badge bg-success">Admin</span>
                             </div>
                             <div class="card">
                                 <div class="card-body">
                                     <h5 class="card-title">Chào mừng đến với Admin Dashboard</h5>
-                                    <p>Vui lòng chọn chức năng từ thanh bên để quản lý tài khoản hoặc xem thống kê.</p>
+                                    <p class="card-text">Vui lòng chọn chức năng từ thanh bên để quản lý tài khoản hoặc xem thống kê.</p>
                                 </div>
                             </div>
                         </div>
@@ -211,7 +227,7 @@
                                     </a>
                                 </div>
                             </div>
-                            <div class="card mb-3">
+                            <div class="card mb-4">
                                 <div class="card-body">
                                     <form action="<%= request.getContextPath()%>/AccountManagementServlet" method="get">
                                         <input type="hidden" name="action" value="search">
@@ -226,7 +242,7 @@
                                             <div class="col-md-4">
                                                 <label class="form-label">Trạng thái</label>
                                                 <select class="form-select" name="status">
-                                                    <option value="all" ${empty filterStatus || filterStatus == 'all' ? 'selected' : ''}>Tất cả trạng thái</option>
+                                                    <option value="all" ${filterStatus == 'all' || empty filterStatus ? 'selected' : ''}>Tất cả trạng thái</option>
                                                     <option value="activated" ${filterStatus == 'activated' ? 'selected' : ''}>Hoạt động</option>
                                                     <option value="deactivated" ${filterStatus == 'deactivated' ? 'selected' : ''}>Vô hiệu hóa</option>
                                                 </select>
@@ -234,11 +250,11 @@
                                             <div class="col-md-4">
                                                 <label class="form-label">Vai trò</label>
                                                 <select class="form-select" name="role">
-                                                    <option value="all" ${empty filterRole || filterRole == 'all' ? 'selected' : ''}>Tất cả vai trò</option>
-                                                    <option value="2" ${filterRole == '2' ? 'selected' : ''}>Bệnh nhân</option>
-                                                    <option value="4" ${filterRole == '4' ? 'selected' : ''}>Bác sĩ</option>
-                                                    <option value="3" ${filterRole == '3' ? 'selected' : ''}>Quản lý</option>
-                                                    <option value="5" ${filterRole == '5' ? 'selected' : ''}>Lễ tân</option>
+                                                    <option value="all" ${filterRole == 'all' || empty filterRole ? 'selected' : ''}>Tất cả vai trò</option>
+                                                    <option value="2" ${filterRole == 'Patient' ? 'selected' : ''}>Bệnh nhân</option>
+                                                    <option value="4" ${filterRole == 'Doctor' ? 'selected' : ''}>Bác sĩ</option>
+                                                    <option value="3" ${filterRole == 'Manager' ? 'selected' : ''}>Quản lý</option>
+                                                    <option value="5" ${filterRole == 'Receptionist' ? 'selected' : ''}>Lễ tân</option>
                                                 </select>
                                             </div>
                                             <div class="col-md-4 d-flex align-items-end">
@@ -285,17 +301,17 @@
                                                             </span>
                                                         </td>
                                                         <td>
-                                                            <a href="<%= request.getContextPath()%>/AccountManagementServlet?action=view&id=${account.id}&showSection=account-detail&filterEmail=${filterEmail}&filterRole=${filterRole}&filterStatus=${filterStatus}" class="btn btn-sm btn-info">
+                                                            <a href="<%= request.getContextPath()%>/AccountManagementServlet?action=view&email=${account.email}&showSection=account-detail" class="btn btn-info btn-sm">
                                                                 <i class="fas fa-eye"></i> Xem chi tiết
                                                             </a>
                                                             <c:choose>
                                                                 <c:when test="${account.status}">
-                                                                    <a href="<%= request.getContextPath()%>/AccountManagementServlet?action=deactivate&id=${account.id}&showSection=account-management&filterEmail=${filterEmail}&filterRole=${filterRole}&filterStatus=${filterStatus}" class="btn btn-sm btn-danger">
+                                                                    <a href="<%= request.getContextPath()%>/AccountManagementServlet?action=deactivate&id=${account.id}&showSection=account-management" class="btn btn-danger btn-sm">
                                                                         <i class="fas fa-trash"></i> Vô hiệu hóa
                                                                     </a>
                                                                 </c:when>
                                                                 <c:otherwise>
-                                                                    <a href="<%= request.getContextPath()%>/AccountManagementServlet?action=activate&id=${account.id}&showSection=account-management&filterEmail=${filterEmail}&filterRole=${filterRole}&filterStatus=${filterStatus}" class="btn btn-sm btn-success">
+                                                                    <a href="<%= request.getContextPath()%>/AccountManagementServlet?action=activate&id=${account.id}&showSection=account-management" class="btn btn-success btn-sm">
                                                                         <i class="fas fa-check"></i> Kích hoạt
                                                                     </a>
                                                                 </c:otherwise>
@@ -320,76 +336,76 @@
                             <div class="d-flex justify-content-between align-items-center mb-4">
                                 <h2><i class="fas fa-eye text-info"></i> Chi tiết tài khoản</h2>
                                 <div>
-                                    <a href="<%= request.getContextPath()%>/AccountManagementServlet?action=list&showSection=account-management&filterEmail=${filterEmail}&filterRole=${filterRole}&filterStatus=${filterStatus}" class="btn btn-primary me-2">
+                                    <a href="<%= request.getContextPath()%>/AccountManagementServlet?action=list&showSection=account-management" class="btn btn-primary me-2">
                                         <i class="fas fa-arrow-left"></i> Quay lại
                                     </a>
+                                    <c:if test="${not empty selectedAccount}">
+                                        <c:set var="role" value="${selectedAccount['class'].simpleName == 'User' ? selectedAccount.role : selectedAccount['class'].simpleName}" />
+                                        <c:if test="${role == 'Manager' || role == 'Receptionist' || role == 'Doctor'}">
+                                            <a href="<%= request.getContextPath()%>/AccountManagementServlet?action=update&email=${selectedAccount.email}&showSection=update-account" class="btn btn-warning">
+                                                <i class="fas fa-edit"></i> Cập nhật
+                                            </a>
+                                        </c:if>
+                                    </c:if>
                                 </div>
                             </div>
                             <c:if test="${not empty selectedAccount}">
                                 <div class="card">
                                     <div class="card-body">
                                         <h5>Thông tin chi tiết</h5>
-                                        <table class="table table-bordered">
-                                            <tr><th>ID</th><td>${selectedAccount.id}</td></tr>
-                                            <tr><th>Tên người dùng</th><td>
-                                                    <c:choose>
-                                                        <c:when test="${selectedAccount['class'].simpleName == 'Patient'}">
-                                                            ${selectedAccount.userName}
-                                                        </c:when>
-                                                        <c:otherwise>
-                                                            ${selectedAccount.username}
-                                                        </c:otherwise>
-                                                    </c:choose>
-                                                </td></tr>
-                                            <tr><th>Email</th><td>${selectedAccount.email}</td></tr>
-                                                    <c:if test="${selectedDetail != null}">
+                                        <%-- Debug to check data --%>
+                                        <!-- <div class="alert alert-info">Debug - Email: ${param.email}, Account: ${selectedAccount}, Detail: ${selectedDetail}</div> -->
+                                        <c:if test="${empty selectedDetail}">
+                                            <div class="alert alert-warning">Không có chi tiết tài khoản để hiển thị. Kiểm tra Email: ${param.email}. Account: ${selectedAccount}, Detail: ${selectedDetail}</div>
+                                        </c:if>
+                                        <c:if test="${not empty selectedDetail}">
+                                            <table class="table table-bordered">
+                                                <tr><th>ID</th><td>${selectedAccount.id}</td></tr>
+                                                <tr><th>Tên người dùng</th><td>
+                                                        <c:choose>
+                                                            <c:when test="${selectedAccount['class'].simpleName == 'Patient'}">
+                                                                ${selectedAccount.userName}
+                                                            </c:when>
+                                                            <c:otherwise>
+                                                                ${selectedAccount.username}
+                                                            </c:otherwise>
+                                                        </c:choose>
+                                                    </td></tr>
+                                                <tr><th>Email</th><td>${selectedAccount.email}</td></tr>
                                                         <c:choose>
                                                             <c:when test="${selectedDetail['class'].simpleName == 'Doctor'}">
                                                         <tr><th>Họ tên</th><td>${selectedDetail.fullName}</td></tr>
-                                                        <tr><th>Địa chỉ</th><td>${selectedDetail.address}</td></tr>
-                                                        <tr><th>Ngày sinh</th><td>${selectedDetail.dob}</td></tr>
                                                         <tr><th>Giới tính</th><td>${selectedDetail.gender}</td></tr>
+                                                        <tr><th>Địa chỉ</th><td>${selectedDetail.address}</td></tr>
                                                         <tr><th>Số điện thoại</th><td>${selectedDetail.phoneNumber}</td></tr>
                                                         <tr><th>Chuyên khoa</th><td>${selectedDetail.specialization.name}</td></tr>
                                                         <tr><th>Trình độ</th><td>${selectedDetail.doctorLevel.name}</td></tr>
-                                                        </c:when>
-                                                        <c:when test="${selectedDetail['class'].simpleName == 'User'}">
+                                                            </c:when>
+                                                            <c:when test="${selectedDetail['class'].simpleName == 'User'}">
                                                         <tr><th>Họ tên</th><td>${selectedDetail.fullName}</td></tr>
-                                                        <tr><th>Địa chỉ</th><td>${selectedDetail.address}</td></tr>
-                                                        <tr><th>Ngày sinh</th><td>${selectedDetail.dob}</td></tr>
                                                         <tr><th>Giới tính</th><td>${selectedDetail.gender}</td></tr>
+                                                        <tr><th>Địa chỉ</th><td>${selectedDetail.address}</td></tr>
                                                         <tr><th>Số điện thoại</th><td>${selectedDetail.phoneNumber}</td></tr>
                                                             </c:when>
                                                             <c:when test="${selectedDetail['class'].simpleName == 'Patient'}">
                                                         <tr><th>Họ tên</th><td>${selectedDetail.fullName}</td></tr>
-                                                        <tr><th>Địa chỉ</th><td>${selectedDetail.address}</td></tr>
-                                                        <tr><th>Ngày sinh</th><td>${selectedDetail.dob}</td></tr>
                                                         <tr><th>Giới tính</th><td>${selectedDetail.gender}</td></tr>
+                                                        <tr><th>Địa chỉ</th><td>${selectedDetail.address}</td></tr>
                                                         <tr><th>Số điện thoại</th><td>${selectedDetail.phoneNumber}</td></tr>
                                                         <tr><th>Số CCCD</th><td>${selectedDetail.identityNumber}</td></tr>
                                                         <tr><th>Số bảo hiểm</th><td>${selectedDetail.insuranceNumber}</td></tr>
                                                             </c:when>
                                                         </c:choose>
-                                                    </c:if>
-                                            <tr>
-                                                <th>Trạng thái</th>
-                                                <td>
-                                                    <span class="badge ${selectedAccount.status ? 'bg-success' : 'bg-danger'}">
-                                                        ${selectedAccount.status ? 'Hoạt động' : 'Vô hiệu hóa'}
-                                                    </span>
-                                                </td>
-                                            </tr>
-                                            <c:if test="${selectedAccount.role != 'Patient'}">
                                                 <tr>
-                                                    <th>Thao tác</th>
+                                                    <th>Trạng thái</th>
                                                     <td>
-                                                        <a href="<%= request.getContextPath()%>/AccountManagementServlet?action=update&id=${selectedAccount.id}&showSection=account-detail&filterEmail=${filterEmail}&filterRole=${filterRole}&filterStatus=${filterStatus}" class="btn btn-warning">
-                                                            <i class="fas fa-edit"></i> Cập nhật tài khoản
-                                                        </a>
+                                                        <span class="badge ${selectedAccount.status ? 'bg-success' : 'bg-danger'}">
+                                                            ${selectedAccount.status ? 'Hoạt động' : 'Vô hiệu hóa'}
+                                                        </span>
                                                     </td>
                                                 </tr>
-                                            </c:if>
-                                        </table>
+                                            </table>
+                                        </c:if>
                                     </div>
                                 </div>
                             </c:if>

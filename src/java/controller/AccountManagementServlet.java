@@ -63,6 +63,24 @@ public class AccountManagementServlet extends HttpServlet {
             case "add":
                 handleAddAccount(request, response);
                 break;
+            case "update": // Xử lý trang cập nhật tài khoản
+                if ("update-account".equals(showSection)) {
+                    String email = request.getParameter("email");
+                    if (email != null) {
+                        AccountDAO accountDAO = new AccountDAO();
+                        request.setAttribute("selectedAccount", accountDAO.getAccountByEmail(email));
+                        request.setAttribute("selectedDetail", accountDAO.getAccountDetailByEmail(email));
+                        // Lấy danh sách specialization và doctorLevel cho Doctor
+                        request.setAttribute("specializations", accountDAO.getSpecializations());
+                        request.setAttribute("doctorLevels", accountDAO.getDoctorLevels());
+                        request.setAttribute("role", request.getAttribute("selectedAccount") != null
+                                ? (request.getAttribute("selectedAccount") instanceof User ? ((User) request.getAttribute("selectedAccount")).getRole()
+                                : request.getAttribute("selectedAccount") instanceof Doctor ? "Doctor" : "Patient") : null);
+                    }
+                }
+                request.setAttribute("showSection", showSection);
+                request.getRequestDispatcher("/admin/updateaccount.jsp").forward(request, response);
+                break;
             default:
                 request.setAttribute("showSection", showSection);
                 request.getRequestDispatcher("/admin/admindashboard.jsp").forward(request, response);
@@ -126,15 +144,24 @@ public class AccountManagementServlet extends HttpServlet {
 
     private void handleViewAccount(HttpServletRequest request, HttpServletResponse response, String showSection)
             throws ServletException, IOException {
-        String idParam = request.getParameter("id");
-        if (idParam != null) {
-            int id = Integer.parseInt(idParam);
+        String email = request.getParameter("email");
+        if (email != null) {
+            System.out.println("Attempting to view account with email: " + email);
             AccountDAO accountDAO = new AccountDAO();
-            Object account = accountDAO.getAccountById(id);
-            Object detail = accountDAO.getAccountDetailById(id); // Lấy chi tiết dựa trên role
-
+            Object account = accountDAO.getAccountByEmail(email);
+            Object detail = accountDAO.getAccountDetailByEmail(email);
+            System.out.println("Retrieved account: " + (account != null ? account.toString() : "null"));
+            System.out.println("Retrieved detail: " + (detail != null ? detail.toString() : "null"));
+            if (account == null) {
+                System.out.println("No account found for email: " + email);
+            }
+            if (detail == null) {
+                System.out.println("No detail found for email: " + email);
+            }
             request.setAttribute("selectedAccount", account);
             request.setAttribute("selectedDetail", detail);
+        } else {
+            System.out.println("No email parameter provided for view action");
         }
         request.setAttribute("showSection", showSection);
         request.getRequestDispatcher("/admin/admindashboard.jsp").forward(request, response);
@@ -182,7 +209,7 @@ public class AccountManagementServlet extends HttpServlet {
                 if (dobStr != null && !dobStr.isEmpty()) {
                     dob = LocalDate.parse(dobStr);
                     // Kiểm tra ngày sinh không phải tương lai
-                    LocalDate currentDate = LocalDate.now(); // 02:00 AM +07, 12/06/2025
+                    LocalDate currentDate = LocalDate.now(); // 09:04 AM +07, 13/06/2025
                     if (dob.isAfter(currentDate)) {
                         message = "Ngày sinh không được là tương lai!";
                         HttpSession session = request.getSession();
@@ -290,10 +317,153 @@ public class AccountManagementServlet extends HttpServlet {
         request.getRequestDispatcher("/admin/addaccount.jsp").forward(request, response);
     }
 
+    private void handleUpdateAccount(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        String email = request.getParameter("email");
+        if (email != null) {
+            AccountDAO accountDAO = new AccountDAO();
+            Object account = accountDAO.getAccountByEmail(email);
+            Object detail = accountDAO.getAccountDetailByEmail(email);
+
+            if (account != null) {
+                String role = "";
+                if (account instanceof User) {
+                    role = ((User) account).getRole();
+                } else if (account instanceof Doctor) {
+                    role = ((Doctor) account).getRole();
+                }
+                request.setAttribute("selectedAccount", account);
+                request.setAttribute("selectedDetail", detail);
+                request.setAttribute("role", role);
+                request.setAttribute("showSection", "update-account");
+                request.getRequestDispatcher("/admin/updateaccount.jsp").forward(request, response);
+            } else {
+                HttpSession session = request.getSession();
+                session.setAttribute("message", "Không tìm thấy tài khoản để cập nhật!");
+                session.setAttribute("messageType", "danger");
+                response.sendRedirect(request.getContextPath() + "/AccountManagementServlet?action=list&showSection=account-management");
+            }
+        }
+    }
+
+    private void handleUpdateAccountPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        String email = request.getParameter("email");
+        String username = request.getParameter("username");
+        String password = request.getParameter("password");
+        String fullName = request.getParameter("fullName");
+        String dobStr = request.getParameter("dob");
+        String gender = request.getParameter("gender");
+        String address = request.getParameter("address");
+        String phoneNumber = request.getParameter("phoneNumber");
+        String specializationId = request.getParameter("specializationId");
+        String doctorLevelId = request.getParameter("doctorLevelId");
+
+        System.out.println("Attempting to update account with email: " + email);
+        System.out.println("Details - Email: " + email + ", Username: " + username + ", Password: " + password
+                + ", FullName: " + fullName + ", DOB: " + dobStr + ", Gender: " + gender
+                + ", Address: " + address + ", Phone: " + phoneNumber
+                + ", SpecializationId: " + specializationId + ", DoctorLevelId: " + doctorLevelId);
+
+        // Lấy tài khoản để xác định role
+        AccountDAO accountDAO = new AccountDAO();
+        Object account = accountDAO.getAccountByEmail(email);
+        String role = (account instanceof User) ? ((User) account).getRole()
+                : (account instanceof Doctor) ? "Doctor" : "Patient";
+
+        // Validate các trường
+        String validationMessage = validateInput(username, email, password, fullName, dobStr, phoneNumber, role, specializationId, doctorLevelId);
+        if (validationMessage != null) {
+            HttpSession session = request.getSession();
+            session.setAttribute("message", validationMessage);
+            session.setAttribute("messageType", "danger");
+            response.sendRedirect(request.getContextPath() + "/admin/updateaccount.jsp?showSection=update-account&email=" + email);
+            return;
+        }
+
+        boolean success = false;
+        String message = "";
+        String messageType = "danger";
+        LocalDate dob = null;
+
+        try {
+            if (dobStr != null && !dobStr.isEmpty()) {
+                dob = LocalDate.parse(dobStr);
+                LocalDate currentDate = LocalDate.now(); // 09:04 AM +07, 13/06/2025
+                if (dob.isAfter(currentDate)) {
+                    message = "Ngày sinh không được là tương lai!";
+                    HttpSession session = request.getSession();
+                    session.setAttribute("message", message);
+                    session.setAttribute("messageType", messageType);
+                    response.sendRedirect(request.getContextPath() + "/admin/updateaccount.jsp?showSection=update-account&email=" + email);
+                    return;
+                }
+            }
+        } catch (DateTimeParseException e) {
+            System.out.println("Error parsing DOB: " + e.getMessage());
+            message = "Định dạng ngày sinh không đúng (yyyy-MM-dd)!";
+            HttpSession session = request.getSession();
+            session.setAttribute("message", message);
+            session.setAttribute("messageType", messageType);
+            response.sendRedirect(request.getContextPath() + "/admin/updateaccount.jsp?showSection=update-account&email=" + email);
+            return;
+        }
+
+        if (account != null) {
+            if (account instanceof User) {
+                role = ((User) account).getRole();
+                User user = (User) account;
+                user.setEmail(email);
+                user.setUsername(username);
+                user.setPassword(password);
+                user.setFullName(fullName);
+                user.setDob(dob);
+                user.setGender(gender);
+                user.setAddress(address);
+                user.setPhoneNumber(phoneNumber);
+                success = accountDAO.updateAccount(user);
+            } else if (account instanceof Doctor) {
+                role = ((Doctor) account).getRole();
+                Doctor doctor = (Doctor) account;
+                doctor.setEmail(email);
+                doctor.setUsername(username);
+                doctor.setPassword(password);
+                doctor.setFullName(fullName);
+                doctor.setDob(dob);
+                doctor.setGender(gender);
+                doctor.setAddress(address);
+                doctor.setPhoneNumber(phoneNumber);
+                if (specializationId != null && doctorLevelId != null) {
+                    doctor.setSpecialization(new Specialization(Integer.parseInt(specializationId), ""));
+                    doctor.setDoctorLevel(new DoctorLevel(Integer.parseInt(doctorLevelId), ""));
+                }
+                success = accountDAO.updateAccount(doctor);
+            }
+            if (success) {
+                message = "Cập nhật tài khoản " + role + " thành công!";
+                messageType = "success";
+            } else {
+                message = "Cập nhật tài khoản thất bại! Kiểm tra log.";
+            }
+        } else {
+            message = "Không tìm thấy tài khoản để cập nhật!";
+        }
+
+        HttpSession session = request.getSession();
+        session.setAttribute("message", message);
+        session.setAttribute("messageType", messageType);
+        response.sendRedirect(request.getContextPath() + "/AccountManagementServlet?action=list&showSection=account-management");
+    }
+
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        doGet(request, response);
+        String action = request.getParameter("action");
+        if ("update".equals(action)) {
+            handleUpdateAccountPost(request, response);
+        } else {
+            doGet(request, response);
+        }
     }
 
     // Hàm validate các trường
@@ -339,7 +509,7 @@ public class AccountManagementServlet extends HttpServlet {
         if (dobStr != null && !dobStr.isEmpty()) {
             try {
                 LocalDate dob = LocalDate.parse(dobStr);
-                LocalDate currentDate = LocalDate.now(); // 02:00 AM +07, 12/06/2025
+                LocalDate currentDate = LocalDate.now(); // 09:04 AM +07, 13/06/2025
                 if (dob.isAfter(currentDate)) {
                     return "Ngày sinh không được là tương lai!";
                 }
@@ -353,7 +523,7 @@ public class AccountManagementServlet extends HttpServlet {
             return "Số điện thoại phải là 10 chữ số!";
         }
 
-        // Validate specializationId và doctorLevelId nếu là Doctor
+        // Validate specializationId và doctorLevelId chỉ khi là Doctor
         if ("Doctor".equals(role)) {
             if (specializationId == null || specializationId.trim().isEmpty() || Integer.parseInt(specializationId) <= 0) {
                 return "ID chuyên khoa không hợp lệ!";
