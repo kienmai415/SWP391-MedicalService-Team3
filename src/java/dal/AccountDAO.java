@@ -388,7 +388,7 @@ public class AccountDAO extends DBContext {
                     ps.setString(1, email);
                     try (ResultSet rs = ps.executeQuery()) {
                         if (rs.next()) {
-                            User user = new User();
+                            User user = (User) account; // Sử dụng đối tượng đã lấy từ getAccountByEmail
                             user.setFullName(rs.getString("fullName"));
                             user.setAddress(rs.getString("address"));
                             java.sql.Date sqlDate = rs.getDate("dateOfBirth");
@@ -413,7 +413,7 @@ public class AccountDAO extends DBContext {
                     ps.setString(1, email);
                     try (ResultSet rs = ps.executeQuery()) {
                         if (rs.next()) {
-                            Doctor doctor = new Doctor();
+                            Doctor doctor = (Doctor) account; // Sử dụng đối tượng đã lấy từ getAccountByEmail
                             doctor.setFullName(rs.getString("fullName"));
                             doctor.setAddress(rs.getString("address"));
                             java.sql.Date sqlDate = rs.getDate("dateOfBirth");
@@ -436,7 +436,7 @@ public class AccountDAO extends DBContext {
                     ps.setString(1, email);
                     try (ResultSet rs = ps.executeQuery()) {
                         if (rs.next()) {
-                            Patient patient = new Patient();
+                            Patient patient = (Patient) account; // Sử dụng đối tượng đã lấy từ getAccountByEmail
                             patient.setFullName(rs.getString("fullName"));
                             patient.setAddress(rs.getString("address"));
                             java.sql.Date sqlDate = rs.getDate("dateOfBirth");
@@ -493,24 +493,23 @@ public class AccountDAO extends DBContext {
 
     // Thêm phương thức để thêm tài khoản
     public boolean addAccount(User user) {
-        String sql = "INSERT INTO users (email, username, password, role, fullName, dateOfBirth, gender, address, phoneNumber, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO users (email, username, password, role, fullName, gender, address, phoneNumber, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = super.getConnection(); PreparedStatement ps = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
             System.out.println("Executing SQL for User: " + sql);
             System.out.println("Parameters - Email: " + user.getEmail() + ", Username: " + user.getUsername()
                     + ", Password: " + user.getPassword() + ", Role: " + user.getRole()
-                    + ", FullName: " + user.getFullName() + ", DOB: " + user.getDob()
-                    + ", Gender: " + user.getGender() + ", Address: " + user.getAddress()
-                    + ", Phone: " + user.getPhoneNumber() + ", Status: " + user.isStatus());
+                    + ", FullName: " + user.getFullName() + ", Gender: " + user.getGender()
+                    + ", Address: " + user.getAddress() + ", Phone: " + user.getPhoneNumber()
+                    + ", Status: " + user.isStatus());
             ps.setString(1, user.getEmail());
             ps.setString(2, user.getUsername());
             ps.setString(3, user.getPassword());
             ps.setString(4, user.getRole());
             ps.setString(5, user.getFullName());
-            ps.setObject(6, user.getDob());
-            ps.setString(7, user.getGender());
-            ps.setString(8, user.getAddress());
-            ps.setString(9, user.getPhoneNumber());
-            ps.setBoolean(10, user.isStatus());
+            ps.setString(6, user.getGender());
+            ps.setString(7, user.getAddress());
+            ps.setString(8, user.getPhoneNumber());
+            ps.setBoolean(9, user.isStatus());
             int rowsAffected = ps.executeUpdate();
             if (rowsAffected > 0) {
                 try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
@@ -544,14 +543,13 @@ public class AccountDAO extends DBContext {
             ps.setString(2, doctor.getUsername());
             ps.setString(3, doctor.getPassword());
             ps.setString(4, doctor.getRole());
-            ps.setString(5, doctor.getFullName());
-            ps.setObject(6, doctor.getDob());
-            ps.setString(7, doctor.getGender());
-            ps.setString(8, doctor.getAddress());
-            ps.setString(9, doctor.getPhoneNumber());
-            ps.setInt(10, doctor.getSpecialization().getId());
-            ps.setInt(11, doctor.getDoctorLevel().getId());
-            ps.setBoolean(12, doctor.isStatus());
+            ps.setObject(5, doctor.getDob());
+            ps.setString(6, doctor.getGender());
+            ps.setString(7, doctor.getAddress());
+            ps.setString(8, doctor.getPhoneNumber());
+            ps.setInt(9, doctor.getSpecialization().getId());
+            ps.setInt(10, doctor.getDoctorLevel().getId());
+            ps.setBoolean(11, doctor.isStatus());
             int rowsAffected = ps.executeUpdate();
             if (rowsAffected > 0) {
                 try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
@@ -573,25 +571,25 @@ public class AccountDAO extends DBContext {
 
     // Thêm phương thức để cập nhật tài khoản
     public boolean updateAccount(User user) {
-        String sql = "UPDATE users SET email = ?, username = ?, password = ?, fullName = ?, dob = ?, gender = ?, address = ?, phoneNumber = ? WHERE id = ?";
-        try (Connection conn = super.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+        String sql = "UPDATE users SET email = ?, username = ?, password = ?, fullName = ?, gender = ?, address = ?, phoneNumber = ? WHERE id = ?";
+        try (Connection conn = super.getConnection()) {
             System.out.println("Executing SQL for User update: " + sql);
             System.out.println("Parameters - Email: " + user.getEmail() + ", Username: " + user.getUsername()
                     + ", Password: " + user.getPassword() + ", FullName: " + user.getFullName()
-                    + ", DOB: " + user.getDob() + ", Gender: " + user.getGender()
-                    + ", Address: " + user.getAddress() + ", Phone: " + user.getPhoneNumber()
-                    + ", ID: " + user.getId());
-            ps.setString(1, user.getEmail());
-            ps.setString(2, user.getUsername());
-            ps.setString(3, user.getPassword());
-            ps.setString(4, user.getFullName());
-            ps.setObject(5, user.getDob());
-            ps.setString(6, user.getGender());
-            ps.setString(7, user.getAddress());
-            ps.setString(8, user.getPhoneNumber());
-            ps.setInt(9, user.getId());
-            int rowsAffected = ps.executeUpdate();
-            return rowsAffected > 0;
+                    + ", Gender: " + user.getGender() + ", Address: " + user.getAddress()
+                    + ", Phone: " + user.getPhoneNumber() + ", ID: " + user.getId());
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, user.getEmail());
+                ps.setString(2, user.getUsername());
+                ps.setString(3, user.getPassword());
+                ps.setString(4, user.getFullName());
+                ps.setString(5, user.getGender());
+                ps.setString(6, user.getAddress());
+                ps.setString(7, user.getPhoneNumber());
+                ps.setInt(8, user.getId());
+                int rowsAffected = ps.executeUpdate();
+                return rowsAffected > 0;
+            }
         } catch (Exception e) {
             System.err.println("Lỗi khi cập nhật tài khoản User: " + e.getMessage());
             return false;
@@ -599,8 +597,8 @@ public class AccountDAO extends DBContext {
     }
 
     public boolean updateAccount(Doctor doctor) {
-        String sql = "UPDATE doctor SET email = ?, username = ?, password = ?, fullName = ?, dob = ?, gender = ?, address = ?, phoneNumber = ?, specializationId = ?, doctorLevelId = ? WHERE id = ?";
-        try (Connection conn = super.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+        String sql = "UPDATE doctor SET email = ?, username = ?, password = ?, fullName = ?, dateOfBirth = ?, gender = ?, address = ?, phoneNumber = ?, specializationId = ?, doctorLevelId = ? WHERE id = ?";
+        try (Connection conn = super.getConnection()) {
             System.out.println("Executing SQL for Doctor update: " + sql);
             System.out.println("Parameters - Email: " + doctor.getEmail() + ", Username: " + doctor.getUsername()
                     + ", Password: " + doctor.getPassword() + ", FullName: " + doctor.getFullName()
@@ -609,26 +607,28 @@ public class AccountDAO extends DBContext {
                     + ", SpecializationId: " + doctor.getSpecialization().getId()
                     + ", DoctorLevelId: " + doctor.getDoctorLevel().getId()
                     + ", ID: " + doctor.getId());
-            ps.setString(1, doctor.getEmail());
-            ps.setString(2, doctor.getUsername());
-            ps.setString(3, doctor.getPassword());
-            ps.setString(4, doctor.getFullName());
-            ps.setObject(5, doctor.getDob());
-            ps.setString(6, doctor.getGender());
-            ps.setString(7, doctor.getAddress());
-            ps.setString(8, doctor.getPhoneNumber());
-            ps.setInt(9, doctor.getSpecialization().getId());
-            ps.setInt(10, doctor.getDoctorLevel().getId());
-            ps.setInt(11, doctor.getId());
-            int rowsAffected = ps.executeUpdate();
-            return rowsAffected > 0;
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, doctor.getEmail());
+                ps.setString(2, doctor.getUsername());
+                ps.setString(3, doctor.getPassword());
+                ps.setString(4, doctor.getFullName());
+                ps.setObject(5, doctor.getDob());
+                ps.setString(6, doctor.getGender());
+                ps.setString(7, doctor.getAddress());
+                ps.setString(8, doctor.getPhoneNumber());
+                ps.setInt(9, doctor.getSpecialization().getId());
+                ps.setInt(10, doctor.getDoctorLevel().getId());
+                ps.setInt(11, doctor.getId());
+                int rowsAffected = ps.executeUpdate();
+                return rowsAffected > 0;
+            }
         } catch (Exception e) {
             System.err.println("Lỗi khi cập nhật tài khoản Doctor: " + e.getMessage());
             return false;
         }
     }
 
-    // Hàm main để test chức năng xem chi tiết
+    // Hàm main để test chức năng cập nhật tài khoản
     public static void main(String[] args) {
         AccountDAO accountDAO = new AccountDAO();
 
@@ -640,49 +640,76 @@ public class AccountDAO extends DBContext {
             return;
         }
 
-        // Test với các email từ danh sách
+        // Danh sách email để test cập nhật
         String[] testEmails = {
-            "patient1@email.com", // Patient
+            "manager1@hospital.com", // Manager
             "doctor2@hospital.com", // Doctor
-            "manager1@hospital.com" // Manager
-        }; // Thay đổi email dựa trên danh sách tài khoản của bạn
-        for (String email : testEmails) {
-            System.out.println("\nTesting account with email: " + email + " - " + java.time.LocalDateTime.now());
+            "patient1@email.com" // Patient
+        };
 
-            // Kiểm tra getAccountByEmail
+        for (String email : testEmails) {
+            System.out.println("\nTesting update for account with email: " + email + " - " + java.time.LocalDateTime.now());
+
+            // Lấy thông tin tài khoản hiện tại
             Object account = accountDAO.getAccountByEmail(email);
-            System.out.println("getAccountByEmail result: " + account);
-            if (account != null) {
-                if (account instanceof User) {
-                    User user = (User) account;
-                    System.out.println("User - ID: " + user.getId() + ", Username: " + user.getUsername() + ", Email: " + user.getEmail() + ", Role: " + user.getRole() + ", Status: " + user.isStatus());
-                } else if (account instanceof Doctor) {
-                    Doctor doctor = (Doctor) account;
-                    System.out.println("Doctor - ID: " + doctor.getId() + ", Username: " + doctor.getUsername() + ", Email: " + doctor.getEmail() + ", Role: " + doctor.getRole() + ", Status: " + doctor.isStatus());
-                } else if (account instanceof Patient) {
-                    Patient patient = (Patient) account;
-                    System.out.println("Patient - ID: " + patient.getId() + ", Username: " + patient.getUserName() + ", Email: " + patient.getEmail() + ", Role: " + patient.getRole() + ", Status: " + patient.isStatus());
-                }
-            } else {
+            if (account == null) {
                 System.out.println("No account found for email: " + email);
+                continue;
             }
 
-            // Kiểm tra getAccountDetailByEmail
-            Object detail = accountDAO.getAccountDetailByEmail(email);
-            System.out.println("getAccountDetailByEmail result: " + detail);
-            if (detail != null) {
-                if (detail instanceof User) {
-                    User user = (User) detail;
-                    System.out.println("Detail - FullName: " + user.getFullName() + ", Gender: " + user.getGender() + ", Address: " + user.getAddress() + ", Phone: " + user.getPhoneNumber());
-                } else if (detail instanceof Doctor) {
-                    Doctor doctor = (Doctor) detail;
-                    System.out.println("Detail - FullName: " + doctor.getFullName() + ", Gender: " + doctor.getGender() + ", Address: " + doctor.getAddress() + ", Phone: " + doctor.getPhoneNumber() + ", Specialization: " + doctor.getSpecialization().getName() + ", DoctorLevel: " + doctor.getDoctorLevel().getName());
-                } else if (detail instanceof Patient) {
-                    Patient patient = (Patient) detail;
-                    System.out.println("Detail - FullName: " + patient.getFullName() + ", Gender: " + patient.getGender() + ", Address: " + patient.getAddress() + ", Phone: " + patient.getPhoneNumber() + ", IdentityNumber: " + patient.getIdentityNumber() + ", InsuranceNumber: " + patient.getInsuranceNumber());
+            // Tạo đối tượng để cập nhật
+            if (account instanceof User) {
+                User user = (User) account;
+                System.out.println("Original User: " + user);
+                // Thay đổi một số thông tin để test
+                user.setUsername(user.getUsername() + "_updated");
+                user.setFullName("Updated " + (user.getFullName() != null ? user.getFullName() : "Unknown"));
+                user.setGender("Nữ"); // Thay đổi giới tính
+                user.setAddress("123 New Street"); // Thay đổi địa chỉ
+                user.setPhoneNumber("0987654321"); // Thay đổi số điện thoại
+
+                boolean success = accountDAO.updateAccount(user);
+                System.out.println("Update User result: " + success);
+                if (success) {
+                    System.out.println("Updated User: " + accountDAO.getAccountByEmail(email));
+                } else {
+                    System.out.println("Update failed for User with email: " + email + ". Check logs for details.");
                 }
-            } else {
-                System.out.println("No detail found for email: " + email);
+            } else if (account instanceof Doctor) {
+                Doctor doctor = (Doctor) account;
+                System.out.println("Original Doctor: " + doctor);
+                // Thay đổi một số thông tin để test
+                doctor.setUsername(doctor.getUsername() + "_updated");
+                doctor.setFullName("Updated " + (doctor.getFullName() != null ? doctor.getFullName() : "Unknown"));
+                doctor.setDob(LocalDate.of(1985, 1, 1)); // Thay đổi ngày sinh
+                doctor.setGender("Nữ"); // Thay đổi giới tính
+                doctor.setAddress("123 New Street"); // Thay đổi địa chỉ
+                doctor.setPhoneNumber("0987654321"); // Thay đổi số điện thoại
+                doctor.setSpecialization(new Specialization(2, "Cardiology")); // Thay đổi chuyên khoa
+                doctor.setDoctorLevel(new DoctorLevel(2, "Senior")); // Thay đổi trình độ
+
+                boolean success = accountDAO.updateAccount(doctor);
+                System.out.println("Update Doctor result: " + success);
+                if (success) {
+                    System.out.println("Updated Doctor: " + accountDAO.getAccountByEmail(email));
+                } else {
+                    System.out.println("Update failed for Doctor with email: " + email + ". Check logs for details.");
+                }
+            } else if (account instanceof Patient) {
+                Patient patient = (Patient) account;
+                System.out.println("Original Patient: " + patient);
+                // Thay đổi một số thông tin để test
+                patient.setUserName(patient.getUserName() + "_updated");
+                patient.setFullName("Updated " + (patient.getFullName() != null ? patient.getFullName() : "Unknown"));
+                patient.setDob(LocalDate.of(1985, 1, 1)); // Thay đổi ngày sinh
+                patient.setGender("Nữ"); // Thay đổi giới tính
+                patient.setAddress("123 New Street"); // Thay đổi địa chỉ
+                patient.setPhoneNumber("0987654321"); // Thay đổi số điện thoại
+                patient.setIdentityNumber("123456789012"); // Thay đổi số CCCD
+                patient.setInsuranceNumber("INS123456"); // Thay đổi số bảo hiểm
+
+                // Lưu ý: Patient không có phương thức updateAccount trong DAO hiện tại
+                System.out.println("Patient update not implemented in DAO main test. Please use servlet for update.");
             }
         }
     }
