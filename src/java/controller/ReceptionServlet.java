@@ -178,38 +178,37 @@ public class ReceptionServlet extends HttpServlet {
         //            request.setAttribute("error", "ID lịch hẹn không hợp lệ: " + e.getMessage());
         //        }
         //        request.getRequestDispatcher("receptionist.jsp").forward(request, response);
-        String action = request.getParameter("action");
-        if ("updateAppointment".equals(request.getParameter("action"))) {
-            int id = Integer.parseInt(request.getParameter("id"));
-            int doctorId = Integer.parseInt(request.getParameter("doctorId"));
-            int patientId = Integer.parseInt(request.getParameter("patientId"));
-            int doctorShiftId = Integer.parseInt(request.getParameter("doctorShiftId"));
-            String confirmationStatus = request.getParameter("status");
+            String action = request.getParameter("action");
+            if ("updateAppointment".equals(request.getParameter("action"))) {
+                int id = Integer.parseInt(request.getParameter("id"));
+                int doctorId = Integer.parseInt(request.getParameter("doctorId"));
+                int patientId = Integer.parseInt(request.getParameter("patientId"));
+                int doctorShiftId = Integer.parseInt(request.getParameter("doctorShiftId"));
+                String confirmationStatus = request.getParameter("status");
 
-            AppointmentSchedule ap = new AppointmentSchedule();
-            ap.setId(id);
+                AppointmentSchedule ap = new AppointmentSchedule();
+                ap.setId(id);
 
-            Doctor d = new Doctor();
-            d.setId(doctorId);
-            ap.setDoctor(d);
+                Doctor d = new Doctor();
+                d.setId(doctorId);
+                ap.setDoctor(d);
 
-            Patient p = new Patient();
-            p.setId(patientId);
-            ap.setPatient(p);
+                Patient p = new Patient();
+                p.setId(patientId);
+                ap.setPatient(p);
 
-            DoctorShiftSlot slot = new DoctorShiftSlot();
-            slot.setId(doctorShiftId);
-            ap.setShiftSlot(slot);
+                DoctorShiftSlot slot = new DoctorShiftSlot();
+                slot.setId(doctorShiftId);
+                ap.setShiftSlot(slot);
 
-            ap.setConfirmationStatus(confirmationStatus);
+                ap.setConfirmationStatus(confirmationStatus);
 
-            ReceptionDAO dao = new ReceptionDAO();
-            dao.updateAppointmentSchedules(ap);
+                ReceptionDAO dao = new ReceptionDAO();
+                dao.updateAppointmentSchedules(ap);
 
-            request.setAttribute("message", "Cập nhật lịch hẹn thành công!");
-            response.sendRedirect("ReceptionServlet?action=viewAppointments");
-        }
-
+                request.setAttribute("message", "Cập nhật lịch hẹn thành công!");
+                response.sendRedirect("ReceptionServlet?action=viewAppointments");
+            }
     }
 
     @Override
