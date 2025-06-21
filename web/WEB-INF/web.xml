@@ -43,9 +43,19 @@
     <servlet>
         <servlet-name>AppointmentScheduleServlet</servlet-name>
         <servlet-class>controller.AppointmentScheduleServlet</servlet-class>
+        
+    </servlet>
+    <servlet>
         <servlet-name>AccountManagementServlet</servlet-name>
         <servlet-class>controller.AccountManagementServlet</servlet-class>
+        
     </servlet>
+    
+    <servlet>
+        <servlet-name>BookingServlet</servlet-name>
+        <servlet-class>controller.BookingServlet</servlet-class>
+    </servlet>
+    
     <servlet-mapping>
         <servlet-name>HomeServlet</servlet-name>
         <url-pattern>/home</url-pattern>
@@ -74,11 +84,7 @@
         <servlet-name>LoginServlet</servlet-name>
         <url-pattern>/login</url-pattern>
     </servlet-mapping>
-    <dependency>
-        <groupId>jakarta.servlet</groupId>
-        <artifactId>jstl</artifactId>
-        <version>1.2</version>
-    </dependency>
+    
     <servlet-mapping>
         <servlet-name>ReceptionController</servlet-name>
         <url-pattern>/reception</url-pattern>
@@ -90,7 +96,7 @@
     <servlet-mapping>
         <servlet-name>AppointmentScheduleServlet</servlet-name>
         <url-pattern>/AppointmentScheduleServlet</url-pattern>
-    
+    </servlet-mapping>
     <servlet-mapping>
         <servlet-name>AccountManagementServlet</servlet-name>
         <url-pattern>/AccountManagementServlet</url-pattern>

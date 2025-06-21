@@ -1,8 +1,6 @@
 package controller;
 
-import DAO.BookingDAO;
-import DAO.PatientDAO;
-import Model.Booking;
+
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.Date;
@@ -51,17 +49,7 @@ public class BookingServlet extends HttpServlet {
             String address = request.getParameter("address");
             String insuranceNumber = request.getParameter("insurance_number");
             String dateStr = request.getParameter("date");
-            String startTimeStr = request.getParameter("start_time");
-            String endTimeStr = request.getParameter("end_time");
-
-            // Validate required fields
-            if (fullName == null || fullName.trim().isEmpty() || gender == null || phoneNumber == null ||
-                phoneNumber.length() > 15 || dobStr == null || address == null || address.trim().isEmpty() ||
-                dateStr == null || startTimeStr == null || endTimeStr == null) {
-                request.setAttribute("error", "Vui lòng điền đầy đủ và đúng định dạng các trường bắt buộc!");
-                request.getRequestDispatcher("booking.jsp").forward(request, response);
-                return;
-            }
+            String startTimeStr = request.getParametec
 
             // Parse date and time
             SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
