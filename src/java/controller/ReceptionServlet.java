@@ -16,14 +16,18 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 import model.AppointmentSchedule;
+import model.Doctor;
+import model.DoctorShiftSlot;
+import model.Patient;
 
 /**
  *
- * @author Admin
+ * @author MinhQuang
  */
 @WebServlet(name = "ReceptionServlet", urlPatterns = {"/ReceptionServlet"})
 public class ReceptionServlet extends HttpServlet {
@@ -54,7 +58,7 @@ public class ReceptionServlet extends HttpServlet {
         String action = request.getParameter("action");
         if ("viewAppointments".equals(action)) {
             int pageIndex = 1; // mặc định trang đầu
-            int pageSize = 2;  // số bản ghi mỗi trang
+            int pageSize = 10;  // số bản ghi mỗi trang
 
             // Lấy chỉ số trang từ request
             String pageRaw = request.getParameter("page");
@@ -82,8 +86,7 @@ public class ReceptionServlet extends HttpServlet {
             request.setAttribute("activeTab", "appointments");
 
             request.getRequestDispatcher("receptionist.jsp").forward(request, response);
-            
-            
+
         } else if ("searchAppointments".equals(action)) {
             ReceptionDAO dao = new ReceptionDAO();
             List<AppointmentSchedule> list;
@@ -111,8 +114,37 @@ public class ReceptionServlet extends HttpServlet {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND, "Lịch hẹn không tồn tại.");
             }
 
-        } else if ("feedback".equals(action)) {
-            
+        } else if ("editAppointment".equals(action)) {
+            int appointmentId = Integer.parseInt(request.getParameter("id"));
+            ReceptionDAO dao = new ReceptionDAO();
+            AppointmentSchedule ap = dao.getAppointmentSchedulesById(appointmentId);
+
+            if (ap != null) {
+                if (!"Pending".equalsIgnoreCase(ap.getConfirmationStatus())) {
+                    response.sendError(HttpServletResponse.SC_FORBIDDEN, "Chỉ có thể chỉnh sửa khi trạng thái là Pending.");
+                    return;
+                }
+
+                List<Doctor> doctors = dao.getAllDoctors();
+                List<Patient> patients = dao.getAllPatients();
+                int doctorId = ap.getDoctor().getId();
+
+                // 🟢 Tách ngày và giờ
+                List<LocalDate> availableDates = dao.getDistinctWorkingDatesByDoctor(doctorId);
+                LocalDate selectedDate = ap.getShiftSlot().getDate();
+                List<DoctorShiftSlot> slotsForDate = dao.getSlotsByDoctorAndDate(doctorId, selectedDate);
+
+                request.setAttribute("appointment", ap);
+                request.setAttribute("doctors", doctors);
+                request.setAttribute("patients", patients);
+                request.setAttribute("availableDates", availableDates);
+                request.setAttribute("slots", slotsForDate); // giờ trong ngày đã chọn
+                request.setAttribute("selectedDate", selectedDate);
+
+                request.getRequestDispatcher("editAppointment.jsp").forward(request, response);
+            } else {
+                response.sendError(HttpServletResponse.SC_NOT_FOUND, "Lịch hẹn không tồn tại.");
+            }
         } else {
             request.getRequestDispatcher("receptionist.jsp").forward(request, response);
         }
@@ -122,30 +154,62 @@ public class ReceptionServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
-//        BookingDAO bd = new BookingDAO();
-//        try {
-//            String action = request.getParameter("action");
-//            int id = Integer.parseInt(request.getParameter("id"));
-//
-//            if ("confirm".equals(action)) {
-//                bd.updateConfirmationStatus(id, "Đã xác nhận");
-//                request.setAttribute("message", "Lịch hẹn đã được xác nhận.");
-//            } else if ("cancel".equals(action)) {
-//                bd.updateConfirmationStatus(id, "Đã hủy");
-//                request.setAttribute("message", "Lịch hẹn đã bị hủy.");
-//            }
-//
-//            List<Booking> list = bd.getBooking();
-//            LOGGER.info("Fetched " + list.size() + " bookings after action: " + action);
-//            request.setAttribute("book", list);
-//        } catch (SQLException e) {
-//            LOGGER.severe("Error processing action in doPost: " + e.getMessage());
-//            request.setAttribute("error", "Lỗi khi xử lý yêu cầu: " + e.getMessage());
-//        } catch (NumberFormatException e) {
-//            LOGGER.severe("Invalid ID format: " + e.getMessage());
-//            request.setAttribute("error", "ID lịch hẹn không hợp lệ: " + e.getMessage());
-//        }
-//        request.getRequestDispatcher("receptionist.jsp").forward(request, response);
+        //        BookingDAO bd = new BookingDAO();
+        //        try {
+        //            String action = request.getParameter("action");
+        //            int id = Integer.parseInt(request.getParameter("id"));
+        //
+        //            if ("confirm".equals(action)) {
+        //                bd.updateConfirmationStatus(id, "Đã xác nhận");
+        //                request.setAttribute("message", "Lịch hẹn đã được xác nhận.");
+        //            } else if ("cancel".equals(action)) {
+        //                bd.updateConfirmationStatus(id, "Đã hủy");
+        //                request.setAttribute("message", "Lịch hẹn đã bị hủy.");
+        //            }
+        //
+        //            List<Booking> list = bd.getBooking();
+        //            LOGGER.info("Fetched " + list.size() + " bookings after action: " + action);
+        //            request.setAttribute("book", list);
+        //        } catch (SQLException e) {
+        //            LOGGER.severe("Error processing action in doPost: " + e.getMessage());
+        //            request.setAttribute("error", "Lỗi khi xử lý yêu cầu: " + e.getMessage());
+        //        } catch (NumberFormatException e) {
+        //            LOGGER.severe("Invalid ID format: " + e.getMessage());
+        //            request.setAttribute("error", "ID lịch hẹn không hợp lệ: " + e.getMessage());
+        //        }
+        //        request.getRequestDispatcher("receptionist.jsp").forward(request, response);
+        String action = request.getParameter("action");
+        if ("updateAppointment".equals(request.getParameter("action"))) {
+            int id = Integer.parseInt(request.getParameter("id"));
+            int doctorId = Integer.parseInt(request.getParameter("doctorId"));
+            int patientId = Integer.parseInt(request.getParameter("patientId"));
+            int doctorShiftId = Integer.parseInt(request.getParameter("doctorShiftId"));
+            String confirmationStatus = request.getParameter("status");
+
+            AppointmentSchedule ap = new AppointmentSchedule();
+            ap.setId(id);
+
+            Doctor d = new Doctor();
+            d.setId(doctorId);
+            ap.setDoctor(d);
+
+            Patient p = new Patient();
+            p.setId(patientId);
+            ap.setPatient(p);
+
+            DoctorShiftSlot slot = new DoctorShiftSlot();
+            slot.setId(doctorShiftId);
+            ap.setShiftSlot(slot);
+
+            ap.setConfirmationStatus(confirmationStatus);
+
+            ReceptionDAO dao = new ReceptionDAO();
+            dao.updateAppointmentSchedules(ap);
+
+            request.setAttribute("message", "Cập nhật lịch hẹn thành công!");
+            response.sendRedirect("ReceptionServlet?action=viewAppointments");
+        }
+
     }
 
     @Override
