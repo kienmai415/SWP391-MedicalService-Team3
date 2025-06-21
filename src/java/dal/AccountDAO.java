@@ -557,6 +557,44 @@ public class AccountDAO extends DBContext {
             return false;
         }
     }
+    
+    public User getUserByEmailPass(String email, String pass) {
+        String sql = "SELECT * FROM dbo.users WHERE email = ? AND password = ?";
+        User u = null;
+        try {
+            PreparedStatement ps = connection.prepareStatement(sql);
+            ps.setString(1, email);
+            ps.setString(2, pass);
+
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                Date sqlDate = rs.getDate("dateOfBirth");
+                LocalDate dob = (sqlDate != null) ? sqlDate.toLocalDate() : null;
+
+                u = new User(rs.getInt("id"), 
+                        rs.getString("imageURL"),
+                        rs.getString("email"),
+                        rs.getString("username"),
+                        rs.getString("password"),
+                        rs.getString("role"),
+                        rs.getString("fullName"),
+                        dob,
+                        rs.getString("gender"),
+                        rs.getString("fullName"),
+                        rs.getString("phoneNumber"),
+                        rs.getBoolean("status")
+                );
+                rs.close();
+                ps.close();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return (u);
+    }
+   
+    
+    
     // Hàm main để test phương thức getAccounts, lấy tất cả tài khoản
 //    public static void main(String[] args) {
 //        AccountDAO accountDAO = new AccountDAO();
@@ -611,4 +649,10 @@ public class AccountDAO extends DBContext {
 //        }
 //        
 //    }
+    
+    public static void main(String[] args) {
+        AccountDAO a = new AccountDAO();
+        User u = a.getUserByEmailPass("admin@admin.com", "admin");
+        System.out.println(u);
+    }
 }

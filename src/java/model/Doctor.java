@@ -30,6 +30,21 @@ public class Doctor {
     public Doctor() {
     }
 
+    public Doctor(int id, String imageURL, String email, String username, String password, String role, String fullName, LocalDate dob, String gender, String address, String phoneNumber, boolean status) {
+        this.id = id;
+        this.imageURL = imageURL;
+        this.email = email;
+        this.username = username;
+        this.password = password;
+        this.role = role;
+        this.fullName = fullName;
+        this.dob = dob;
+        this.gender = gender;
+        this.address = address;
+        this.phoneNumber = phoneNumber;
+        this.status = status;
+    }
+    
     public Doctor(int id, String imageURL, String email, String username, String password, String role, String fullName, LocalDate dob, String gender, String address, String phoneNumber, boolean status, Specialization specialization, DoctorLevel doctorLevel) {
         this.id = id;
         this.imageURL = imageURL;
@@ -161,7 +176,7 @@ public class Doctor {
 
     @Override
     public String toString() {
-        return "Doctor{" + "id=" + id + ", imageURL=" + imageURL + ", email=" + email + ", username=" + username + ", password=" + password + ", role=" + role + ", fullName=" + fullName + ", dob=" + dob + ", gender=" + gender + ", address=" + address + ", phoneNumber=" + phoneNumber + ", status=" + status + ", specialization=" + specialization + ", doctorLevel=" + doctorLevel + '}';
+        return "Doctor{" + "id=" + id + ", imageURL=" + imageURL + ", email=" + email + ", username=" + username + ", password=" + password + ", role=" + role + ", fullName=" + fullName + ", dob=" + dob + ", gender=" + gender + ", address=" + address + ", phoneNumber=" + phoneNumber + ", status=" + status + '}';
     }
 
     

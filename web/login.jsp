@@ -459,21 +459,7 @@
                         else if (!emailRegex.test(value))
                             msg = "Email không hợp lệ!";
                         break;
-
-                    case "CCCD":
-                        const cccdRegex = /^\d{12}$/;
-                        if (!value)
-                            msg = "Vui lòng nhập số căn cước công dân!";
-                        else if (!cccdRegex.test(value))
-                            msg = "Căn cước công dân không hợp lệ!";
-                        break;
-                    case "BHYT":
-                        const bhytRegex = /^[A-Z]{2}\d{13}$|^[A-Z]{2}\d{8}$/;
-                        if (!value)
-                            msg = "Vui lòng nhập số bảo hiểm y tế!";
-                        else if (!bhytRegex.test(value))
-                            msg = "Số bảo hiểm y tế không hợp lệ!";
-                        break;
+                    
                     case "phone":
                         const phoneRegex = /^(0|\+84)[0-9]{9}$/;
                         if (!value)
