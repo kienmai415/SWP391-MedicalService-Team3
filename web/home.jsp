@@ -1478,7 +1478,7 @@
                             <a class="nav-link" href="contact">Liên hệ</a>
                         </li>
                     </ul>
-                    <a href="login.jsp" class="btn btn-primary ms-lg-4">
+                    <a href="login" class="btn btn-primary ms-lg-4">
                         <i class="bi bi-person-fill me-2"></i>Đăng nhập
                     </a>
                 </div>

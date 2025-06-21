@@ -421,7 +421,7 @@
                                                             <td>
                                                                 <a href="ReceptionServlet?action=viewDetail&id=${i.id}" title="Xem chi tiết lịch hẹn">
                                                                     <button class="btn btn-outline-success custom-detail-btn">Chi tiết
-                                                                        <i class="bi bi-eye"></i> 
+                                                                        <i class="bi bi-eye"></i>
                                                                     </button>
                                                                 </a>
                                                             </td>

@@ -5,22 +5,25 @@
 package model;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 
 /**
  *
  * @author laptop368
  */
 public class DoctorShiftSlot {
+
     private int id;
     private int doctorId;
     private String slotStartTime;
-    private LocalDate date;
+    private String date;
     private boolean isBooked;
 
     public DoctorShiftSlot() {
     }
 
-    public DoctorShiftSlot(int id, int doctorId, String slotStartTime, LocalDate date, boolean isBooked) {
+    public DoctorShiftSlot(int id, int doctorId, String slotStartTime, String date, boolean isBooked) {
         this.id = id;
         this.doctorId = doctorId;
         this.slotStartTime = slotStartTime;
@@ -49,15 +52,19 @@ public class DoctorShiftSlot {
     }
 
     public void setSlotStartTime(String slotStartTime) {
-        this.slotStartTime = slotStartTime;
+        LocalTime time = LocalTime.parse(slotStartTime);
+        String formatted = time.format(DateTimeFormatter.ofPattern("HH:mm"));
+        this.slotStartTime = formatted;
     }
 
-    public LocalDate getDate() {
+    public String getDate() {
         return date;
     }
 
     public void setDate(LocalDate date) {
-        this.date = date;
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+        String formattedDate = date.format(formatter);
+        this.date = formattedDate;
     }
 
     public boolean isIsBooked() {
@@ -73,5 +80,4 @@ public class DoctorShiftSlot {
         return "DoctorShiftSlot{" + "id=" + id + ", doctorId=" + doctorId + ", slotStartTime=" + slotStartTime + ", date=" + date + ", isBooked=" + isBooked + '}';
     }
 
-    
 }

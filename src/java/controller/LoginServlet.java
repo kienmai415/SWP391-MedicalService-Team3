@@ -4,6 +4,8 @@
  */
 package controller;
 
+import dal.AccountDAO;
+import dal.DoctorDAO;
 import dal.PatientDAO;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -13,7 +15,9 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import model.Doctor;
 import model.Patient;
+import model.User;
 
 /**
  *
@@ -42,7 +46,7 @@ public class LoginServlet extends HttpServlet {
             out.println("<title>Servlet LoginServlet</title>");
             out.println("</head>");
             out.println("<body>");
-            out.println("<h1>Servlet LoginServlet at trang này này"  + "</h1>");
+            out.println("<h1>Servlet LoginServlet at trang này này" + "</h1>");
             out.println("</body>");
             out.println("</html>");
         }
@@ -78,6 +82,8 @@ public class LoginServlet extends HttpServlet {
             throws ServletException, IOException {
         //processRequest(request, response);
         PatientDAO ad = new PatientDAO();
+        DoctorDAO dd = new DoctorDAO();
+        AccountDAO acd = new AccountDAO();
 
         String email = request.getParameter("email");
         String password = request.getParameter("password");
@@ -86,24 +92,32 @@ public class LoginServlet extends HttpServlet {
 
         //tạo object
         Patient p = ad.getPatientByEmailPass(email, password);
+        Doctor d = dd.getDoctorByEmailPass(email, password);
+        User u = acd.getUserByEmailPass(email, password);
 
         try (PrintWriter out = response.getWriter()) {
 
             if (p != null) {
-                role = p.getRole();
-            }
-
-            if (role == null) {
+                HttpSession session = request.getSession();
+                session.setAttribute("p", p);
+                request.getRequestDispatcher("view/patient/patient_dashboard.jsp").forward(request, response);
+            } else if (d != null) {
+                HttpSession session = request.getSession();
+                session.setAttribute("d", d);
+                request.getRequestDispatcher("doctorhome.jsp").forward(request, response);
+            } else if (u != null) {
+                HttpSession session = request.getSession();
+                if ("Admin".equals(u.getRole())) {
+                    request.getRequestDispatcher("/AccountManagementServlet?showSection=dashboard").forward(request, response);
+                } else if ("Receptionist".equals(u.getRole())) {
+                    request.getRequestDispatcher("receptionist.jsp").forward(request, response);
+                } else if ("Manager".equals(u.getRole())) {
+                    //request.getRequestDispatcher("receptionist.jsp").forward(request, response);
+                }
+            } else {
                 String error = "Đăng nhập thất bại. Kiểm tra lại email và mật khẩu!";
                 request.setAttribute("error", error);
                 request.getRequestDispatcher("login.jsp").forward(request, response);
-            } else {
-
-                if (role.equals(p.getRole())) {
-                    HttpSession session = request.getSession();
-                    session.setAttribute("p", p);
-                    request.getRequestDispatcher("admin.jsp").forward(request, response);
-                }
             }
         }
     }

@@ -4,23 +4,21 @@
  */
 package controller;
 
-import dal.AppointmentScheduleDAO;
 import java.io.IOException;
 import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-import java.util.List;
-import model.AppointmentSchedule;
-import model.Patient;
 
 /**
  *
- * @author laptop368
+ * @author BB-MT
  */
-public class AppointmentScheduleServlet extends HttpServlet {
+@WebServlet(name = "Logout", urlPatterns = {"/logout"})
+public class Logout extends HttpServlet {
 
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -39,10 +37,10 @@ public class AppointmentScheduleServlet extends HttpServlet {
             out.println("<!DOCTYPE html>");
             out.println("<html>");
             out.println("<head>");
-            out.println("<title>Servlet AppointmentScheduleServlet</title>");
+            out.println("<title>Servlet Logout</title>");
             out.println("</head>");
             out.println("<body>");
-            out.println("<h1>Servlet AppointmentScheduleServlet at " + request.getContextPath() + "</h1>");
+            out.println("<h1>Servlet Logout at " + request.getContextPath() + "</h1>");
             out.println("</body>");
             out.println("</html>");
         }
@@ -60,22 +58,14 @@ public class AppointmentScheduleServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String action = request.getParameter("action");
-        AppointmentScheduleDAO dao = new AppointmentScheduleDAO();
-
-        if ("view".equals(action)) {
-            int patientId = Integer.parseInt(request.getParameter("pid"));
-            List<AppointmentSchedule> appointmentById = dao.getListAppointmentById(patientId);
-            AppointmentSchedule appointmentInfo = appointmentById.get(0);
-            request.setAttribute("appointmentInfo", appointmentInfo);
-            request.getRequestDispatcher("appointment_info.jsp").forward(request, response);
-        
-        } else {
-            List<AppointmentSchedule> listAppByDoctor = dao.getListAppointmentByDoctorId(1);
-            request.setAttribute("ListAppointment", listAppByDoctor);
-            request.getRequestDispatcher("appointment_schedule.jsp").forward(request, response);
+        //processRequest(request, response);
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            session.removeAttribute("p");
+            session.invalidate();  
         }
 
+        response.sendRedirect("login.jsp"); 
     }
 
     /**

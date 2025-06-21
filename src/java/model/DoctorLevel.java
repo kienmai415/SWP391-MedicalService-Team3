@@ -9,6 +9,7 @@ package model;
  * @author laptop368
  */
 public class DoctorLevel {
+
     private int id;
     private String name;
     private double examinationFee;
@@ -21,6 +22,13 @@ public class DoctorLevel {
         this.name = name;
         this.examinationFee = examinationFee;
     }
+
+    public DoctorLevel(int id, String name) {
+        this.id = id;
+        this.name = name;
+    }
+
+    
 
     public int getId() {
         return id;
@@ -51,4 +59,6 @@ public class DoctorLevel {
         return "DoctorLevel{" + "id=" + id + ", name=" + name + ", examinationFee=" + examinationFee + '}';
     }
     
+
+
 }
