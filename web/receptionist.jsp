@@ -166,9 +166,6 @@
                         <a class="nav-link ${activeTab == 'appointments' ? 'active' : ''}"
                            href="${pageContext.request.contextPath}/ReceptionServlet?action=viewAppointments">
                             <i class="fas fa-calendar-check me-2"></i>Quản lý lịch hẹn
-                            <c:if test="${not empty listApp}">
-                                <span class="notification-badge">${listApp.size()}</span>
-                            </c:if>
                         </a>
 
                         <a class="nav-link" href="#" onclick="showTab('feedback')">
@@ -337,12 +334,23 @@
                                         background-color: #1b4332;
                                     }
                                 </style>
-                                <form method="get" action="ReceptionServlet" class="search-bar">
+                                <form method="get" action="ReceptionServlet" class="search-bar" onsubmit="return validateSearch()">
                                     <input type="hidden" name="action" value="searchAppointments" />
-                                    <input type="text" name="keyword" placeholder="Nhập tên bệnh nhân hoặc bác sĩ"
+                                    <input type="text" id="searchInput" name="keyword" placeholder="Nhập tên bệnh nhân hoặc bác sĩ"
                                            value="${param.keyword}" />
                                     <button type="submit">🔍</button>
                                 </form>
+
+                                <script>
+                                    function validateSearch() {
+                                        const input = document.getElementById("searchInput").value.trim();
+                                        if (input === "") {
+                                            alert("Vui lòng nhập tên bệnh nhân hoặc bác sĩ để tìm kiếm.");
+                                            return false;
+                                        }
+                                        return true;
+                                    }
+                                </script>
                             </div>
 
 
@@ -360,6 +368,7 @@
                                             <th>Trạng thái</th>
                                             <th>Thao tác</th>
                                             <th>Chi tiết</th>
+                                            <th>Chỉnh sửa</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -405,7 +414,7 @@
                                                                     </form>
                                                                 </c:if>
                                                                 <c:if test="${i.confirmationStatus != 'Pending'}">
-                                                                    <span>—</span>
+                                                                    <span>— </span>
                                                                 </c:if>
                                                             </td>
 
@@ -416,6 +425,17 @@
                                                                     </button>
                                                                 </a>
                                                             </td>
+
+                                                            <td>
+                                                                <a href="ReceptionServlet?action=editAppointment&id=${i.id}"
+                                                                   class="btn btn-outline-success"
+                                                                   style="border-radius: 8px; padding: 6px 16px; font-weight: 500;">Chỉnh sửa
+                                                                    <i class="fas fa-pen me-1"></i> 
+                                                                </a>
+                                                            </td>
+
+
+
                                                         </tr>
                                                     </c:forEach>
                                                 </c:when>
@@ -427,6 +447,7 @@
                                             </c:choose>
                                         </tbody>
                                     </table>
+
                                     <!-- PHÂN TRANG -->
                                     <div style="text-align: center; margin-top: 20px;">
                                         <c:if test="${page > 1}">
@@ -444,7 +465,7 @@
 
                                         <c:if test="${page < totalPage}">
                                             <a href="ReceptionServlet?action=viewAppointments&page=${page + 1}" class="btn btn-outline-secondary m-1">
-                                                 >
+                                                >
                                             </a>
                                         </c:if>
                                     </div>
@@ -517,15 +538,15 @@
 
             <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
             <script>
-                            function showTab(tabName) {
-                                const tabs = document.querySelectorAll('.tab-content');
-                                tabs.forEach(tab => tab.classList.remove('active'));
-                                document.getElementById(tabName).classList.add('active');
+    function showTab(tabName) {
+        const tabs = document.querySelectorAll('.tab-content');
+        tabs.forEach(tab => tab.classList.remove('active'));
+        document.getElementById(tabName).classList.add('active');
 
-                                const navLinks = document.querySelectorAll('.nav-link');
-                                navLinks.forEach(link => link.classList.remove('active'));
-                                event.target.classList.add('active');
-                            }
+        const navLinks = document.querySelectorAll('.nav-link');
+        navLinks.forEach(link => link.classList.remove('active'));
+        event.target.classList.add('active');
+    }
             </script>
         </body>
     </html>

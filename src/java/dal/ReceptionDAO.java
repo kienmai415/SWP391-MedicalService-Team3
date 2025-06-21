@@ -17,11 +17,12 @@ import model.Doctor;
 import model.DoctorShiftSlot;
 import model.Patient;
 
+
 /**
  *
  * @author MinhQuang
  */
-public class ReceptionDAO extends DBContext{
+public class ReceptionDAO extends DBContext {
 
     public ArrayList<AppointmentSchedule> getAllSchedules() {
         ArrayList<AppointmentSchedule> listAp = new ArrayList<>();
@@ -271,6 +272,93 @@ public class ReceptionDAO extends DBContext{
             e.printStackTrace();
         }
         return 0;
+    }
+
+    public List<Doctor> getAllDoctors() {
+        List<Doctor> list = new ArrayList<>();
+        String sql = "SELECT id, fullName FROM doctor";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                Doctor d = new Doctor();
+                d.setId(rs.getInt("id"));
+                d.setFullName(rs.getString("fullName"));
+                list.add(d);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    public List<Patient> getAllPatients() {
+        List<Patient> list = new ArrayList<>();
+        String sql = "SELECT id, fullName FROM patient";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                Patient p = new Patient();
+                p.setId(rs.getInt("id"));
+                p.setFullName(rs.getString("fullName"));
+                list.add(p);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    public List<DoctorShiftSlot> getSlotsByDoctorId(int doctorId) {
+        List<DoctorShiftSlot> list = new ArrayList<>();
+        String sql = "SELECT id, date, slotStartTime FROM doctorShiftSlot WHERE doctorId = ?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, doctorId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                DoctorShiftSlot slot = new DoctorShiftSlot();
+                slot.setId(rs.getInt("id"));
+                slot.setDate(rs.getDate("date").toLocalDate());
+                slot.setSlotStartTime(rs.getTime("slotStartTime").toLocalTime().toString());
+                list.add(slot);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    public List<LocalDate> getDistinctWorkingDatesByDoctor(int doctorId) {
+        List<LocalDate> dates = new ArrayList<>();
+        String sql = "SELECT DISTINCT date FROM doctorShiftSlot WHERE doctorId = ? ORDER BY date ASC";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, doctorId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                dates.add(rs.getDate("date").toLocalDate());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return dates;
+    }
+
+    public List<DoctorShiftSlot> getSlotsByDoctorAndDate(int doctorId, LocalDate date) {
+        List<DoctorShiftSlot> slots = new ArrayList<>();
+        String sql = "SELECT id, slotStartTime FROM doctorShiftSlot WHERE doctorId = ? AND date = ? ORDER BY slotStartTime";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, doctorId);
+            ps.setDate(2, java.sql.Date.valueOf(date));
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                DoctorShiftSlot slot = new DoctorShiftSlot();
+                slot.setId(rs.getInt("id"));
+                slot.setSlotStartTime(rs.getTime("slotStartTime").toLocalTime().toString());
+                slots.add(slot);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return slots;
     }
 
     public AppointmentSchedule addAppointmentSchedules(AppointmentSchedule APP) {
