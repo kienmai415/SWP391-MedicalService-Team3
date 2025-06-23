@@ -1,9 +1,3 @@
-<%-- 
-    Document   : updateaccount
-    Created on : 2 thg 6, 2025, 16:28:52
-    Author     : maiki
---%>
-
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 
@@ -159,12 +153,14 @@
                                 <c:if test="${not empty selectedAccount}">
                                     <form action="<%= request.getContextPath()%>/AccountManagementServlet" method="post">
                                         <input type="hidden" name="action" value="update">
-                                        <input type="hidden" name="email" value="${selectedAccount.email}">
+                                        <input type="hidden" name="showSection" value="update-account">
+                                        <input type="hidden" name="originalEmail" value="${selectedAccount.email}">
+
                                         <div class="row g-3">
                                             <div class="col-md-6">
                                                 <div class="form-group">
-                                                    <label for="email" class="form-label">Email</label>
-                                                    <input type="email" class="form-control" id="email" name="email" value="${selectedAccount.email}" required>
+                                                    <label for="email" class="form-label">Email mới</label>
+                                                    <input type="email" class="form-control" id="email" name="email" value="${selectedAccount.email}" placeholder="Nhập email mới (có thể để trống để giữ nguyên)">
                                                 </div>
                                             </div>
                                             <div class="col-md-6">
@@ -198,14 +194,14 @@
                                             <div class="col-md-6">
                                                 <div class="form-group">
                                                     <label for="dob" class="form-label">Ngày sinh</label>
-                                                    <input type="date" class="form-control" id="dob" name="dob" value="<c:if test='${selectedDetail.dob != null}'>${selectedDetail.dob}</c:if>" required>
-                                                    </div>
+                                                    <input type="date" class="form-control" id="dob" name="dob" value="<c:if test='${selectedDetail.dob != null}'>${selectedDetail.dob.toString()}</c:if>" required>
                                                 </div>
-                                                <div class="col-md-6">
-                                                    <div class="form-group">
-                                                        <label for="gender" class="form-label">Giới tính</label>
-                                                        <select class="form-select" id="gender" name="gender" required>
-                                                            <option value="Nam" ${selectedDetail.gender == 'Nam' ? 'selected' : ''}>Nam</option>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label for="gender" class="form-label">Giới tính</label>
+                                                    <select class="form-select" id="gender" name="gender" required>
+                                                        <option value="Nam" ${selectedDetail.gender == 'Nam' ? 'selected' : ''}>Nam</option>
                                                         <option value="Nữ" ${selectedDetail.gender == 'Nữ' ? 'selected' : ''}>Nữ</option>
                                                         <option value="Khác" ${selectedDetail.gender == 'Khác' ? 'selected' : ''}>Khác</option>
                                                     </select>
