@@ -17,7 +17,6 @@ import model.Doctor;
 import model.DoctorShiftSlot;
 import model.Patient;
 
-
 /**
  *
  * @author MinhQuang
@@ -27,18 +26,20 @@ public class ReceptionDAO extends DBContext {
     public ArrayList<AppointmentSchedule> getAllSchedules() {
         ArrayList<AppointmentSchedule> listAp = new ArrayList<>();
         String sql = """
-        	select 
-        	app.id ,
-        	ds.date ,
-        	ds.slotStartTime ,
-        	pa.fullName as patientName , 
-        	dt.fullName as  doctorName,
-        	app.confirmationStatus  
-                     
-        	from appointmentSchedule app
-        	JOIN doctorShiftSlot ds on app.doctorShiftId = ds.id
-        	JOIN patient pa ON app.patientId = pa.id
-        	JOIN doctor dt on app.doctorId = dt.id
+        select 
+            app.id ,
+            ds.date ,
+            ds.slotStartTime ,
+            pa.fullName as patientName , 
+            dt.fullName as doctorName,
+            app.confirmationStatus,
+            app.appointment_date,
+            app.appointment_hour,
+            app.symptom
+        from appointmentSchedule app
+        JOIN doctorShiftSlot ds on app.doctorShiftId = ds.id
+        JOIN patient pa ON app.patientId = pa.id
+        JOIN doctor dt on app.doctorId = dt.id
         """;
 
         try {
@@ -46,34 +47,32 @@ public class ReceptionDAO extends DBContext {
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 int apId = rs.getInt("id");
-                String apConfirm = rs.getString("confirmationStatus"); // đảm bảo đúng tên cột trong DB
-
-//                int doctorId = rs.getInt("doctorId");
+                String apConfirm = rs.getString("confirmationStatus");
                 String doctorName = rs.getString("doctorName");
+                String patientName = rs.getString("patientName");
+
                 Doctor apDoctor = new Doctor();
                 apDoctor.setFullName(doctorName);
-//                apDoctor.setId(doctorId);
-
-//                int patientId = rs.getInt("patientId");
-                String patientName = rs.getString("patientName");
                 Patient apPatient = new Patient();
                 apPatient.setFullName(patientName);
-//                apPatient.setId(patientId);
-//                int slotId = rs.getInt("doctorShiftId");
 
                 DoctorShiftSlot apSlot = new DoctorShiftSlot();
-//                apSlot.setId(slotId);
-                String slotStartTime = rs.getString("slotStartTime");
-                apSlot.setSlotStartTime(slotStartTime);
-                LocalDate date = rs.getDate("date").toLocalDate();
-                apSlot.setDate(date);
-// Tạo đối tượng Appointment (hoặc AppointmentSchedule nếu đúng tên)
-                AppointmentSchedule app = new AppointmentSchedule(apId, apConfirm, apDoctor, apPatient, apSlot);
+                apSlot.setSlotStartTime(rs.getString("slotStartTime"));
+                apSlot.setDate(rs.getDate("date").toLocalDate());
+
+                AppointmentSchedule app = new AppointmentSchedule(
+                        apId,
+                        apConfirm,
+                        apDoctor,
+                        apPatient,
+                        apSlot,
+                        rs.getString("appointment_date"),
+                        rs.getString("appointment_hour"),
+                        rs.getString("symptom")
+                );
 
                 listAp.add(app);
-
             }
-
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -83,33 +82,31 @@ public class ReceptionDAO extends DBContext {
     public AppointmentSchedule getAppointmentSchedulesById(int id) {
         DBContext dbc = DBContext.getInstance();
         String sql = """
-                   SELECT app.id, ds.date, ds.slotStartTime, app.confirmationStatus,
-                                    pa.fullName AS patientName, pa.email AS patientEmail, pa.phoneNumber AS patientPhone,
-                                    pa.gender AS patientGender, pa.address AS patientAddress,
-                                    dt.fullName AS doctorName, dt.email AS doctorEmail, dt.phoneNumber AS doctorPhone,
-                                    dt.gender AS doctorGender, dt.address AS doctorAddress
-                             FROM appointmentSchedule app
-                             JOIN doctorShiftSlot ds ON app.doctorShiftId = ds.id
-                             JOIN patient pa ON app.patientId = pa.id
-                             JOIN doctor dt ON app.doctorId = dt.id
-                             WHERE app.id = ?
-                     """;
-        try {
-            PreparedStatement preparedStatement = dbc.connection.prepareStatement(sql);
-            preparedStatement.setInt(1, id);
-            ResultSet rs = preparedStatement.executeQuery();
+            SELECT app.id, app.appointment_date, app.appointment_hour, app.confirmationStatus,
+                   pa.fullName AS patientName, pa.email AS patientEmail, pa.phoneNumber AS patientPhone,
+                   pa.gender AS patientGender, pa.address AS patientAddress,
+                   dt.fullName AS doctorName, dt.email AS doctorEmail, dt.phoneNumber AS doctorPhone,
+                   dt.gender AS doctorGender, dt.address AS doctorAddress
+            FROM appointmentSchedule app
+            JOIN patient pa ON app.patientId = pa.id
+            JOIN doctor dt ON app.doctorId = dt.id
+            WHERE app.id = ?
+        """;
+        try (PreparedStatement ps = dbc.connection.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            ResultSet rs = ps.executeQuery();
             if (rs.next()) {
-
                 AppointmentSchedule ap = new AppointmentSchedule();
                 ap.setId(rs.getInt("id"));
                 ap.setConfirmationStatus(rs.getString("confirmationStatus"));
 
                 DoctorShiftSlot shift = new DoctorShiftSlot();
-                shift.setDate(rs.getDate("date").toLocalDate());
+                shift.setDate(LocalDate.parse(rs.getString("appointment_date")));
+                shift.setSlotStartTime(rs.getString("appointment_hour"));
+                ap.setShiftSlot(shift);
 
-                LocalTime time = rs.getTime("slotStartTime").toLocalTime();
-                String formattedTime = time.format(DateTimeFormatter.ofPattern("HH:mm"));
-                shift.setSlotStartTime(formattedTime);
+                shift.setDate(LocalDate.parse(rs.getString("appointment_date")));
+                shift.setSlotStartTime(rs.getString("appointment_hour"));
                 ap.setShiftSlot(shift);
 
                 Patient patient = new Patient();
@@ -127,11 +124,11 @@ public class ReceptionDAO extends DBContext {
                 doctor.setGender(rs.getString("doctorGender"));
                 doctor.setAddress(rs.getString("doctorAddress"));
                 ap.setDoctor(doctor);
-                return ap;
 
+                return ap;
             }
         } catch (Exception e) {
-            return null;
+            e.printStackTrace();
         }
         return null;
     }
@@ -185,50 +182,48 @@ public class ReceptionDAO extends DBContext {
         return resultList;
     }
 
-    public ArrayList<AppointmentSchedule> get(String sql) {
-        ArrayList<AppointmentSchedule> listAp = new ArrayList<>();
-        DBContext dbc = DBContext.getInstance();
-        try {
-            PreparedStatement preparedStatement = dbc.connection.prepareStatement(sql);
-            ResultSet rs = preparedStatement.executeQuery();
-            while (rs.next()) {
-                int apId = rs.getInt("id");
-                String apConfirm = rs.getString("confirmationStatus"); // đảm bảo đúng tên cột trong DB
-
-                int doctorId = rs.getInt("doctorId");
-                Doctor apDoctor = new Doctor();
-                apDoctor.setId(doctorId);
-
-                int patientId = rs.getInt("patientId");
-                Patient apPatient = new Patient();
-                apPatient.setId(patientId);
-
-                int slotId = rs.getInt("doctorShiftId");
-                DoctorShiftSlot apSlot = new DoctorShiftSlot();
-                apSlot.setId(slotId);
-
-                AppointmentSchedule app = new AppointmentSchedule(apId, apConfirm, apDoctor, apPatient, apSlot);
-                listAp.add(app);
-            }
-        } catch (Exception e) {
-            return null;
-        }
-        return listAp.isEmpty() ? null : listAp;
-    }
+//    public ArrayList<AppointmentSchedule> get(String sql) {
+//        ArrayList<AppointmentSchedule> listAp = new ArrayList<>();
+//        DBContext dbc = DBContext.getInstance();
+//        try {
+//            PreparedStatement preparedStatement = dbc.connection.prepareStatement(sql);
+//            ResultSet rs = preparedStatement.executeQuery();
+//            while (rs.next()) {
+//                int apId = rs.getInt("id");
+//                String apConfirm = rs.getString("confirmationStatus"); // đảm bảo đúng tên cột trong DB
+//
+//                int doctorId = rs.getInt("doctorId");
+//                Doctor apDoctor = new Doctor();
+//                apDoctor.setId(doctorId);
+//
+//                int patientId = rs.getInt("patientId");
+//                Patient apPatient = new Patient();
+//                apPatient.setId(patientId);
+//
+//                int slotId = rs.getInt("doctorShiftId");
+//                DoctorShiftSlot apSlot = new DoctorShiftSlot();
+//                apSlot.setId(slotId);
+//
+//                AppointmentSchedule app = new AppointmentSchedule(apId, apConfirm, apDoctor, apPatient, apSlot);
+//                listAp.add(app);
+//            }
+//        } catch (Exception e) {
+//            return null;
+//        }
+//        return listAp.isEmpty() ? null : listAp;
+//    }
 //phân trang
-
     public List<AppointmentSchedule> getAppointmentsWithPaging(int pageIndex, int pageSize) {
         List<AppointmentSchedule> list = new ArrayList<>();
         String sql = """
-        SELECT app.id, ds.date, ds.slotStartTime,
+        SELECT app.id, app.appointment_date, app.appointment_hour,
                pa.fullName AS patientName,
                dt.fullName AS doctorName,
                app.confirmationStatus
         FROM appointmentSchedule app
-        JOIN doctorShiftSlot ds ON app.doctorShiftId = ds.id
         JOIN patient pa ON app.patientId = pa.id
         JOIN doctor dt ON app.doctorId = dt.id
-        ORDER BY ds.date DESC
+        ORDER BY app.id ASC
         OFFSET ? ROWS FETCH NEXT ? ROWS ONLY
     """;
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
@@ -240,9 +235,10 @@ public class ReceptionDAO extends DBContext {
                 ap.setId(rs.getInt("id"));
                 ap.setConfirmationStatus(rs.getString("confirmationStatus"));
 
+                // Ngày giờ lấy từ cột trực tiếp
                 DoctorShiftSlot shift = new DoctorShiftSlot();
-                shift.setDate(rs.getDate("date").toLocalDate());
-                shift.setSlotStartTime(rs.getTime("slotStartTime").toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm")));
+                shift.setDate(LocalDate.parse(rs.getString("appointment_date")));
+                shift.setSlotStartTime(rs.getString("appointment_hour"));
                 ap.setShiftSlot(shift);
 
                 Doctor doctor = new Doctor();
@@ -263,6 +259,70 @@ public class ReceptionDAO extends DBContext {
 
     public int countTotalAppointments() {
         String sql = "SELECT COUNT(*) FROM appointmentSchedule";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    public List<AppointmentSchedule> getHistoryAppointmentsWithPaging(int pageIndex, int pageSize) {
+        List<AppointmentSchedule> list = new ArrayList<>();
+        String sql = """
+        SELECT app.id, app.confirmationStatus,
+               pa.fullName AS patientName,
+               dt.fullName AS doctorName,
+               shift.date AS shiftDate,
+               shift.slotStartTime
+        FROM appointmentSchedule app
+        JOIN patient pa ON app.patientId = pa.id
+        JOIN doctor dt ON app.doctorId = dt.id
+        JOIN doctorShiftSlot shift ON app.doctorShiftId = shift.id
+        WHERE app.confirmationStatus IN (N'Done', N'Cancel')
+        ORDER BY app.id ASC
+        OFFSET ? ROWS FETCH NEXT ? ROWS ONLY
+    """;
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, (pageIndex - 1) * pageSize);
+            ps.setInt(2, pageSize);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                AppointmentSchedule ap = new AppointmentSchedule();
+                ap.setId(rs.getInt("id"));
+                ap.setConfirmationStatus(rs.getString("confirmationStatus"));
+
+                Doctor doctor = new Doctor();
+                doctor.setFullName(rs.getString("doctorName"));
+                ap.setDoctor(doctor);
+
+                Patient patient = new Patient();
+                patient.setFullName(rs.getString("patientName"));
+                ap.setPatient(patient);
+
+                DoctorShiftSlot shift = new DoctorShiftSlot();
+                shift.setDate(rs.getDate("shiftDate").toLocalDate());
+                shift.setSlotStartTime(rs.getString("slotStartTime")); // or toLocalTime() if needed
+                ap.setShiftSlot(shift);
+
+                list.add(ap);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return list;
+    }
+
+    public int countTotalHistoryAppointments() {
+        String sql = """
+        SELECT COUNT(*) FROM appointmentSchedule
+        WHERE confirmationStatus IN (N'Done', N'Cancel')
+    """;
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
@@ -308,204 +368,204 @@ public class ReceptionDAO extends DBContext {
         return list;
     }
 
-    public List<DoctorShiftSlot> getSlotsByDoctorId(int doctorId) {
-        List<DoctorShiftSlot> list = new ArrayList<>();
-        String sql = "SELECT id, date, slotStartTime FROM doctorShiftSlot WHERE doctorId = ?";
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setInt(1, doctorId);
+    public AppointmentSchedule getAppointmentScheduleByIdRaw(int id) {
+        DBContext dbc = DBContext.getInstance();
+        String sql = """
+        SELECT app.id, app.appointment_date, app.appointment_hour, app.confirmationStatus,
+               app.patientId, app.doctorId,
+               pa.fullName AS patientName, dt.fullName AS doctorName
+        FROM appointmentSchedule app
+        JOIN patient pa ON app.patientId = pa.id
+        JOIN doctor dt ON app.doctorId = dt.id
+        WHERE app.id = ?
+    """;
+
+        try (PreparedStatement ps = dbc.connection.prepareStatement(sql)) {
+            ps.setInt(1, id);
             ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                AppointmentSchedule ap = new AppointmentSchedule();
+                ap.setId(rs.getInt("id"));
+                ap.setConfirmationStatus(rs.getString("confirmationStatus"));
+
+                ap.setAppointment_date(rs.getString("appointment_date"));
+                ap.setAppointment_hour(rs.getString("appointment_hour"));
+
+                Patient p = new Patient();
+                p.setId(rs.getInt("patientId"));
+                p.setFullName(rs.getString("patientName"));
+                ap.setPatient(p);
+
+                Doctor d = new Doctor();
+                d.setId(rs.getInt("doctorId"));
+                d.setFullName(rs.getString("doctorName"));
+                ap.setDoctor(d);
+
+                return ap;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    public List<DoctorShiftSlot> getSlotsByAppointmentDate(String appointmentDate) {
+        List<DoctorShiftSlot> list = new ArrayList<>();
+        String sql = "SELECT id, doctor_id, appointment_date, appointment_hour FROM AppointmentSchedule WHERE appointment_date = ? ORDER BY appointment_hour";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, appointmentDate);
+            ResultSet rs = ps.executeQuery();
+
             while (rs.next()) {
                 DoctorShiftSlot slot = new DoctorShiftSlot();
                 slot.setId(rs.getInt("id"));
-                slot.setDate(rs.getDate("date").toLocalDate());
-                slot.setSlotStartTime(rs.getTime("slotStartTime").toLocalTime().toString());
+                slot.setDoctorId(rs.getInt("doctor_id"));
+                slot.setDate(LocalDate.parse(rs.getString("appointment_date")));
+                slot.setSlotStartTime(rs.getString("appointment_hour"));
+                slot.setIsBooked(false);
                 list.add(slot);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
+
         return list;
     }
 
-    public List<LocalDate> getDistinctWorkingDatesByDoctor(int doctorId) {
-        List<LocalDate> dates = new ArrayList<>();
-        String sql = "SELECT DISTINCT date FROM doctorShiftSlot WHERE doctorId = ? ORDER BY date ASC";
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setInt(1, doctorId);
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                dates.add(rs.getDate("date").toLocalDate());
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return dates;
-    }
+    public List<DoctorShiftSlot> getSlotsByAppointmentHour(String appointmentHour) {
+        List<DoctorShiftSlot> list = new ArrayList<>();
+        String sql = "SELECT id, doctor_id, appointment_date, appointment_hour FROM AppointmentSchedule WHERE appointment_hour = ? ORDER BY appointment_date";
 
-    public List<DoctorShiftSlot> getSlotsByDoctorAndDate(int doctorId, LocalDate date) {
-        List<DoctorShiftSlot> slots = new ArrayList<>();
-        String sql = "SELECT id, slotStartTime FROM doctorShiftSlot WHERE doctorId = ? AND date = ? ORDER BY slotStartTime";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setInt(1, doctorId);
-            ps.setDate(2, java.sql.Date.valueOf(date));
+            ps.setString(1, appointmentHour);
             ResultSet rs = ps.executeQuery();
+
             while (rs.next()) {
                 DoctorShiftSlot slot = new DoctorShiftSlot();
                 slot.setId(rs.getInt("id"));
-                slot.setSlotStartTime(rs.getTime("slotStartTime").toLocalTime().toString());
-                slots.add(slot);
+                slot.setDoctorId(rs.getInt("doctor_id"));
+                slot.setDate(LocalDate.parse(rs.getString("appointment_date")));
+                slot.setSlotStartTime(rs.getString("appointment_hour"));
+                slot.setIsBooked(false);
+                list.add(slot);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return slots;
+
+        return list;
     }
 
-    public AppointmentSchedule addAppointmentSchedules(AppointmentSchedule APP) {
-        DBContext dbc = DBContext.getInstance();
-        int rs = 0;
+    public List<String> getAllAppointmentDates() {
+        List<String> list = new ArrayList<>();
+        String sql = "SELECT DISTINCT appointment_date FROM AppointmentSchedule ORDER BY appointment_date";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                String date = rs.getString("appointment_date");
+                LocalDate parsedDate = LocalDate.parse(date);
+                list.add(parsedDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return list;
+    }
+
+    public List<String> getAllAppointmentHours() {
+        List<String> list = new ArrayList<>();
+        String sql = "SELECT DISTINCT appointment_hour FROM AppointmentSchedule ORDER BY appointment_hour";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                String hour = rs.getString("appointment_hour");
+                list.add(LocalTime.parse(hour).format(DateTimeFormatter.ofPattern("HH:mm")));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return list;
+    }
+
+    public List<AppointmentSchedule> searchHistoryAppointmentsByName(String name) {
+        List<AppointmentSchedule> resultList = new ArrayList<>();
         String sql = """
-                        INSERT INTO [dbo].[appointmentSchedule]
-                                                         ([patientId]
-                                                         ,[doctorId]
-                                                         ,[doctorShiftId]
-                                                         ,[confirmationStatus])
-                                                   VALUES
-                                                         (?
-                                                         ,?
-                                                         ,?
-                                                         ,?)
-                     """;
-        try {
-            PreparedStatement statement = dbc.getConnection().prepareStatement(sql);
+        SELECT app.id, app.confirmationStatus,
+               pa.fullName AS patientName,
+               dt.fullName AS doctorName,
+               shift.date AS shiftDate,
+               shift.slotStartTime
+        FROM appointmentSchedule app
+        JOIN patient pa ON app.patientId = pa.id
+        JOIN doctor dt ON app.doctorId = dt.id
+        JOIN doctorShiftSlot shift ON app.doctorShiftId = shift.id
+        WHERE (dt.fullName LIKE ? OR pa.fullName LIKE ?)
+          AND app.confirmationStatus IN (N'Done', N'Cancel')
+        ORDER BY app.id ASC
+    """;
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            String kw = "%" + name.trim() + "%";
+            ps.setString(1, kw);
+            ps.setString(2, kw);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                AppointmentSchedule ap = new AppointmentSchedule();
+                ap.setId(rs.getInt("id"));
+                ap.setConfirmationStatus(rs.getString("confirmationStatus"));
 
-            statement.setInt(1, APP.getPatient().getId());
-            statement.setInt(2, APP.getDoctor().getId());
-            statement.setInt(3, APP.getShiftSlot().getId());
-            statement.setString(4, APP.getConfirmationStatus());
+                Doctor doctor = new Doctor();
+                doctor.setFullName(rs.getString("doctorName"));
+                ap.setDoctor(doctor);
 
-            rs = statement.executeUpdate();
+                Patient patient = new Patient();
+                patient.setFullName(rs.getString("patientName"));
+                ap.setPatient(patient);
+
+                DoctorShiftSlot shift = new DoctorShiftSlot();
+                shift.setDate(rs.getDate("shiftDate").toLocalDate());
+                shift.setSlotStartTime(rs.getString("slotStartTime"));
+                ap.setShiftSlot(shift);
+
+                resultList.add(ap);
+            }
         } catch (Exception e) {
-            return null;
+            e.printStackTrace();
         }
-        if (rs == 0) {
-            return null;
-        } else {
-            return APP;
-        }
+        return resultList;
     }
 
-    public AppointmentSchedule deleteAppointmentSchedules(AppointmentSchedule APP) {
-        DBContext dbc = DBContext.getInstance();
-        int rs = 0;
+    public boolean updateAppointment(AppointmentSchedule ap) {
         String sql = """
-                       DELETE FROM [dbo].[appointmentSchedule]
-                             WHERE id = ?
-                     """;
-        try {
-            PreparedStatement statement = dbc.getConnection().prepareStatement(sql);
+        UPDATE appointmentSchedule
+        SET doctorId = ?, appointment_date = ?, appointment_hour = ?, confirmationStatus = ?
+        WHERE id = ?
+    """;
 
-            statement.setInt(1, APP.getId());
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, ap.getDoctor().getId());
+            ps.setString(2, ap.getAppointment_date());
+            ps.setString(3, ap.getAppointment_hour());
+            ps.setString(4, ap.getConfirmationStatus());
+            ps.setInt(5, ap.getId());
 
-            rs = statement.executeUpdate();
+            int rows = ps.executeUpdate();
+            return rows > 0;
+
         } catch (Exception e) {
-            return null;
-        }
-        if (rs == 0) {
-            return null;
-        } else {
-            return APP;
-        }
-    }
-
-    public AppointmentSchedule updateAppointmentSchedules(AppointmentSchedule APP) {
-        DBContext dbc = DBContext.getInstance();
-        int rs = 0;
-        String sql = """           
-                       UPDATE [dbo].[appointmentSchedule]
-                                SET [patientId] = ?
-                                   ,[doctorId] = ?
-                                   ,[doctorShiftId] = ?
-                                   ,[confirmationStatus] = ?
-                        WHERE id = ?
-                     """;
-        try {
-            PreparedStatement statement = dbc.getConnection().prepareStatement(sql);
-            statement.setInt(1, APP.getPatient().getId());
-            statement.setInt(2, APP.getDoctor().getId());
-            statement.setInt(3, APP.getShiftSlot().getId());
-            statement.setString(4, APP.getConfirmationStatus());
-            statement.setInt(5, APP.getId());
-
-            rs = statement.executeUpdate();
-        } catch (Exception e) {
-            return null;
-        }
-        if (rs == 0) {
-            return null;
-        } else {
-            return APP;
+            e.printStackTrace();
+            return false;
         }
     }
 
     public static void main(String[] args) {
         ReceptionDAO dao = new ReceptionDAO();
         ArrayList<AppointmentSchedule> list = dao.getAllSchedules();
-        // System.out.println( dao.insertAppointmentSchedules(new AppointmentSchedule( 0, java.sql.Date.valueOf("2025-05-30"), "08:00:00", "08:30:00", 3, 2, 1, "pending")));
-
-//test insert
-//        AppointmentSchedule inserted = dao.addAppointmentSchedules(
-//                new AppointmentSchedule(
-//                        2,
-//                        java.sql.Date.valueOf("2025-05-30"),
-//                        "08:00:00",
-//                        "08:30:00",
-//                        1,
-//                        1,
-//                        1,
-//                        "Pending" 
-//                )
-//        );
-//
-//        if (inserted != null) {
-//            System.out.println("Insert thành công: " + inserted);
-//        } else {
-//            System.out.println("Insert thất bại!");
-//        }
-//test update
-//        AppointmentSchedule updated = dao.updateAppointmentSchedules(
-//                new AppointmentSchedule(
-//                        12, // ID của bản ghi cần update
-//                        java.sql.Date.valueOf("2025-06-01"), // đổi ngày hẹn
-//                        "09:00:00", // đổi giờ bắt đầu
-//                        "09:30:00", // đổi giờ kết thúc
-//                        1, // giữ nguyên patient_id
-//                        1, // giữ nguyên doctor_id
-//                        1, // giữ nguyên slot
-//                        "Accepted" // đổi trạng thái
-//                )
-//        );
-//
-//        if (updated != null) {
-//            System.out.println("✅ Update thành công: " + updated);
-//        } else {
-//            System.out.println("❌ Update thất bại!");
-//        }
-//test delete
-//        AppointmentSchedule deleted = dao.deleteAppointmentSchedules(
-//                new AppointmentSchedule(
-//                        12, // ID cần xóa
-//                        null, null, null,
-//                        0, 0, 0,
-//                        null
-//                )
-//        );
-//
-//        if (deleted != null) {
-//            System.out.println("🗑️ Delete thành công: " + deleted);
-//        } else {
-//            System.out.println("❌ Delete thất bại!");
-//        `
         for (AppointmentSchedule app : list) {
             System.out.println(app);
         }

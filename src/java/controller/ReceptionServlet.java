@@ -6,23 +6,18 @@ package controller;
 
 //import DAO.BookingDAO;
 //import Model.Booking;
-import dal.AppointmentScheduleDAO;
 import dal.ReceptionDAO;
 import java.io.IOException;
-import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.sql.SQLException;
-import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.logging.Logger;
 import model.AppointmentSchedule;
 import model.Doctor;
-import model.DoctorShiftSlot;
 import model.Patient;
 
 /**
@@ -37,30 +32,15 @@ public class ReceptionServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-//        BookingDAO bd = new BookingDAO();
-//        try {
-//            List<Booking> list = bd.getBooking();
-//            LOGGER.info("Fetched " + list.size() + " bookings for receptionist page.");
-//            request.setAttribute("book", list);
-//        } catch (SQLException e) {
-//            LOGGER.severe("Error fetching bookings in doGet: " + e.getMessage());
-//            request.setAttribute("error", "Lỗi khi lấy danh sách lịch hẹn: " + e.getMessage());
-//        }
-//        request.getRequestDispatcher("receptionist.jsp").forward(request, response);
-
-//        AppointmentScheduleDAO dao = new AppointmentScheduleDAO();
-//        ArrayList<appointment_schedules> list = dao.getAllSchedules();
-//        
-//        request.setAttribute("activeTab", "appointments");
-//        
-//        request.setAttribute("listApp", list);
-//        request.getRequestDispatcher("receptionist.jsp").forward(request, response);
         String action = request.getParameter("action");
+        String message = request.getParameter("message");
+        if (message != null) {
+            request.setAttribute("message", message);
+        }
         if ("viewAppointments".equals(action)) {
-            int pageIndex = 1; // mặc định trang đầu
-            int pageSize = 10;  // số bản ghi mỗi trang
+            int pageIndex = 1;
+            int pageSize = 10;
 
-            // Lấy chỉ số trang từ request
             String pageRaw = request.getParameter("page");
             if (pageRaw != null) {
                 try {
@@ -72,14 +52,11 @@ public class ReceptionServlet extends HttpServlet {
 
             ReceptionDAO dao = new ReceptionDAO();
 
-            // Lấy danh sách theo phân trang
             List<AppointmentSchedule> list = dao.getAppointmentsWithPaging(pageIndex, pageSize);
 
-            // Tính tổng số trang
             int total = dao.countTotalAppointments();
             int totalPage = (int) Math.ceil((double) total / pageSize);
 
-            // Gửi dữ liệu sang JSP
             request.setAttribute("listApp", list);
             request.setAttribute("page", pageIndex);
             request.setAttribute("totalPage", totalPage);
@@ -90,17 +67,26 @@ public class ReceptionServlet extends HttpServlet {
         } else if ("searchAppointments".equals(action)) {
             ReceptionDAO dao = new ReceptionDAO();
             List<AppointmentSchedule> list;
+
             String keyword = request.getParameter("keyword");
 
-            if (keyword != null && !keyword.trim().isEmpty()) {
-                list = (List<AppointmentSchedule>) dao.getAppointmentSchedulesByName(keyword.trim());
+            if (keyword != null) {
+                keyword = keyword.trim();
+
+                keyword = keyword.replaceAll("\\s+", " ");
+
+                if (!keyword.isEmpty()) {
+                    list = dao.getAppointmentSchedulesByName(keyword);
+                } else {
+                    list = dao.getAllSchedules();
+                }
             } else {
                 list = dao.getAllSchedules();
             }
+
             request.setAttribute("listApp", list);
             request.setAttribute("activeTab", "appointments");
             request.getRequestDispatcher("receptionist.jsp").forward(request, response);
-
         } else if ("viewDetail".equals(action)) {
             int appointmentId = Integer.parseInt(request.getParameter("id"));
 
@@ -114,37 +100,47 @@ public class ReceptionServlet extends HttpServlet {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND, "Lịch hẹn không tồn tại.");
             }
 
-        } else if ("editAppointment".equals(action)) {
-            int appointmentId = Integer.parseInt(request.getParameter("id"));
-            ReceptionDAO dao = new ReceptionDAO();
-            AppointmentSchedule ap = dao.getAppointmentSchedulesById(appointmentId);
+        } else if ("viewHistory".equals(action)) {
+            int pageIndex = 1;
+            int pageSize = 10;
 
-            if (ap != null) {
-                if (!"Pending".equalsIgnoreCase(ap.getConfirmationStatus())) {
-                    response.sendError(HttpServletResponse.SC_FORBIDDEN, "Chỉ có thể chỉnh sửa khi trạng thái là Pending.");
-                    return;
+            String pageRaw = request.getParameter("page");
+            if (pageRaw != null) {
+                try {
+                    pageIndex = Integer.parseInt(pageRaw);
+                } catch (NumberFormatException e) {
+                    pageIndex = 1;
                 }
-
-                List<Doctor> doctors = dao.getAllDoctors();
-                List<Patient> patients = dao.getAllPatients();
-                int doctorId = ap.getDoctor().getId();
-
-                // 🟢 Tách ngày và giờ
-                List<LocalDate> availableDates = dao.getDistinctWorkingDatesByDoctor(doctorId);
-                LocalDate selectedDate = ap.getShiftSlot().getDate();
-                List<DoctorShiftSlot> slotsForDate = dao.getSlotsByDoctorAndDate(doctorId, selectedDate);
-
-                request.setAttribute("appointment", ap);
-                request.setAttribute("doctors", doctors);
-                request.setAttribute("patients", patients);
-                request.setAttribute("availableDates", availableDates);
-                request.setAttribute("slots", slotsForDate); // giờ trong ngày đã chọn
-                request.setAttribute("selectedDate", selectedDate);
-
-                request.getRequestDispatcher("editAppointment.jsp").forward(request, response);
-            } else {
-                response.sendError(HttpServletResponse.SC_NOT_FOUND, "Lịch hẹn không tồn tại.");
             }
+
+            ReceptionDAO dao = new ReceptionDAO();
+            List<AppointmentSchedule> list = dao.getHistoryAppointmentsWithPaging(pageIndex, pageSize);
+
+            int total = dao.countTotalHistoryAppointments();
+            int totalPage = (int) Math.ceil((double) total / pageSize);
+
+            request.setAttribute("listApp", list);
+            request.setAttribute("page", pageIndex);
+            request.setAttribute("totalPage", totalPage);
+            request.setAttribute("activeTab", "history");
+
+            request.getRequestDispatcher("receptionist.jsp").forward(request, response);
+        } else if ("searchHistory".equals(action)) {
+            ReceptionDAO dao = new ReceptionDAO();
+            String keyword = request.getParameter("keyword");
+            List<AppointmentSchedule> list;
+
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                keyword = keyword.trim().replaceAll("\\s+", " ");
+                list = dao.searchHistoryAppointmentsByName(keyword);
+            } else {
+                list = dao.getHistoryAppointmentsWithPaging(1, 100);
+            }
+
+            request.setAttribute("listApp", list);
+            request.setAttribute("activeTab", "history");
+            request.getRequestDispatcher("receptionist.jsp").forward(request, response);
+
         } else {
             request.getRequestDispatcher("receptionist.jsp").forward(request, response);
         }
@@ -154,61 +150,41 @@ public class ReceptionServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
-        //        BookingDAO bd = new BookingDAO();
-        //        try {
-        //            String action = request.getParameter("action");
-        //            int id = Integer.parseInt(request.getParameter("id"));
-        //
-        //            if ("confirm".equals(action)) {
-        //                bd.updateConfirmationStatus(id, "Đã xác nhận");
-        //                request.setAttribute("message", "Lịch hẹn đã được xác nhận.");
-        //            } else if ("cancel".equals(action)) {
-        //                bd.updateConfirmationStatus(id, "Đã hủy");
-        //                request.setAttribute("message", "Lịch hẹn đã bị hủy.");
-        //            }
-        //
-        //            List<Booking> list = bd.getBooking();
-        //            LOGGER.info("Fetched " + list.size() + " bookings after action: " + action);
-        //            request.setAttribute("book", list);
-        //        } catch (SQLException e) {
-        //            LOGGER.severe("Error processing action in doPost: " + e.getMessage());
-        //            request.setAttribute("error", "Lỗi khi xử lý yêu cầu: " + e.getMessage());
-        //        } catch (NumberFormatException e) {
-        //            LOGGER.severe("Invalid ID format: " + e.getMessage());
-        //            request.setAttribute("error", "ID lịch hẹn không hợp lệ: " + e.getMessage());
-        //        }
-        //        request.getRequestDispatcher("receptionist.jsp").forward(request, response);
-            String action = request.getParameter("action");
-            if ("updateAppointment".equals(request.getParameter("action"))) {
-                int id = Integer.parseInt(request.getParameter("id"));
-                int doctorId = Integer.parseInt(request.getParameter("doctorId"));
-                int patientId = Integer.parseInt(request.getParameter("patientId"));
-                int doctorShiftId = Integer.parseInt(request.getParameter("doctorShiftId"));
-                String confirmationStatus = request.getParameter("status");
 
-                AppointmentSchedule ap = new AppointmentSchedule();
-                ap.setId(id);
+        String action = request.getParameter("action");
+        if ("confirm".equals(action) || "cancel".equals(action)) {
+            int id = Integer.parseInt(request.getParameter("id"));
+            ReceptionDAO dao = new ReceptionDAO();
+            AppointmentSchedule ap = dao.getAppointmentScheduleByIdRaw(id);
 
-                Doctor d = new Doctor();
-                d.setId(doctorId);
-                ap.setDoctor(d);
+            if (ap != null) {
+                ap.setConfirmationStatus("confirm".equals(action) ? "Done" : "Cancel");
 
-                Patient p = new Patient();
-                p.setId(patientId);
-                ap.setPatient(p);
+                boolean updated = dao.updateAppointment(ap);
 
-                DoctorShiftSlot slot = new DoctorShiftSlot();
-                slot.setId(doctorShiftId);
-                ap.setShiftSlot(slot);
+                if (updated) {
+                    response.sendRedirect("ReceptionServlet?action=viewHistory&message=success");
+                } else {
+                    // Nếu không cập nhật được thì reload lại lịch sử để hiển thị lỗi
+                    int pageIndex = 1;
+                    int pageSize = 10;
 
-                ap.setConfirmationStatus(confirmationStatus);
+                    List<AppointmentSchedule> list = dao.getHistoryAppointmentsWithPaging(pageIndex, pageSize);
+                    int total = dao.countTotalHistoryAppointments();
+                    int totalPage = (int) Math.ceil((double) total / pageSize);
 
-                ReceptionDAO dao = new ReceptionDAO();
-                dao.updateAppointmentSchedules(ap);
-
-                request.setAttribute("message", "Cập nhật lịch hẹn thành công!");
-                response.sendRedirect("ReceptionServlet?action=viewAppointments");
+                    request.setAttribute("listApp", list);
+                    request.setAttribute("page", pageIndex);
+                    request.setAttribute("totalPage", totalPage);
+                    request.setAttribute("activeTab", "history");
+                    request.setAttribute("error", "Không thể cập nhật trạng thái lịch hẹn.");
+                    request.getRequestDispatcher("receptionist.jsp").forward(request, response);
+                }
+            } else {
+                response.sendRedirect("ReceptionServlet?action=viewAppointments&error=Không+tìm+thấy+lịch+hẹn");
             }
+        }
+
     }
 
     @Override

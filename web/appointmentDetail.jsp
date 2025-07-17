@@ -1,9 +1,3 @@
-<%-- 
-    Document   : appointmentDetail
-    Created on : Jun 12, 2025, 11:20:54 AM
-    Author     : MinhQuang
---%>
-
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <!DOCTYPE html>
@@ -60,19 +54,24 @@
             color: #343a40;
         }
 
-        .back-button {
-            display: block;
-            width: fit-content;
-            margin: 30px auto 0;
-            padding: 10px 25px;
-            background-color: #2d6a4f;
-            color: #fff;
-            text-decoration: none;
-            border-radius: 6px;
-            transition: 0.3s;
+        .button-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 30px;
         }
 
-        .back-button:hover {
+        .btn-common {
+            padding: 10px 25px;
+            border-radius: 6px;
+            text-decoration: none;
+            color: #fff;
+            background-color: #2d6a4f;
+            transition: 0.3s;
+            font-weight: 500;
+        }
+
+        .btn-common:hover {
             background-color: #1b4332;
         }
     </style>
@@ -107,8 +106,9 @@
             <div class="info-row"><span class="label">Địa chỉ:</span> <span class="value">${appointment.patient.address}</span></div>
         </div>
 
-        <a href="ReceptionServlet?action=viewAppointments" class="back-button">Quay lại</a>
+        <div class="button-container">
+            <a href="ReceptionServlet?action=viewAppointments" class="btn-common">Quay lại</a>
+        </div>
     </div>
 </body>
 </html>
-

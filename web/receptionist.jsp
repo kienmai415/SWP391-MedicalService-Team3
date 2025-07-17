@@ -1,17 +1,18 @@
-<%@page contentType="text/html" pageEncoding="UTF-8"%>
-<%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
-<%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-
 <!DOCTYPE html>
 <html lang="vi">
+    <%@page contentType="text/html" pageEncoding="UTF-8"%>
+    <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+    <%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+    <%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Hệ thống Lễ tân - Phòng khám</title>
+
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <style>
             body {
                 background: linear-gradient(135deg, #2d5a27 0%, #4a7c59 50%, #6b8e23 100%);
@@ -143,6 +144,9 @@
             .tab-content.active {
                 display: block;
             }
+
+
+
         </style>
     </head>
     <body>
@@ -168,23 +172,28 @@
                             <i class="fas fa-calendar-check me-2"></i>Quản lý lịch hẹn
                         </a>
 
-                        <a class="nav-link" href="#" onclick="showTab('feedback')">
+                        <a class="nav-link ${activeTab == 'feedback' ? 'active' : ''}"
+                           href="${pageContext.request.contextPath}/ReceptionServlet?action=viewFeedback">
                             <i class="fas fa-comments me-2"></i>Phản hồi bệnh nhân
                         </a>
 
-                        <a class="nav-link" href="#" onclick="showTab('history')">
-                            <i class="fas fa-history me-2"></i>Lịch sử
+                        <a class="nav-link ${activeTab == 'history' ? 'active' : ''}"
+                           href="${pageContext.request.contextPath}/ReceptionServlet?action=viewHistory">
+                            <i class="fas fa-history me-2"></i>Lịch sử lịch hẹn
                         </a>
 
-                        <a class="nav-link" href="#" onclick="showTab('shifts')">
+                        <a class="nav-link ${activeTab == 'shifts' ? 'active' : ''}"
+                           href="${pageContext.request.contextPath}/ReceptionServlet?action=viewShifts">
                             <i class="fas fa-user-md me-2"></i>Ca làm bác sĩ
                         </a>
 
-                        <a class="nav-link" href="#" onclick="showTab('support')">
+                        <a class="nav-link ${activeTab == 'support' ? 'active' : ''}"
+                           href="${pageContext.request.contextPath}/ReceptionServlet?action=viewSupport">
                             <i class="fas fa-headset me-2"></i>Hỗ trợ khách hàng
                         </a>
 
                     </nav>
+
                 </div>
 
                 <!-- Main Content -->
@@ -268,16 +277,7 @@
                                     <div class="card-header">
                                         <h5 class="mb-0"><i class="fas fa-bell me-2"></i>Thông báo mới</h5>
                                     </div>
-                                    <div class="card-body">
-                                        <c:if test="${book.stream().filter(b -> b.confirmationStatus == 'Pending').count() > 0}">
-                                            <div class="alert alert-warning mb-0">
-                                                <small>${book.stream().filter(b -> b.confirmationStatus == 'Pending').count()} lịch hẹn chờ xác nhận</small>
-                                            </div>
-                                        </c:if>
-                                        <c:if test="${book.stream().filter(b -> b.confirmationStatus == 'Pending').count() == 0}">
-                                            <p class="mb-0">Không có thông báo mới.</p>
-                                        </c:if>
-                                    </div>
+
                                 </div>
                             </div>
                         </div>
@@ -301,7 +301,8 @@
                             <div class="card-header" style="display: flex;justify-content: space-between;" >
 
                                 <h5 class="mb-0">Danh sách lịch hẹn</h5>
-                                <style>.search-bar {
+                                <style>
+                                    .search-bar {
                                         display: flex;
                                         align-items: center;
                                         gap: 10px;
@@ -347,6 +348,8 @@
                                         if (input === "") {
                                             alert("Vui lòng nhập tên bệnh nhân hoặc bác sĩ để tìm kiếm.");
                                             return false;
+                                        } else if (input === "") {
+
                                         }
                                         return true;
                                     }
@@ -368,7 +371,7 @@
                                             <th>Trạng thái</th>
                                             <th>Thao tác</th>
                                             <th>Chi tiết</th>
-                                            <th>Chỉnh sửa</th>
+
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -398,6 +401,7 @@
 
                                                             <td>
                                                                 <c:if test="${i.confirmationStatus == 'Pending'}">
+
                                                                     <form action="ReceptionServlet" method="post" style="display: inline;">
                                                                         <input type="hidden" name="action" value="confirm"/>
                                                                         <input type="hidden" name="id" value="${i.id}"/>
@@ -405,6 +409,7 @@
                                                                             <i class="fas fa-check"></i>
                                                                         </button>
                                                                     </form>
+
                                                                     <form action="ReceptionServlet" method="post" style="display: inline;">
                                                                         <input type="hidden" name="action" value="cancel"/>
                                                                         <input type="hidden" name="id" value="${i.id}"/>
@@ -412,6 +417,7 @@
                                                                             <i class="fas fa-times"></i>
                                                                         </button>
                                                                     </form>
+
                                                                 </c:if>
                                                                 <c:if test="${i.confirmationStatus != 'Pending'}">
                                                                     <span>— </span>
@@ -426,25 +432,33 @@
                                                                 </a>
                                                             </td>
 
-                                                            <td>
-                                                                <a href="ReceptionServlet?action=editAppointment&id=${i.id}"
-                                                                   class="btn btn-outline-success"
-                                                                   style="border-radius: 8px; padding: 6px 16px; font-weight: 500;">Chỉnh sửa
-                                                                    <i class="fas fa-pen me-1"></i> 
-                                                                </a>
-                                                            </td>
 
 
+                                                            <c:if test="${param.message == 'success'}">
 
-                                                        </tr>
-                                                    </c:forEach>
-                                                </c:when>
-                                                <c:otherwise>
-                                                    <tr>
-                                                        <td colspan="7" class="text-center">Không có lịch hẹn nào.</td>
+                                                        <script>
+                                                            window.onload = function () {
+                                                                Swal.fire({
+                                                                    icon: 'success',
+                                                                    title: 'Cập nhật thành công!',
+                                                                    text: 'Lịch hẹn đã được cập nhật.',
+                                                                    timer: 2500,
+                                                                    showConfirmButton: false
+                                                                });
+                                                            };
+                                                        </script>
+                                                    </c:if>
+
+
                                                     </tr>
-                                                </c:otherwise>
-                                            </c:choose>
+                                                </c:forEach>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <tr>
+                                                    <td colspan="7" class="text-center">Không có lịch hẹn nào.</td>
+                                                </tr>
+                                            </c:otherwise>
+                                        </c:choose>
                                         </tbody>
                                     </table>
 
@@ -473,80 +487,162 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
 
 
-                    <!-- Feedback Tab -->
-                    <div id="feedback" class="tab-content">
-                        <h2 class="header-title">
-                            <i class="fas fa-comments me-2"></i>Quản lý phản hồi bệnh nhân
-                        </h2>
-                        <div class="card">
-                            <div class="card-body">
-                                <p>Chưa có dữ liệu phản hồi bệnh nhân.</p>
+                        <!-- Feedback Tab -->
+                        <div id="feedback" class="tab-content">
+                            <h2 class="header-title">
+                                <i class="fas fa-comments me-2"></i>Quản lý phản hồi bệnh nhân
+                            </h2>
+                            <div class="card">
+                                <div class="card-body">
+                                    <p>Chưa có dữ liệu phản hồi bệnh nhân.</p>
+                                </div>
+                            </div>
+                        </div>
+
+
+
+                        <!-- History Tab -->
+                        <div id="history" class="tab-content ${activeTab == 'history' ? 'active' : ''}">
+                            <h2 class="header-title">
+                                <i class="fas fa-history me-2"></i> Lịch sử lịch hẹn
+                            </h2>
+
+                            <!-- Thông báo cập nhật thành công -->
+                            <c:if test="${param.message == 'success'}">
+                                <script>
+                                    window.onload = function () {
+                                        Swal.fire({
+                                            icon: 'success',
+                                            title: 'Thành công!',
+                                            text: 'Lịch hẹn đã được cập nhật trạng thái thành công. Vui lòng xem ở lịch sử lịch hẹn.',
+                                            timer: 2500,
+                                            showConfirmButton: false
+                                        });
+                                    };
+                                </script>
+                            </c:if>
+
+                            <div class="card">
+                                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                                    <h5 class="mb-0">Danh sách lịch sử lịch hẹn</h5>
+
+                                    <!-- Search bar -->
+                                    <form method="get" action="ReceptionServlet" class="search-bar" onsubmit="return validateSearchHistory()">
+                                        <input type="hidden" name="action" value="searchHistory" />
+                                        <input type="text" id="searchInputHistory" name="keyword" placeholder="Nhập tên bệnh nhân hoặc bác sĩ"
+                                               value="${param.keyword}" />
+                                        <button type="submit">🔍</button>
+                                    </form>
+                                </div>
+
+                                <div class="card-body">
+                                    <c:choose>
+                                        <c:when test="${not empty listApp}">
+                                            <div class="table-responsive">
+                                                <table class="table table-hover">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>ID</th>
+                                                            <th>Ngày</th>
+                                                            <th>Thời gian</th>
+                                                            <th>Bệnh nhân</th>
+                                                            <th>Bác sĩ</th>
+                                                            <th>Trạng thái</th>
+                                                            <th>Chi tiết</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <c:forEach items="${listApp}" var="i">
+                                                            <tr>
+                                                                <td>${i.id}</td>
+                                                                <td>${i.shiftSlot.date}</td>
+                                                                <td>${fn:substring(i.shiftSlot.slotStartTime, 0, 8)}</td>
+                                                                <td><strong>${i.patient.fullName}</strong></td>
+                                                                <td>${i.doctor.fullName}</td>
+                                                                <td>
+                                                                    <c:choose>
+                                                                        <c:when test="${i.confirmationStatus == 'Done'}">
+                                                                            <span class="badge bg-success">Đã xác nhận</span>
+                                                                        </c:when>
+                                                                        <c:when test="${i.confirmationStatus == 'Cancel'}">
+                                                                            <span class="badge bg-danger">Đã hủy</span>
+                                                                        </c:when>
+                                                                        <c:otherwise>
+                                                                            <span class="badge bg-secondary">Đang xử lý</span>
+                                                                        </c:otherwise>
+                                                                    </c:choose>
+                                                                </td>
+                                                                <td>
+                                                                    <a href="ReceptionServlet?action=viewDetail&id=${i.id}" title="Xem chi tiết lịch hẹn">
+                                                                        <button class="btn btn-outline-success custom-detail-btn">
+                                                                            Chi tiết <i class="bi bi-eye"></i>
+                                                                        </button>
+                                                                    </a>
+                                                                </td>
+                                                            </tr>
+                                                        </c:forEach>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+
+                                            <!-- Pagination -->
+                                            <div class="text-center mt-3">
+                                                <c:if test="${page > 1}">
+                                                    <a href="ReceptionServlet?action=viewHistory&page=${page - 1}" class="btn btn-outline-secondary m-1">&lt;</a>
+                                                </c:if>
+
+                                                <c:forEach var="i" begin="1" end="${totalPage}">
+                                                    <a href="ReceptionServlet?action=viewHistory&page=${i}"
+                                                       class="btn ${i == page ? 'btn-success' : 'btn-outline-success'} m-1">${i}</a>
+                                                </c:forEach>
+
+                                                <c:if test="${page < totalPage}">
+                                                    <a href="ReceptionServlet?action=viewHistory&page=${page + 1}" class="btn btn-outline-secondary m-1">&gt;</a>
+                                                </c:if>
+                                            </div>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <p class="text-muted">Không có dữ liệu lịch sử lịch hẹn.</p>
+                                        </c:otherwise>
+                                    </c:choose>
+                                </div>
+                            </div>
+                        </div>
+
+
+
+
+
+                        <!-- Shifts Tab -->
+                        <div id="shifts" class="tab-content">
+                            <h2 class="header-title">
+                                <i class="fas fa-user-md me-2"></i>Quản lý ca làm bác sĩ
+                            </h2>
+                            <div class="card">
+                                <div class="card-body">
+                                    <p>Chưa có dữ liệu ca làm bác sĩ.</p>
+                                </div>
+                            </div>
+                        </div>
+
+
+
+
+                        <!-- Support Tab -->
+                        <div id="support" class="tab-content">
+                            <h2 class="header-title">
+                                <i class="fas fa-headset me-2"></i>Hỗ trợ khách hàng
+                            </h2>
+                            <div class="card">
+                                <div class="card-body">
+                                    <p>Chưa có yêu cầu hỗ trợ khách hàng.</p>
+                                </div>
                             </div>
                         </div>
                     </div>
-
-
-
-
-                    <!-- History Tab -->
-                    <div id="history" class="tab-content">
-                        <h2 class="header-title">
-                            <i class="fas fa-history me-2"></i>Lịch sử hoạt động
-                        </h2>
-                        <div class="card">
-                            <div class="card-body">
-                                <p>Chưa có dữ liệu lịch sử hoạt động.</p>
-                            </div>
-                        </div>
-                    </div>
-
-
-
-
-
-                    <!-- Shifts Tab -->
-                    <div id="shifts" class="tab-content">
-                        <h2 class="header-title">
-                            <i class="fas fa-user-md me-2"></i>Quản lý ca làm bác sĩ
-                        </h2>
-                        <div class="card">
-                            <div class="card-body">
-                                <p>Chưa có dữ liệu ca làm bác sĩ.</p>
-                            </div>
-                        </div>
-                    </div>
-
-
-
-
-                    <!-- Support Tab -->
-                    <div id="support" class="tab-content">
-                        <h2 class="header-title">
-                            <i class="fas fa-headset me-2"></i>Hỗ trợ khách hàng
-                        </h2>
-                        <div class="card">
-                            <div class="card-body">
-                                <p>Chưa có yêu cầu hỗ trợ khách hàng.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                </div>                
             </div>
-
-            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-            <script>
-    function showTab(tabName) {
-        const tabs = document.querySelectorAll('.tab-content');
-        tabs.forEach(tab => tab.classList.remove('active'));
-        document.getElementById(tabName).classList.add('active');
-
-        const navLinks = document.querySelectorAll('.nav-link');
-        navLinks.forEach(link => link.classList.remove('active'));
-        event.target.classList.add('active');
-    }
-            </script>
         </body>
     </html>
