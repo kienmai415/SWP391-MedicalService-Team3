@@ -277,103 +277,178 @@ public class AppointmentScheduleDAO extends DBContext {
     }
 
     //Quy
-    public int addAppointment(int id, String dateApp, String timeApp, String decription) {
+//    public int addAppointment(int id, String dateApp, String timeApp, String decription) {
+//        String sql = """
+//                      INSERT INTO dbo.appointmentSchedule
+//                       (
+//                           patientId,
+//                           appointment_date,
+//                           appointment_hour,
+//                           Symptom
+//                       )
+//                       VALUES
+//                       (?,?,?,?)""";
+//        int isUpdated = 0;
+//        try {
+//            PreparedStatement ps = connection.prepareStatement(sql);
+//            ps.setInt(1, id);
+//            ps.setString(2, dateApp);
+//            ps.setString(3, timeApp);
+//            ps.setNString(4, decription);
+//            isUpdated = ps.executeUpdate();
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//        if (isUpdated == 0) {
+//            return -1;
+//        } else {
+//            return isUpdated;
+//        }
+//    }
+    public int addAppointment(int patientId, int doctorId, String dateApp, String timeApp, String description) {
         String sql = """
-                      INSERT INTO dbo.appointmentSchedule
-                       (
-                           patientId,
-                           appointment_date,
-                           appointment_hour,
-                           Symptom
-                       )
-                       VALUES
-                       (?,?,?,?)""";
+        INSERT INTO dbo.appointmentSchedule
+            (patientId, doctorId, appointment_date, appointment_hour, Symptom)
+        VALUES (?, ?, ?, ?, ?)
+    """;
         int isUpdated = 0;
         try {
             PreparedStatement ps = connection.prepareStatement(sql);
-            ps.setInt(1, id);
-            ps.setString(2, dateApp);
-            ps.setString(3, timeApp);
-            ps.setNString(4, decription);
+            ps.setInt(1, patientId);
+            ps.setInt(2, doctorId);
+            ps.setString(3, dateApp);
+            ps.setString(4, timeApp);
+            ps.setNString(5, description);
             isUpdated = ps.executeUpdate();
         } catch (Exception e) {
             e.printStackTrace();
         }
-        if (isUpdated == 0) {
-            return -1;
-        } else {
-            return isUpdated;
-        }
+        return (isUpdated == 0) ? -1 : isUpdated;
     }
+//    public List<AppoinmentScheduleDTO> getListAppointmentDTOByPId(int id) {
+//        List<AppoinmentScheduleDTO> list = new ArrayList<>();
+//        String sql = """
+//                     SELECT 
+//                         p.fullName AS patientName,
+//                         d.fullName AS doctorName,
+//                         d.phoneNumber AS doctorPhone,
+//                         dl.name AS doctorLevel,
+//                         s.name AS specialization,
+//                         a.appointment_date,
+//                         a.appointment_hour,
+//                         
+//                         -- Trạng thái hiển thị
+//                         CASE 
+//                             WHEN mr.examinationStatus = 'Done' THEN N'Đã khám'
+//                             WHEN a.confirmationStatus = 'Pending' THEN N'Đang chờ xử lý'
+//                             WHEN a.confirmationStatus = 'Accept' THEN N'Đã xác nhận'
+//                             WHEN a.confirmationStatus = 'Cancel' THEN N'Đã hủy'
+//                             ELSE N'Không đến khám'
+//                         END AS status
+//                     
+//                     FROM 
+//                         dbo.appointmentSchedule a
+//                     JOIN 
+//                         dbo.patient p ON a.patientId = p.id
+//                     JOIN 
+//                         dbo.doctor d ON a.doctorId = d.id
+//                     JOIN 
+//                         dbo.doctorLevel dl ON d.doctorLevelId = dl.id
+//                     JOIN 
+//                         dbo.doctorShiftSlot ds ON a.doctorShiftId = ds.id
+//                     	JOIN dbo.specialization s ON s.id = d.specializationId
+//                     
+//                    
+//                     LEFT JOIN 
+//                         medicalRecord mr 
+//                         ON mr.patientId = a.patientId 
+//                         AND mr.doctorId = a.doctorId
+//                         AND FORMAT(mr.time, 'yyyy-MM-dd') = a.appointment_date
+//                     
+//                     WHERE 
+//                         p.id = ? 
+//                     ORDER BY 
+//                         a.appointment_date DESC, a.appointment_hour;""";
+//        try {
+//            PreparedStatement ps = connection.prepareStatement(sql);
+//            ps.setInt(1, id);
+//            ResultSet rs = ps.executeQuery();
+//
+//            while (rs.next()) {
+//                AppoinmentScheduleDTO appP = new AppoinmentScheduleDTO();
+//                appP.setNameP(rs.getString(1));
+//                appP.setNameD(rs.getString(2));
+//                appP.setPhoneD(rs.getString(3));
+//                appP.setLevelD(rs.getString(4));
+//                appP.setSpecD(rs.getString(5));
+//                appP.setAppointDate(rs.getString(6));
+//                appP.setAppointTime(rs.getString(7));
+//                appP.setStatus(rs.getString(8));
+//
+//                list.add(appP);
+//            }
+//
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//        return list;
+//
+//    }
 
     public List<AppoinmentScheduleDTO> getListAppointmentDTOByPId(int id) {
         List<AppoinmentScheduleDTO> list = new ArrayList<>();
         String sql = """
-                     SELECT 
-                         p.fullName AS patientName,
-                         d.fullName AS doctorName,
-                         d.phoneNumber AS doctorPhone,
-                         dl.name AS doctorLevel,
-                         s.name AS specialization,
-                         a.appointment_date,
-                         a.appointment_hour,
-                         
-                         -- Trạng thái hiển thị
-                         CASE 
-                             WHEN mr.examinationStatus = 'Done' THEN N'Đã khám'
-                             WHEN a.confirmationStatus = 'Pending' THEN N'Đang chờ xử lý'
-                             WHEN a.confirmationStatus = 'Accept' THEN N'Đã xác nhận'
-                             WHEN a.confirmationStatus = 'Cancel' THEN N'Đã hủy'
-                             ELSE N'Không đến khám'
-                         END AS status
-                     
-                     FROM 
-                         dbo.appointmentSchedule a
-                     JOIN 
-                         dbo.patient p ON a.patientId = p.id
-                     JOIN 
-                         dbo.doctor d ON a.doctorId = d.id
-                     JOIN 
-                         dbo.doctorLevel dl ON d.doctorLevelId = dl.id
-                     JOIN 
-                         dbo.doctorShiftSlot ds ON a.doctorShiftId = ds.id
-                     	JOIN dbo.specialization s ON s.id = d.specializationId
-                     
-                    
-                     LEFT JOIN 
-                         medicalRecord mr 
-                         ON mr.patientId = a.patientId 
-                         AND mr.doctorId = a.doctorId
-                         AND FORMAT(mr.time, 'yyyy-MM-dd') = a.appointment_date
-                     
-                     WHERE 
-                         p.id = ? 
-                     ORDER BY 
-                         a.appointment_date DESC, a.appointment_hour;""";
-        try {
-            PreparedStatement ps = connection.prepareStatement(sql);
+        SELECT 
+            p.fullName AS patientName,
+            d.fullName AS doctorName,
+            d.phoneNumber AS doctorPhone,
+            dl.name AS doctorLevel,
+            s.name AS specialization,
+            a.appointment_date,
+            a.appointment_hour,
+            CASE 
+                WHEN a.confirmationStatus = 'Cancel' THEN N'Đã hủy'
+                WHEN a.confirmationStatus = 'Pending' THEN N'Đang chờ xử lý'
+                WHEN a.confirmationStatus = 'Done' AND mr.examinationStatus = 'Done' THEN N'Đã hoàn thành'
+                WHEN a.confirmationStatus = 'Done' THEN N'Đã xác nhận'
+                ELSE N'Không đến khám'
+            END AS status
+        FROM 
+            appointmentSchedule a
+        JOIN patient p ON a.patientId = p.id
+        JOIN doctor d ON a.doctorId = d.id
+        JOIN doctorLevel dl ON d.doctorLevelId = dl.id
+        JOIN specialization s ON d.specializationId = s.id
+        LEFT JOIN medicalRecord mr 
+            ON mr.patientId = a.patientId 
+            AND mr.doctorId = a.doctorId 
+            AND CAST(mr.time AS DATE) = a.appointment_date
+        WHERE p.id = ?
+        ORDER BY a.id ASC;
+    """;
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, id);
             ResultSet rs = ps.executeQuery();
 
             while (rs.next()) {
-                AppoinmentScheduleDTO appP = new AppoinmentScheduleDTO();
-                appP.setNameP(rs.getString(1));
-                appP.setNameD(rs.getString(2));
-                appP.setPhoneD(rs.getString(3));
-                appP.setLevelD(rs.getString(4));
-                appP.setSpecD(rs.getString(5));
-                appP.setAppointDate(rs.getString(6));
-                appP.setAppointTime(rs.getString(7));
-                appP.setStatus(rs.getString(8));
-
-                list.add(appP);
+                AppoinmentScheduleDTO dto = new AppoinmentScheduleDTO(
+                        rs.getString("patientName"),
+                        rs.getString("doctorName"),
+                        rs.getString("doctorPhone"),
+                        rs.getString("doctorLevel"),
+                        rs.getString("specialization"),
+                        rs.getString("appointment_date"),
+                        rs.getString("appointment_hour"),
+                        rs.getString("status")
+                );
+                list.add(dto);
             }
-
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return list;
 
+        return list;
     }
 
     public static void main(String[] args) {

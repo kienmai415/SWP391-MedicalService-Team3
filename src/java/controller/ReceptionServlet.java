@@ -13,6 +13,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import java.util.List;
 import java.util.Objects;
 import java.util.logging.Logger;
@@ -32,6 +33,13 @@ public class ReceptionServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+//        HttpSession session = request.getSession(false);
+//        if (session == null || session.getAttribute("p") == null) {
+//            response.sendRedirect("login.jsp");
+//            return;
+//        }
+//        AppointmentSchedule appointmentSchedule = (AppointmentSchedule) session.getAttribute("p");
+//        
         String action = request.getParameter("action");
         String message = request.getParameter("message");
         if (message != null) {
@@ -50,9 +58,11 @@ public class ReceptionServlet extends HttpServlet {
                 }
             }
 
+            int offset = (pageIndex - 1) * pageSize;
+
             ReceptionDAO dao = new ReceptionDAO();
 
-            List<AppointmentSchedule> list = dao.getAppointmentsWithPaging(pageIndex, pageSize);
+            List<AppointmentSchedule> list = dao.getAppointmentsWithPaging(offset, pageSize);
 
             int total = dao.countTotalAppointments();
             int totalPage = (int) Math.ceil((double) total / pageSize);
@@ -63,29 +73,55 @@ public class ReceptionServlet extends HttpServlet {
             request.setAttribute("activeTab", "appointments");
 
             request.getRequestDispatcher("receptionist.jsp").forward(request, response);
-
         } else if ("searchAppointments".equals(action)) {
             ReceptionDAO dao = new ReceptionDAO();
             List<AppointmentSchedule> list;
 
             String keyword = request.getParameter("keyword");
+            String pageRaw = request.getParameter("page");
+
+            int pageIndex = 1;
+            int pageSize = 10;
+
+            if (pageRaw != null) {
+                try {
+                    pageIndex = Integer.parseInt(pageRaw);
+                } catch (NumberFormatException e) {
+                    pageIndex = 1;
+                }
+            }
+
+            int offset = (pageIndex - 1) * pageSize;
 
             if (keyword != null) {
-                keyword = keyword.trim();
-
-                keyword = keyword.replaceAll("\\s+", " ");
-
+                keyword = keyword.trim().replaceAll("\\s+", " ");
                 if (!keyword.isEmpty()) {
-                    list = dao.getAppointmentSchedulesByName(keyword);
+                    list = dao.getAppointmentSchedulesByName(keyword, offset, pageSize);
+                    int total = dao.countTotalSearchAppointments(keyword);
+                    int totalPage = (int) Math.ceil((double) total / pageSize);
+
+                    request.setAttribute("page", pageIndex);
+                    request.setAttribute("totalPage", totalPage);
                 } else {
-                    list = dao.getAllSchedules();
+                    list = dao.getAppointmentsWithPaging(offset, pageSize);
+                    int total = dao.countTotalAppointments();
+                    int totalPage = (int) Math.ceil((double) total / pageSize);
+
+                    request.setAttribute("page", pageIndex);
+                    request.setAttribute("totalPage", totalPage);
                 }
             } else {
-                list = dao.getAllSchedules();
+                list = dao.getAppointmentsWithPaging(offset, pageSize);
+                int total = dao.countTotalAppointments();
+                int totalPage = (int) Math.ceil((double) total / pageSize);
+
+                request.setAttribute("page", pageIndex);
+                request.setAttribute("totalPage", totalPage);
             }
 
             request.setAttribute("listApp", list);
             request.setAttribute("activeTab", "appointments");
+            request.setAttribute("keyword", keyword); // giữ lại từ khóa trong ô input
             request.getRequestDispatcher("receptionist.jsp").forward(request, response);
         } else if ("viewDetail".equals(action)) {
             int appointmentId = Integer.parseInt(request.getParameter("id"));
@@ -115,7 +151,6 @@ public class ReceptionServlet extends HttpServlet {
 
             ReceptionDAO dao = new ReceptionDAO();
             List<AppointmentSchedule> list = dao.getHistoryAppointmentsWithPaging(pageIndex, pageSize);
-
             int total = dao.countTotalHistoryAppointments();
             int totalPage = (int) Math.ceil((double) total / pageSize);
 
@@ -139,8 +174,8 @@ public class ReceptionServlet extends HttpServlet {
 
             request.setAttribute("listApp", list);
             request.setAttribute("activeTab", "history");
+            request.setAttribute("keyword", keyword);
             request.getRequestDispatcher("receptionist.jsp").forward(request, response);
-
         } else {
             request.getRequestDispatcher("receptionist.jsp").forward(request, response);
         }
@@ -151,6 +186,13 @@ public class ReceptionServlet extends HttpServlet {
             throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
 
+//        HttpSession session = request.getSession(false);
+//        if (session == null || session.getAttribute("p") == null) {
+//            response.sendRedirect("login.jsp");
+//            return;
+//        }
+//        AppointmentSchedule appointmentSchedule = (AppointmentSchedule) session.getAttribute("p");
+//        
         String action = request.getParameter("action");
         if ("confirm".equals(action) || "cancel".equals(action)) {
             int id = Integer.parseInt(request.getParameter("id"));

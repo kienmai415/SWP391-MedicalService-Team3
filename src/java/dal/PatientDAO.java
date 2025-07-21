@@ -89,11 +89,11 @@ public class PatientDAO extends DBContext {
         String sql = """
                      INSERT INTO dbo.patient
                      (
-                         full_name,
-                         phone_number,
+                         fullName,
+                         phoneNumber,
                          email,
-                         pass,
-                         status,
+                         password,
+                         status
                      )
                      VALUES(?,?,?,?,?)""";
         int isUpdated = 0;
@@ -106,6 +106,7 @@ public class PatientDAO extends DBContext {
             ps.setInt(5, status);
             isUpdated = ps.executeUpdate();
         } catch (SQLException e) {
+            e.printStackTrace();
         }
         return isUpdated;
     }

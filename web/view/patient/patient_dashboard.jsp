@@ -183,8 +183,8 @@
 
                 </div>
                 <div class="mt-3">
-                    <a href="${pageContext.request.contextPath}/patient?action=history" class="active"><i class="fas fa-calendar-alt me-2"></i> Lịch sử đặt khám</a>
-                    <a href="${pageContext.request.contextPath}/patient?action=schedule" class="active"><i class="fas fa-calendar-alt me-2"></i> Đăng ký khám</a>
+                    <a href="${pageContext.request.contextPath}/PatientServlet?action=history" class="active"><i class="fas fa-calendar-alt me-2"></i> Lịch sử đặt khám</a>
+                    <a href="${pageContext.request.contextPath}/PatientServlet?action=schedule" class="active"><i class="fas fa-calendar-alt me-2"></i> Đăng ký khám</a>
                     <a href="logout"><i class="fas fa-sign-out-alt me-2"></i> Đăng xuất</a>
                 </div>
             </div>
@@ -210,12 +210,12 @@
 
                 <!-- Nội dung chính thay đổi dựa trên tham số -->
                 <c:choose>
-                    <c:when test="${param.page == 'history'}">
+                    <c:when test="${param.action == 'history'}">
                         <c:if test="${not empty pageContent}">
                             <jsp:include page="${pageContent}" />
                         </c:if>
                     </c:when>
-                    <c:when test="${param.page == 'schedule'}">
+                    <c:when test="${param.action == 'schedule'}">
                         <c:if test="${not empty pageContent}">
                             <jsp:include page="${pageContent}" />
                         </c:if>

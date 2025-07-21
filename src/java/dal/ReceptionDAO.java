@@ -133,46 +133,46 @@ public class ReceptionDAO extends DBContext {
         return null;
     }
 
-    public List<AppointmentSchedule> getAppointmentSchedulesByName(String name) {
+    public List<AppointmentSchedule> getAppointmentSchedulesByName(String name, int offset, int pageSize) {
         List<AppointmentSchedule> resultList = new ArrayList<>();
-        DBContext dbc = DBContext.getInstance();
         String sql = """
-        select 
-            app.id ,
-            ds.date ,
-            ds.slotStartTime ,
-            pa.fullName as patientName , 
-            dt.fullName as doctorName,
-            app.confirmationStatus 
-        from appointmentSchedule app
-        JOIN doctorShiftSlot ds on app.doctorShiftId = ds.id
-        JOIN patient pa ON app.patientId = pa.id
-        JOIN doctor dt on app.doctorId = dt.id
-        where dt.fullName like ? or pa.fullName like ?
-    """;
+            SELECT app.id, app.appointment_date, app.appointment_hour,
+                   app.confirmationStatus,
+                   pa.fullName AS patientName,
+                   dt.fullName AS doctorName
+            FROM appointmentSchedule app
+            JOIN patient pa ON app.patientId = pa.id
+            JOIN doctor dt ON app.doctorId = dt.id
+            WHERE dt.fullName LIKE ? OR pa.fullName LIKE ?
+            ORDER BY app.id ASC
+            OFFSET ? ROWS FETCH NEXT ? ROWS ONLY
+        """;
 
-        try {
-            PreparedStatement preparedStatement = dbc.connection.prepareStatement(sql);
-            String Aname = "%" + name + "%";
-            preparedStatement.setString(1, Aname);
-            preparedStatement.setString(2, Aname);
-            ResultSet rs = preparedStatement.executeQuery();
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            String keyword = "%" + name + "%";
+            ps.setString(1, keyword);
+            ps.setString(2, keyword);
+            ps.setInt(3, offset);
+            ps.setInt(4, pageSize);
 
+            ResultSet rs = ps.executeQuery();
             while (rs.next()) {
-                int apId = rs.getInt("id");
-                String apConfirm = rs.getString("confirmationStatus");
+                AppointmentSchedule ap = new AppointmentSchedule();
+                ap.setId(rs.getInt("id"));
+                ap.setConfirmationStatus(rs.getString("confirmationStatus"));
+                ap.setAppointment_date(rs.getString("appointment_date"));
+                ap.setAppointment_hour(rs.getString("appointment_hour"));
 
-                Doctor apDoctor = new Doctor();
-                apDoctor.setFullName(rs.getString("doctorName"));
+                Patient patient = new Patient();
+                patient.setFullName(rs.getString("patientName"));
+                ap.setPatient(patient);
 
-                Patient apPatient = new Patient();
-                apPatient.setFullName(rs.getString("patientName"));
+                Doctor doctor = new Doctor();
+                doctor.setFullName(rs.getString("doctorName"));
+                ap.setDoctor(doctor);
 
-                DoctorShiftSlot apSlot = new DoctorShiftSlot();
-                apSlot.setSlotStartTime(rs.getString("slotStartTime"));
-                apSlot.setDate(rs.getDate("date").toLocalDate());
+                ap.setShiftSlot(null);
 
-                AppointmentSchedule ap = new AppointmentSchedule(apId, apConfirm, apDoctor, apPatient, apSlot);
                 resultList.add(ap);
             }
         } catch (Exception e) {
@@ -182,38 +182,31 @@ public class ReceptionDAO extends DBContext {
         return resultList;
     }
 
-//    public ArrayList<AppointmentSchedule> get(String sql) {
-//        ArrayList<AppointmentSchedule> listAp = new ArrayList<>();
-//        DBContext dbc = DBContext.getInstance();
-//        try {
-//            PreparedStatement preparedStatement = dbc.connection.prepareStatement(sql);
-//            ResultSet rs = preparedStatement.executeQuery();
-//            while (rs.next()) {
-//                int apId = rs.getInt("id");
-//                String apConfirm = rs.getString("confirmationStatus"); // đảm bảo đúng tên cột trong DB
-//
-//                int doctorId = rs.getInt("doctorId");
-//                Doctor apDoctor = new Doctor();
-//                apDoctor.setId(doctorId);
-//
-//                int patientId = rs.getInt("patientId");
-//                Patient apPatient = new Patient();
-//                apPatient.setId(patientId);
-//
-//                int slotId = rs.getInt("doctorShiftId");
-//                DoctorShiftSlot apSlot = new DoctorShiftSlot();
-//                apSlot.setId(slotId);
-//
-//                AppointmentSchedule app = new AppointmentSchedule(apId, apConfirm, apDoctor, apPatient, apSlot);
-//                listAp.add(app);
-//            }
-//        } catch (Exception e) {
-//            return null;
-//        }
-//        return listAp.isEmpty() ? null : listAp;
-//    }
+    public int countTotalSearchAppointments(String keyword) {
+        String sql = """
+            SELECT COUNT(*) FROM appointmentSchedule app
+            JOIN patient pa ON app.patientId = pa.id
+            JOIN doctor dt ON app.doctorId = dt.id
+            WHERE dt.fullName LIKE ? OR pa.fullName LIKE ?
+        """;
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            String nameLike = "%" + keyword + "%";
+            ps.setString(1, nameLike);
+            ps.setString(2, nameLike);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return 0;
+    }
 //phân trang
-    public List<AppointmentSchedule> getAppointmentsWithPaging(int pageIndex, int pageSize) {
+
+    public List<AppointmentSchedule> getAppointmentsWithPaging(int offset, int pageSize) {
         List<AppointmentSchedule> list = new ArrayList<>();
         String sql = """
         SELECT app.id, app.appointment_date, app.appointment_hour,
@@ -226,28 +219,26 @@ public class ReceptionDAO extends DBContext {
         ORDER BY app.id ASC
         OFFSET ? ROWS FETCH NEXT ? ROWS ONLY
     """;
+
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setInt(1, (pageIndex - 1) * pageSize);
+            ps.setInt(1, offset);
             ps.setInt(2, pageSize);
             ResultSet rs = ps.executeQuery();
+
             while (rs.next()) {
                 AppointmentSchedule ap = new AppointmentSchedule();
                 ap.setId(rs.getInt("id"));
+                ap.setAppointment_date(rs.getString("appointment_date"));
+                ap.setAppointment_hour(rs.getString("appointment_hour"));
                 ap.setConfirmationStatus(rs.getString("confirmationStatus"));
-
-                // Ngày giờ lấy từ cột trực tiếp
-                DoctorShiftSlot shift = new DoctorShiftSlot();
-                shift.setDate(LocalDate.parse(rs.getString("appointment_date")));
-                shift.setSlotStartTime(rs.getString("appointment_hour"));
-                ap.setShiftSlot(shift);
-
-                Doctor doctor = new Doctor();
-                doctor.setFullName(rs.getString("doctorName"));
-                ap.setDoctor(doctor);
 
                 Patient patient = new Patient();
                 patient.setFullName(rs.getString("patientName"));
                 ap.setPatient(patient);
+
+                Doctor doctor = new Doctor();
+                doctor.setFullName(rs.getString("doctorName"));
+                ap.setDoctor(doctor);
 
                 list.add(ap);
             }
@@ -273,15 +264,13 @@ public class ReceptionDAO extends DBContext {
     public List<AppointmentSchedule> getHistoryAppointmentsWithPaging(int pageIndex, int pageSize) {
         List<AppointmentSchedule> list = new ArrayList<>();
         String sql = """
-        SELECT app.id, app.confirmationStatus,
+        SELECT app.id, app.appointment_date, app.appointment_hour,
                pa.fullName AS patientName,
                dt.fullName AS doctorName,
-               shift.date AS shiftDate,
-               shift.slotStartTime
+               app.confirmationStatus
         FROM appointmentSchedule app
         JOIN patient pa ON app.patientId = pa.id
         JOIN doctor dt ON app.doctorId = dt.id
-        JOIN doctorShiftSlot shift ON app.doctorShiftId = shift.id
         WHERE app.confirmationStatus IN (N'Done', N'Cancel')
         ORDER BY app.id ASC
         OFFSET ? ROWS FETCH NEXT ? ROWS ONLY
@@ -291,23 +280,21 @@ public class ReceptionDAO extends DBContext {
             ps.setInt(1, (pageIndex - 1) * pageSize);
             ps.setInt(2, pageSize);
             ResultSet rs = ps.executeQuery();
+
             while (rs.next()) {
                 AppointmentSchedule ap = new AppointmentSchedule();
                 ap.setId(rs.getInt("id"));
+                ap.setAppointment_date(rs.getString("appointment_date"));
+                ap.setAppointment_hour(rs.getString("appointment_hour"));
                 ap.setConfirmationStatus(rs.getString("confirmationStatus"));
-
-                Doctor doctor = new Doctor();
-                doctor.setFullName(rs.getString("doctorName"));
-                ap.setDoctor(doctor);
 
                 Patient patient = new Patient();
                 patient.setFullName(rs.getString("patientName"));
                 ap.setPatient(patient);
 
-                DoctorShiftSlot shift = new DoctorShiftSlot();
-                shift.setDate(rs.getDate("shiftDate").toLocalDate());
-                shift.setSlotStartTime(rs.getString("slotStartTime")); // or toLocalTime() if needed
-                ap.setShiftSlot(shift);
+                Doctor doctor = new Doctor();
+                doctor.setFullName(rs.getString("doctorName"));
+                ap.setDoctor(doctor);
 
                 list.add(ap);
             }
@@ -323,6 +310,7 @@ public class ReceptionDAO extends DBContext {
         SELECT COUNT(*) FROM appointmentSchedule
         WHERE confirmationStatus IN (N'Done', N'Cancel')
     """;
+
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
@@ -331,6 +319,7 @@ public class ReceptionDAO extends DBContext {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
         return 0;
     }
 

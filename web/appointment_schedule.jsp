@@ -13,7 +13,7 @@
     <body>
         <div class="container mt-3">
             <div class="text-start mt-4">
-                <a href = "doctorhome.jsp" class="btn btn-secondary">⬅ Quay lại trang chủ</a>
+                <a href = "login" class="btn btn-secondary">⬅ Quay lại trang chủ</a>
             </div>
             <h2 class="text-center mb-4">📋 Danh sách lịch hẹn</h2>
 

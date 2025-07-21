@@ -1,14 +1,9 @@
- /*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
- */
 package controller;
 
 import dal.AccountDAO;
 import dal.DoctorDAO;
 import dal.PatientDAO;
 import java.io.IOException;
-import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -19,117 +14,73 @@ import model.Doctor;
 import model.Patient;
 import model.User;
 
-/**
- *
- * @author BB-MT
- */
 @WebServlet(name = "LoginServlet", urlPatterns = {"/login"})
 public class LoginServlet extends HttpServlet {
 
-    /**
-     * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
-     * methods.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
-    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        response.setContentType("text/html;charset=UTF-8");
-        try (PrintWriter out = response.getWriter()) {
-            /* TODO output your page here. You may use following sample code. */
-            out.println("<!DOCTYPE html>");
-            out.println("<html>");
-            out.println("<head>");
-            out.println("<title>Servlet LoginServlet</title>");
-            out.println("</head>");
-            out.println("<body>");
-            out.println("<h1>Servlet LoginServlet at trang này này" + "</h1>");
-            out.println("</body>");
-            out.println("</html>");
-        }
-    }
-
-    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
-    /**
-     * Handles the HTTP <code>GET</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-//        processRequest(request, response);
-//        doPost(request, response);
         request.getRequestDispatcher("login.jsp").forward(request, response);
     }
 
-    /**
-     * Handles the HTTP <code>POST</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        //processRequest(request, response);
-        PatientDAO ad = new PatientDAO();
-        DoctorDAO dd = new DoctorDAO();
-        AccountDAO acd = new AccountDAO();
 
         String email = request.getParameter("email");
         String password = request.getParameter("password");
 
-        String role = null;
+        PatientDAO patientDAO = new PatientDAO();
+        DoctorDAO doctorDAO = new DoctorDAO();
+        AccountDAO accountDAO = new AccountDAO();
 
-        //tạo object
-        Patient p = ad.getPatientByEmailPass(email, password);
-        Doctor d = dd.getDoctorByEmailPass(email, password);
-        User u = acd.getUserByEmailPass(email, password);
+        Patient patient = patientDAO.getPatientByEmailPass(email, password);
+        Doctor doctor = doctorDAO.getDoctorByEmailPass(email, password);
+        User user = accountDAO.getUserByEmailPass(email, password);
 
-        try (PrintWriter out = response.getWriter()) {
+        HttpSession session = request.getSession();
 
-            if (p != null) {
-                HttpSession session = request.getSession();
-                session.setAttribute("p", p);
-                request.getRequestDispatcher("view/patient/patient_dashboard.jsp").forward(request, response);
-            } else if (d != null) {
-                HttpSession session = request.getSession();
-                session.setAttribute("d", d);
-                request.getRequestDispatcher("doctorhome.jsp").forward(request, response);
-            } else if (u != null) {
-                HttpSession session = request.getSession();
-                if ("Admin".equals(u.getRole())) {
-                    request.getRequestDispatcher("/AccountManagementServlet?showSection=dashboard").forward(request, response);
-                } else if ("Receptionist".equals(u.getRole())) {
-                    request.getRequestDispatcher("receptionist.jsp").forward(request, response);
-                } else if ("Manager".equals(u.getRole())) {
-                    //request.getRequestDispatcher("receptionist.jsp").forward(request, response);
-                }
+        if (patient != null) {
+            session.setAttribute("account", patient); // Optional
+            session.setAttribute("p", patient);
+            response.sendRedirect("PatientServlet"); // ✅ chuyển đúng qua servlet để xử lý tiếp
+            return;
+        }
+
+        if (doctor != null) {
+            session.setAttribute("account", doctor);
+            session.setAttribute("d", doctor);
+            response.sendRedirect("DoctorServlet"); //✅ chuyển qua servlet cho bác sĩ
+            return;
+        }
+
+        if (user != null) {
+            session.setAttribute("account", user);
+
+            String role = user.getRole();
+            if ("Admin".equals(role)) {
+                response.sendRedirect("AccountManagementServlet?showSection=dashboard");
+                return;
+            } else if ("Receptionist".equals(role)) {
+                response.sendRedirect("ReceptionServlet");
+                return;
+            } else if ("Manager".equals(role)) {
+                response.sendRedirect("manager_dashboard.jsp"); // hoặc Servlet nếu có
+                return;
             } else {
-                String error = "Đăng nhập thất bại. Kiểm tra lại email và mật khẩu!";
-                request.setAttribute("error", error);
+                request.setAttribute("error", "Vai trò người dùng không hợp lệ.");
                 request.getRequestDispatcher("login.jsp").forward(request, response);
+                return;
             }
         }
+
+        // Đăng nhập thất bại
+        request.setAttribute("error", "Đăng nhập thất bại. Kiểm tra lại email và mật khẩu!");
+        request.getRequestDispatcher("login.jsp").forward(request, response);
     }
 
-    /**
-     * Returns a short description of the servlet.
-     *
-     * @return a String containing servlet description
-     */
     @Override
     public String getServletInfo() {
-        return "Short description";
-    }// </editor-fold>
-
+        return "Login servlet xử lý đăng nhập cho mọi vai trò";
+    }
 }

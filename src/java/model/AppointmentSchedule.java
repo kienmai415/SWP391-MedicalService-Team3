@@ -41,6 +41,7 @@ public class AppointmentSchedule {
         this.appointment_hour = appointment_hour;
         this.Symptom = Symptom;
     }
+    
 
     public int getId() {
         return id;

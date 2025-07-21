@@ -380,10 +380,9 @@
                                                 <c:forEach items="${listApp}" var="i">
                                                     <tr>
                                                         <td>${i.id}</td>
+                                                        <td>${i.appointment_date}</td>
+                                                        <td>${i.appointment_hour}</td>
 
-                                                        <td>${i.getShiftSlot().getDate()}</td>
-
-                                                        <td> ${fn:substring(i.getShiftSlot().getSlotStartTime(), 0, 8)}</td>
                                                         <td>
                                                             <strong>${i.getPatient().getFullName()}</strong>
                                                         </td>
@@ -431,8 +430,6 @@
                                                                     </button>
                                                                 </a>
                                                             </td>
-
-
 
                                                             <c:if test="${param.message == 'success'}">
 
@@ -509,7 +506,6 @@
                                 <i class="fas fa-history me-2"></i> Lịch sử lịch hẹn
                             </h2>
 
-                            <!-- Thông báo cập nhật thành công -->
                             <c:if test="${param.message == 'success'}">
                                 <script>
                                     window.onload = function () {
@@ -528,7 +524,6 @@
                                 <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
                                     <h5 class="mb-0">Danh sách lịch sử lịch hẹn</h5>
 
-                                    <!-- Search bar -->
                                     <form method="get" action="ReceptionServlet" class="search-bar" onsubmit="return validateSearchHistory()">
                                         <input type="hidden" name="action" value="searchHistory" />
                                         <input type="text" id="searchInputHistory" name="keyword" placeholder="Nhập tên bệnh nhân hoặc bác sĩ"
@@ -557,8 +552,8 @@
                                                         <c:forEach items="${listApp}" var="i">
                                                             <tr>
                                                                 <td>${i.id}</td>
-                                                                <td>${i.shiftSlot.date}</td>
-                                                                <td>${fn:substring(i.shiftSlot.slotStartTime, 0, 8)}</td>
+                                                                <td>${i.appointment_date}</td>
+                                                                <td>${i.appointment_hour}</td>
                                                                 <td><strong>${i.patient.fullName}</strong></td>
                                                                 <td>${i.doctor.fullName}</td>
                                                                 <td>
@@ -610,7 +605,6 @@
                                 </div>
                             </div>
                         </div>
-
 
 
 

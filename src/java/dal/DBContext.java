@@ -31,7 +31,7 @@ public class DBContext {
     public DBContext() {
         try {
             String user = "sa"; //sửa theo cấu hình cảu mình
-            String pass = "1"; // sửa theo cấu hình cảu mình
+            String pass = "123"; // sửa theo cấu hình cảu mình
             String url = "jdbc:sqlserver://localhost\\SQLEXPRESS:1433;databaseName=Medicare_Booking"; //đổi tên DATABASE
             Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
             connection = DriverManager.getConnection(url, user, pass);
