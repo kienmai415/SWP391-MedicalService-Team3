@@ -13,7 +13,7 @@ import java.util.Date;
  * @author BB-MT
  */
 public class AppoinmentScheduleDTO {
-
+    private int id;
     private String nameP;
     private String nameD;
     private String phoneD;
@@ -23,10 +23,39 @@ public class AppoinmentScheduleDTO {
     private String appointTime;
     private String status;
 
+    private String symptom;
+    
+
     public AppoinmentScheduleDTO() {
     }
 
-    public AppoinmentScheduleDTO(String nameP, String nameD, String phoneD, String levelD, String specD, String appointDate, String appointTime, String status) {
+//    public AppoinmentScheduleDTO(String nameP, String nameD, String phoneD, String levelD, String specD, String appointDate, String appointTime, String status) {
+//        this.nameP = nameP;
+//        this.nameD = nameD;
+//        this.phoneD = phoneD;
+//        this.levelD = levelD;
+//        this.specD = specD;
+//        this.appointDate = appointDate;
+//        this.appointTime = appointTime;
+//        this.status = status;
+//    }
+
+    //có triệu chứng
+//    public AppoinmentScheduleDTO(String nameP, String nameD, String phoneD, String levelD, String specD,
+//            String appointDate, String appointTime, String status, String symptom) {
+//        this.nameP = nameP;
+//        this.nameD = nameD;
+//        this.phoneD = phoneD;
+//        this.levelD = levelD;
+//        this.specD = specD;
+//        this.appointDate = appointDate;
+//        this.appointTime = appointTime;
+//        this.status = status;
+//        this.symptom = symptom;
+//    }
+    //có id
+    public AppoinmentScheduleDTO(int id, String nameP, String nameD, String phoneD, String levelD, String specD, String appointDate, String appointTime, String status, String symptom) {
+        this.id = id;
         this.nameP = nameP;
         this.nameD = nameD;
         this.phoneD = phoneD;
@@ -35,8 +64,29 @@ public class AppoinmentScheduleDTO {
         this.appointDate = appointDate;
         this.appointTime = appointTime;
         this.status = status;
+        this.symptom = symptom;
+    }
+    
+
+    public int getId() {
+        return id;
     }
 
+    public void setId(int id) {
+        this.id = id;
+    }
+    
+
+    public String getSymptom() {
+        return symptom;
+    }
+
+    public void setSymptom(String symptom) {
+        this.symptom = symptom;
+    }
+
+      
+    
     public String getNameP() {
         return nameP;
     }
@@ -82,19 +132,19 @@ public class AppoinmentScheduleDTO {
     }
 
     public void setAppointDate(String appointDate) {
-       if (appointDate != null && !appointDate.isEmpty()) {
-        try {
-            SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd");
-            SimpleDateFormat outputFormat = new SimpleDateFormat("dd/MM/yyyy");
-            Date date = inputFormat.parse(appointDate);
-            this.appointDate = outputFormat.format(date);
-        } catch (ParseException e) {
-            e.printStackTrace();
-            this.appointDate = appointDate; // fallback nếu parse lỗi
+        if (appointDate != null && !appointDate.isEmpty()) {
+            try {
+                SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd");
+                SimpleDateFormat outputFormat = new SimpleDateFormat("dd/MM/yyyy");
+                Date date = inputFormat.parse(appointDate);
+                this.appointDate = outputFormat.format(date);
+            } catch (ParseException e) {
+                e.printStackTrace();
+                this.appointDate = appointDate; // fallback nếu parse lỗi
+            }
+        } else {
+            this.appointDate = null;
         }
-    } else {
-        this.appointDate = null;
-    }
     }
 
     public String getAppointTime() {

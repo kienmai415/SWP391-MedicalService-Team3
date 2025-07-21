@@ -19,7 +19,7 @@ public class AppointmentSchedule {
     private String appointment_date;
     private String appointment_hour;
     private String Symptom;
-
+    private String attendanceStatus;
     public AppointmentSchedule() {
     }
 
@@ -41,6 +41,27 @@ public class AppointmentSchedule {
         this.appointment_hour = appointment_hour;
         this.Symptom = Symptom;
     }
+    //co trang thai moi
+    public AppointmentSchedule(int id, String confirmationStatus, Doctor doctor, Patient patient, DoctorShiftSlot shiftSlot, String appointment_date, String appointment_hour, String Symptom, String attendanceStatus) {
+        this.id = id;
+        this.confirmationStatus = confirmationStatus;
+        this.doctor = doctor;
+        this.patient = patient;
+        this.shiftSlot = shiftSlot;
+        this.appointment_date = appointment_date;
+        this.appointment_hour = appointment_hour;
+        this.Symptom = Symptom;
+        this.attendanceStatus = attendanceStatus;
+    }
+
+    public String getAttendanceStatus() {
+        return attendanceStatus;
+    }
+
+    public void setAttendanceStatus(String attendanceStatus) {
+        this.attendanceStatus = attendanceStatus;
+    }
+    
     
 
     public int getId() {
@@ -106,11 +127,6 @@ public class AppointmentSchedule {
     public void setSymptom(String Symptom) {
         this.Symptom = Symptom;
     }
-
-//    @Override
-//    public String toString() {
-//        return "AppointmentSchedule{" + "id=" + id + ", confirmationStatus=" + confirmationStatus + ", doctor=" + doctor + ", patient=" + patient + ", shiftSlot=" + shiftSlot + '}';
-//    }
 
     @Override
     public String toString() {

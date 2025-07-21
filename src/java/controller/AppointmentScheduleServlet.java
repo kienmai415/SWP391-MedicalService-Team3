@@ -1,105 +1,97 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
- */
 package controller;
 
 import dal.AppointmentScheduleDAO;
 import java.io.IOException;
-import java.io.PrintWriter;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.util.List;
+import model.AppoinmentScheduleDTO;
 import model.AppointmentSchedule;
-import model.Patient;
+import model.Doctor;
 
-/**
- *
- * @author laptop368
- */
+@WebServlet(name = "AppointmentScheduleServlet", urlPatterns = {"/AppointmentScheduleServlet"})
 public class AppointmentScheduleServlet extends HttpServlet {
 
-    /**
-     * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
-     * methods.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
-    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        response.setContentType("text/html;charset=UTF-8");
-        try (PrintWriter out = response.getWriter()) {
-            /* TODO output your page here. You may use following sample code. */
-            out.println("<!DOCTYPE html>");
-            out.println("<html>");
-            out.println("<head>");
-            out.println("<title>Servlet AppointmentScheduleServlet</title>");
-            out.println("</head>");
-            out.println("<body>");
-            out.println("<h1>Servlet AppointmentScheduleServlet at " + request.getContextPath() + "</h1>");
-            out.println("</body>");
-            out.println("</html>");
-        }
-    }
-
-    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
-    /**
-     * Handles the HTTP <code>GET</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+
         String action = request.getParameter("action");
         AppointmentScheduleDAO dao = new AppointmentScheduleDAO();
 
         if ("view".equals(action)) {
             int patientId = Integer.parseInt(request.getParameter("pid"));
-            List<AppointmentSchedule> appointmentById = dao.getListAppointmentById(patientId);
-            AppointmentSchedule appointmentInfo = appointmentById.get(0);
-            request.setAttribute("appointmentInfo", appointmentInfo);
+            List<AppoinmentScheduleDTO> appointments = dao.getListAppointmentDTOByPId(patientId);
+            if (!appointments.isEmpty()) {
+                AppoinmentScheduleDTO appointmentInfo = appointments.get(0);
+                request.setAttribute("appointmentInfo", appointmentInfo);
+            }
             request.getRequestDispatcher("appointment_info.jsp").forward(request, response);
-        
-        } else {
-            List<AppointmentSchedule> listAppByDoctor = dao.getListAppointmentByDoctorId(1);
-            request.setAttribute("ListAppointment", listAppByDoctor);
-            request.getRequestDispatcher("appointment_schedule.jsp").forward(request, response);
+            return;
         }
 
+        if ("detail".equals(action)) {
+            int appointmentId = Integer.parseInt(request.getParameter("appointmentId"));
+            AppointmentSchedule detail = dao.getAppointmentScheduleById(appointmentId);
+            request.setAttribute("appointment", detail);
+            request.getRequestDispatcher("appointment_info.jsp").forward(request, response);
+            return;
+        }
+
+        HttpSession session = request.getSession();
+        Doctor sessionDoctor = (Doctor) session.getAttribute("d");
+
+        if (sessionDoctor == null) {
+            response.sendRedirect("login.jsp");
+            return;
+        }
+
+        int doctorId = sessionDoctor.getId();
+        List<AppoinmentScheduleDTO> list = dao.getListAppointmentDTOByDoctorId(doctorId);
+
+        request.setAttribute("appointmentList", list);
+        request.getRequestDispatcher("appointment_schedule.jsp").forward(request, response);
     }
 
-    /**
-     * Handles the HTTP <code>POST</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        processRequest(request, response);
+
+        String action = request.getParameter("action");
+        AppointmentScheduleDAO dao = new AppointmentScheduleDAO();
+
+        try {
+            int appointmentId = Integer.parseInt(request.getParameter("appointmentId"));
+
+            switch (action) {
+                case "complete":
+                    dao.updateAttendanceStatus(appointmentId, "Completed"); 
+                    dao.markMedicalRecordAsDone(appointmentId);             
+                    break;
+
+                case "noShow":
+                    dao.updateAttendanceStatus(appointmentId, "No-show"); 
+                    break;
+
+                
+            }
+
+        } catch (NumberFormatException e) {
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+// Reload lại danh sách lịch hẹn cho bác sĩ
+        response.sendRedirect("AppointmentScheduleServlet");
     }
 
-    /**
-     * Returns a short description of the servlet.
-     *
-     * @return a String containing servlet description
-     */
     @Override
     public String getServletInfo() {
-        return "Short description";
-    }// </editor-fold>
-
+        return "AppointmentScheduleServlet using DTO model.";
+    }
 }

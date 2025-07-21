@@ -6,53 +6,60 @@
         <title>Đăng ký khám bệnh</title>
         <link rel="stylesheet" href="style.css" />
         <style>
-            .btn-option {
-                margin: 10px;
-                padding: 10px 20px;
-                font-weight: bold;
-                background-color: #4CAF50;
-                border: none;
-                border-radius: 8px;
-                color: white;
-                cursor: pointer;
-            }
-
-            .form-section {
-                display: none;
-                margin-top: 20px;
-            }
-
-            .form-section.active {
-                display: block;
-            }
-
             body {
                 font-family: Arial, sans-serif;
-                background: #fff;
+                background-color: #f5f6f7;
+                margin: 0;
+                padding: 0;
+                display: flex;
+            }
+
+            /* Sidebar giả định */
+            .sidebar {
+                width: 250px;
+                background-color: #4CAF50;
+                height: 100vh;
+                color: white;
                 padding: 20px;
             }
 
-            form {
-                max-width: 900px;
-                margin: 0 auto;
+            /* Container mở rộng phần còn lại */
+            .container {
+                flex: 1;
+                padding: 40px 80px;
+                background-color: #fff;
+                min-height: 100vh;
+                box-sizing: border-box;
+                border-radius: 30px;
+                width: 168%;
+            }
+
+            h2 {
+                text-align: center;
+                color: #2b8a3e;
+                font-size: 32px;
+                font-weight: bold;
+                margin-bottom: 40px;
             }
 
             .row {
                 display: flex;
+                flex-wrap: wrap;
                 gap: 20px;
-                margin-bottom: 15px;
+                margin-bottom: 20px;
             }
 
             .col {
                 flex: 1;
                 display: flex;
                 flex-direction: column;
+                min-width: 250px;
             }
 
             label {
                 font-weight: bold;
-                color: #007bff;
-                margin-bottom: 5px;
+                color: #1e88e5;
+                margin-bottom: 6px;
             }
 
             input[type="text"],
@@ -61,70 +68,46 @@
             input[type="date"],
             select,
             textarea {
-                padding: 12px;
+                padding: 14px 12px;
                 border: 1px solid #ccc;
-                border-radius: 6px;
-                background-color: #f9f9f9;
-                font-size: 14px;
+                border-radius: 8px;
+                background-color: #f1f1f1;
+                font-size: 15px;
+                transition: border 0.3s, background-color 0.3s;
+                width: 100%;
+            }
+
+            input:focus,
+            select:focus,
+            textarea:focus {
+                outline: none;
+                border-color: #4CAF50;
+                background-color: #fff;
             }
 
             textarea {
                 resize: vertical;
-                height: 100px;
-            }
-
-            .gender-options {
-                display: flex;
-                align-items: center;
-                gap: 10px;
-                margin-top: 6px;
-            }
-
-            .note {
-                font-size: 13px;
-                color: #666;
-                margin-bottom: 10px;
-            }
-
-            .checkbox {
-                margin: 15px 0;
-            }
-
-            .checkbox input {
-                margin-right: 6px;
-            }
-
-            .checkbox label {
-                font-weight: normal;
-                color: #000;
-            }
-
-            .checkbox a {
-                color: #007bff;
-                text-decoration: none;
+                height: 120px;
             }
 
             .submit-btn {
                 background-color: #50c2aa;
                 color: white;
                 border: none;
-                padding: 15px 30px;
-                border-radius: 30px;
-                font-size: 16px;
+                padding: 16px 40px;
+                border-radius: 40px;
+                font-size: 17px;
                 font-weight: bold;
                 cursor: pointer;
+                transition: background-color 0.3s ease;
+                display: block;
+                margin: 30px auto 0;
             }
 
             .submit-btn:hover {
                 background-color: #3bb498;
             }
 
-            .checkbox {
-                visibility: hidden;
-                height: 20px;
-                margin: 0;
-                padding: 0;
-            }
         </style>
     </head>
     <body>
@@ -145,7 +128,7 @@
 
                         <!-- ✅ Combobox chọn bác sĩ -->
                         <div class="col">
-                            <label for="doctorId">Chọn bác sĩ<span style="color:red">*</span></label>
+                            <label for="doctorId">Chọn bác sĩ</label>
                             <select name="doctorId" id="doctorId" required>
                                 <option value="">-- Chọn bác sĩ --</option>
                                 <c:forEach var="d" items="${listDoctors}">
@@ -175,12 +158,12 @@
 
                     <div class="row">
                         <div class="col">
-                            <label for="appointmentDate">Ngày đặt khám<span style="color:red">*</span></label>
+                            <label for="appointmentDate">Ngày đặt khám</label>
                             <input type="date" id="appointmentDate" name="appointmentDate" min="<%= minDate %>" max="<%= maxDate %>" required>
                         </div>
 
                         <div class="col">
-                            <label for="appointmentTime">Giờ đặt khám<span style="color:red">*</span></label>
+                            <label for="appointmentTime">Giờ đặt khám</label>
                             <select id="appointmentTime" name="appointmentTime" required>
                                 <option value="">-- Chọn giờ --</option>
                                 <option value="08:00">08:00</option>
@@ -201,22 +184,25 @@
 
                     <div class="row">
                         <div class="col" style="width: 100%;">
-                            <label for="symptom">Lý do khám<span style="color:red">*</span></label>
+                            <label for="symptom">Lý do khám</label>
                             <textarea id="symptom" name="symptom" placeholder="Triệu chứng của bạn" required></textarea>
                         </div>
                     </div>
 
-                    <div class="checkbox">
-                        <input type="checkbox" id="agree" name="agree">
-                        <label for="agree">
-                            Tôi đã đọc và đồng ý với
-                            <a href="#" target="_blank">Chính sách bảo vệ dữ liệu cá nhân</a>
-                            và chấp thuận để xử lý dữ liệu cá nhân của tôi.
-                        </label>
-                    </div>
-
+                    <!--                    <div class="checkbox">
+                                            <input type="checkbox" id="agree" name="agree">
+                                            <label for="agree">
+                                                Tôi đã đọc và đồng ý với
+                                                <a href="#" target="_blank">Chính sách bảo vệ dữ liệu cá nhân</a>
+                                                và chấp thuận để xử lý dữ liệu cá nhân của tôi.
+                                            </label>
+                                        </div>
+                    
+                                        <div class="note">
+                                            *Lưu ý: Chúng tôi chỉ liên hệ với Thuê bao nội địa. Nếu quý khách sử dụng thuê bao quốc tế, vui lòng bổ sung email chính xác để nhận mã xác nhận và thông tin xác nhận đặt lịch.
+                                        </div>-->
                     <div class="note">
-                        *Lưu ý: Chúng tôi chỉ liên hệ với Thuê bao nội địa. Nếu quý khách sử dụng thuê bao quốc tế, vui lòng bổ sung email chính xác để nhận mã xác nhận và thông tin xác nhận đặt lịch.
+                        vui lòng thanh toán 200.00VND để đăng kí khám bệnh
                     </div>
 
                     <button type="submit" class="submit-btn">Gửi thông tin</button>

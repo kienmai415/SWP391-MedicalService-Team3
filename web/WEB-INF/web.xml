@@ -43,19 +43,15 @@
     <servlet>
         <servlet-name>AppointmentScheduleServlet</servlet-name>
         <servlet-class>controller.AppointmentScheduleServlet</servlet-class>
-        
     </servlet>
     <servlet>
         <servlet-name>AccountManagementServlet</servlet-name>
         <servlet-class>controller.AccountManagementServlet</servlet-class>
-        
     </servlet>
-    
     <servlet>
         <servlet-name>BookingServlet</servlet-name>
         <servlet-class>controller.BookingServlet</servlet-class>
     </servlet>
-    
     <servlet-mapping>
         <servlet-name>HomeServlet</servlet-name>
         <url-pattern>/home</url-pattern>
@@ -66,7 +62,7 @@
     </servlet-mapping>
     <servlet-mapping>
         <servlet-name>DoctorServlet</servlet-name>
-        <url-pattern>/doctor</url-pattern>
+        <url-pattern>/DoctorServlet</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
         <servlet-name>ServiceServlet</servlet-name>
@@ -84,7 +80,6 @@
         <servlet-name>LoginServlet</servlet-name>
         <url-pattern>/login</url-pattern>
     </servlet-mapping>
-    
     <servlet-mapping>
         <servlet-name>ReceptionController</servlet-name>
         <url-pattern>/reception</url-pattern>

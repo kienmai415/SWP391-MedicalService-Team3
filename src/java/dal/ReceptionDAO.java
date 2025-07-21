@@ -516,10 +516,20 @@ public class ReceptionDAO extends DBContext {
                 patient.setFullName(rs.getString("patientName"));
                 ap.setPatient(patient);
 
+                LocalDate date = rs.getDate("shiftDate").toLocalDate();
+                String rawTime = rs.getString("slotStartTime");
+
+                String formattedTime = rawTime != null && rawTime.length() >= 5
+                        ? rawTime.substring(0, 5)
+                        : rawTime;
+
                 DoctorShiftSlot shift = new DoctorShiftSlot();
-                shift.setDate(rs.getDate("shiftDate").toLocalDate());
-                shift.setSlotStartTime(rs.getString("slotStartTime"));
+                shift.setDate(date);
+                shift.setSlotStartTime(rawTime);
                 ap.setShiftSlot(shift);
+
+                ap.setAppointment_date(date.toString());         
+                ap.setAppointment_hour(formattedTime);           
 
                 resultList.add(ap);
             }

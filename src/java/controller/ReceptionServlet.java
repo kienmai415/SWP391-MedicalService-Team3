@@ -169,7 +169,7 @@ public class ReceptionServlet extends HttpServlet {
                 keyword = keyword.trim().replaceAll("\\s+", " ");
                 list = dao.searchHistoryAppointmentsByName(keyword);
             } else {
-                list = dao.getHistoryAppointmentsWithPaging(1, 100);
+                list = dao.getHistoryAppointmentsWithPaging(1, 10);
             }
 
             request.setAttribute("listApp", list);

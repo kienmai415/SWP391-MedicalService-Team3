@@ -1,136 +1,116 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<!DOCTYPE html>
 <html>
     <head>
-        <title>Thông tin khám bệnh</title>
+        <title>Chi tiết lịch hẹn</title>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
         <style>
-            .info-table {
-                width: 80%;
-                margin: auto;
-                border: 1px solid #ccc;
-                font-size: 16px;
+            body {
+                font-family: 'Segoe UI', sans-serif;
+                background-color: #f9f9f9;
+                margin: 0;
+                padding: 30px;
             }
 
-            .info-table td, .info-table th {
-                padding: 8px 12px;
-                vertical-align: middle;
+            .container {
+                max-width: 800px;
+                margin: 0 auto;
+                background-color: #fff;
+                border-radius: 12px;
+                padding: 30px;
+                box-shadow: 0 0 10px rgba(0,0,0,0.08);
             }
 
-            .info-header {
-                font-weight: bold;
-                background-color: #f2f2f2;
+            h2 {
+                text-align: center;
+                color: #2d6a4f;
+                margin-bottom: 30px;
             }
 
-            .patient-photo {
-                width: 120px;
-                height: 120px;
-                object-fit: cover;
-                border: 1px solid #ccc;
+            .section {
+                margin-bottom: 30px;
+            }
+
+            .section-title {
+                font-size: 20px;
+                color: #40916c;
+                margin-bottom: 15px;
+                border-bottom: 2px solid #74c69d;
+                padding-bottom: 5px;
+            }
+
+            .info-row {
+                margin-bottom: 10px;
             }
 
             .label {
                 font-weight: bold;
-                white-space: nowrap;
+                color: #1b4332;
+                display: inline-block;
+                width: 120px;
+            }
+
+            .value {
+                color: #343a40;
+            }
+
+            .button-container {
+                display: flex;
+                justify-content: center;
+                margin-top: 30px;
+            }
+
+            .btn-back {
+                background-color: #2d6a4f;
+                color: white;
+                padding: 10px 25px;
+                border-radius: 6px;
+                text-decoration: none;
+                font-weight: 500;
+                transition: 0.3s;
+            }
+
+            .btn-back:hover {
+                background-color: #1b4332;
             }
         </style>
     </head>
     <body>
-        <div class="container mt-3">
-            <div class="mt-4 d-flex justify-content-start">
-                <a href="./AppointmentScheduleServlet" class="btn btn-secondary">⬅ Quay lại danh sách</a>
-            </div>
-            <div class="d-flex justify-content-end mb-3">           
-                <button class="btn btn-primary" onclick="toggleForm()">✏️ </button>
-            </div>
-            <h3 class="text-center mb-4">🧾 PHIẾU THÔNG TIN KHÁM BỆNH</h3>
-            <table class="info-table table-bordered">
-                <tr>
-                    <td rowspan="4" style="text-align: center;">
-                        <img src="img/" width="120" class="patient-photo" alt="Patient Image">
+        <div class="container">
+            <h2>Chi tiết lịch hẹn</h2>
 
-                    </td>
-                    <td class="label">Mã BN:</td>
-                    <td>${appointmentInfo.patient.id}</td>
-                    <td class="label">Ngày khám:</td>
-                    <td>${appointmentInfo.shiftSlot.date}</td>
-                </tr>
-                <tr>
-                    <td class="label">Họ tên:</td>
-                    <td><strong>${appointmentInfo.patient.fullName}</strong></td>
-                    <td class="label">Giờ khám:</td>
-                    <td>${appointmentInfo.shiftSlot.slotStartTime}</td>
-                </tr>
-                <tr>
-                    <td class="label">Ngày sinh:</td>
-                    <td>${appointmentInfo.patient.dob}</td>
-                    <td class="label">Giới tính:</td>
-                    <td>${appointmentInfo.patient.gender}</td>
-                </tr>
-                <tr>
-                    <td class="label">Số điện thoại:</td>
-                    <td>${appointmentInfo.patient.phoneNumber}</td>
-                    <td colspan="2"></td>
-                </tr>
-                <tr>
-                    <td class="label">Bác sĩ phụ trách:</td>
-                    <td colspan="2">${appointmentInfo.doctor.fullName}</td>
-                    <td class="label">SĐT Bác sĩ:</td>
-                    <td>${appointmentInfo.doctor.phoneNumber}</td>
-                </tr>
-            </table>
-            <div id="editForm" class="mt-4" style="display: none;">
-                <h5 class="mb-3"></h5>
-                <table class="table table-bordered">
+            <div class="section">
+                <div class="section-title">Thông tin lịch hẹn</div>
+                <div class="info-row"><span class="label">ID lịch hẹn:</span> <span class="value">${appointment.id}</span></div>
+                <div class="info-row"><span class="label">Ngày:</span> <span class="value">${appointment.appointment_date}</span></div>
+                <div class="info-row"><span class="label">Giờ:</span> <span class="value">${appointment.appointment_hour}</span></div>
+                <div class="info-row"><span class="label">Triệu chứng:</span> <span class="value">${appointment.symptom}</span></div>
 
-                        <input type="hidden" class="form-control" name="medical_record_id">
-                    <tr>
-                        <th>Cân nặng (kg)</th>
-                        <td><input type="text" class="form-control" name="weight"></td>
-                    </tr>
-                    <tr>
-                        <th>Chiều cao (cm)</th>
-                        <td><input type="text" class="form-control" name="height"></td>
-                    </tr>
-                    <tr>
-                        <th>Nhiệt độ cơ thể (°C)</th>
-                        <td><input type="text" class="form-control" name="body_temperature"></td>
-                    </tr>
-                    <tr>
-                        <th>Nhịp tim (lần/phút)</th>
-                        <td><input type="text" class="form-control" name="heartbeat"></td>
-                    </tr>
-                    <tr>
-                        <th>Huyết áp (mmHg)</th>
-                        <td><input type="text" class="form-control" name="blood_pressure"></td>
-                    </tr>
-                    <tr>
-                        <th>Tình trạng </th>
-                        <td><textarea class="form-control" name="detail_medical" rows="2"></textarea></td>
-                    </tr>
-                    <tr>
-                        <th>Chẩn đoán</th>
-                        <td><textarea class="form-control" name="diagnose" rows="2"></textarea></td>
-                    </tr>
-                    <tr>
-                        <th>Giải pháp</th>
-                        <td><textarea class="form-control" name="solution" rows="2"></textarea></td>
-                    </tr>
-                    <tr>
-                        <th>Đơn thuốc và ghi chú</th>
-                        <td><textarea class="form-control" name="solution" rows="2"></textarea></td>
-                    </tr>
-                </table>
+                <!--<div class="info-row"><span class="label">Trạng thái:</span> <span class="value">${appointment.confirmationStatus}</span></div>-->
+            </div>
+
+            <div class="section">
+                <div class="section-title">Thông tin bác sĩ</div>
+                <div class="info-row"><span class="label">Họ tên:</span> <span class="value">${appointment.doctor.fullName}</span></div>
+                <div class="info-row"><span class="label">Email:</span> <span class="value">${appointment.doctor.email}</span></div>
+                <div class="info-row"><span class="label">Giới tính:</span> <span class="value">${appointment.doctor.gender}</span></div>
+                <div class="info-row"><span class="label">Điện thoại:</span> <span class="value">${appointment.doctor.phoneNumber}</span></div>
+                <div class="info-row"><span class="label">Địa chỉ:</span> <span class="value">${appointment.doctor.address}</span></div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">Thông tin bệnh nhân</div>
+                <div class="info-row"><span class="label">Họ tên:</span> <span class="value">${appointment.patient.fullName}</span></div>
+                <div class="info-row"><span class="label">Email:</span> <span class="value">${appointment.patient.email}</span></div>
+                <div class="info-row"><span class="label">Giới tính:</span> <span class="value">${appointment.patient.gender}</span></div>
+                <div class="info-row"><span class="label">Điện thoại:</span> <span class="value">${appointment.patient.phoneNumber}</span></div>
+                <div class="info-row"><span class="label">Địa chỉ:</span> <span class="value">${appointment.patient.address}</span></div>
+            </div>
+
+            <div class="button-container">
+                <a href="AppointmentScheduleServlet" class="btn-back">Quay lại</a>
             </div>
         </div>
-
-    </div>
-
-    <script>
-        function toggleForm() {
-            const form = document.getElementById("editForm");
-            form.style.display = form.style.display === "none" ? "block" : "none";
-        }
-    </script>
-</body>
-
+    </body>
 </html>

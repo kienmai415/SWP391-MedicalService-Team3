@@ -28,7 +28,6 @@ public class DoctorServlet extends HttpServlet {
         Doctor sessionDoctor = (Doctor) session.getAttribute("d");
 
         if (sessionDoctor == null) {
-            System.out.println("Không tìm thấy bác sĩ trong session → chuyển về login.jsp");
             response.sendRedirect("login.jsp");
             return;
         }

@@ -26,10 +26,7 @@
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h4 class="mb-0">Lịch sử khám bệnh</h4>
-    
-    <!-- ✅ Dùng đúng servlet (không phải /patient nữa) -->
     <a href="${pageContext.request.contextPath}/PatientServlet?action=schedule" class="btn-register">Đăng ký khám</a>
-
 </div>
 
 <div class="card">
@@ -40,21 +37,20 @@
                     <table class="table table-hover">
                         <thead>
                             <tr>
-                                <th>Bệnh nhân</th>
+                                <th>Triệu chứng</th>
                                 <th>Bác sĩ</th>
                                 <th>SĐT Bác sĩ</th>
-                                <th>Chức vụ</th>
+                                <th>Trình độ</th>
                                 <th>Chuyên môn</th>
                                 <th>Ngày khám</th>
                                 <th>Khung giờ</th>
                                 <th>Trạng thái</th>
-                                <th>Thao tác</th>
                             </tr>
                         </thead>
                         <tbody>
                             <c:forEach items="${historyList}" var="hl">
                                 <tr>
-                                    <td>${hl.nameP}</td>
+                                    <td>${hl.symptom}</td>
                                     <td>${hl.nameD}</td>
                                     <td>${hl.phoneD}</td>
                                     <td>${hl.levelD}</td>
@@ -63,7 +59,7 @@
                                     <td>${hl.appointTime}</td>
                                     <td>
                                         <c:choose>
-                                            <c:when test="${hl.status eq 'Đã khám'}">
+                                            <c:when test="${hl.status eq 'Đã hoàn thành'}">
                                                 <span class="status-success">${hl.status}</span>
                                             </c:when>
                                             <c:when test="${hl.status eq 'Đang chờ xử lý'}">
@@ -72,18 +68,16 @@
                                             <c:when test="${hl.status eq 'Đã xác nhận'}">
                                                 <span class="status-primary">${hl.status}</span>
                                             </c:when>
-                                            <c:when test="${hl.status eq 'Đã hủy'}">
+                                            <c:when test="${hl.status eq 'Không đến khám'}">
                                                 <span class="status-danger">${hl.status}</span>
                                             </c:when>
-                                            <c:otherwise>
+                                            <c:when test="${hl.status eq 'Đã hủy'}">
                                                 <span class="status-muted">${hl.status}</span>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <span>${hl.status}</span>
                                             </c:otherwise>
                                         </c:choose>
-                                    </td>
-                                    <td>
-                                        <button class="btn btn-sm btn-outline-primary" title="Xem chi tiết">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
                                     </td>
                                 </tr>
                             </c:forEach>

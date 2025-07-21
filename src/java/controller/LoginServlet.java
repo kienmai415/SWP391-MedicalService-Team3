@@ -41,16 +41,16 @@ public class LoginServlet extends HttpServlet {
         HttpSession session = request.getSession();
 
         if (patient != null) {
-            session.setAttribute("account", patient); // Optional
+            session.setAttribute("account", patient); 
             session.setAttribute("p", patient);
-            response.sendRedirect("PatientServlet"); // ✅ chuyển đúng qua servlet để xử lý tiếp
+            response.sendRedirect("PatientServlet"); 
             return;
         }
 
         if (doctor != null) {
             session.setAttribute("account", doctor);
             session.setAttribute("d", doctor);
-            response.sendRedirect("DoctorServlet"); //✅ chuyển qua servlet cho bác sĩ
+            response.sendRedirect("DoctorServlet"); 
             return;
         }
 
@@ -65,7 +65,7 @@ public class LoginServlet extends HttpServlet {
                 response.sendRedirect("ReceptionServlet");
                 return;
             } else if ("Manager".equals(role)) {
-                response.sendRedirect("manager_dashboard.jsp"); // hoặc Servlet nếu có
+                response.sendRedirect("manager_dashboard.jsp");
                 return;
             } else {
                 request.setAttribute("error", "Vai trò người dùng không hợp lệ.");
