@@ -118,96 +118,83 @@
                 <p style="color:red">${errorB}</p>
             </c:if>
 
-            <div id="form-auto" class="form-section active">
-                <form action="PatientServlet" method="post">
-                    <div class="row">
-                        <div class="col">
-                            <label for="fullName">Họ và tên<span style="color:red">*</span></label>
-                            <input type="text" id="fullName" name="fullName" placeholder="Họ và tên" value="${p.fullName}" readonly>
-                        </div>
-
-                        <!-- ✅ Combobox chọn bác sĩ -->
-                        <div class="col">
-                            <label for="doctorId">Chọn bác sĩ</label>
-                            <select name="doctorId" id="doctorId" required>
-                                <option value="">-- Chọn bác sĩ --</option>
-                                <c:forEach var="d" items="${listDoctors}">
-                                    <option value="${d.id}">${d.fullName} - ${d.specialization.name}</option>
-                                </c:forEach>
-                            </select>
-                        </div>
+            <form action="VNPayServlet" method="post">
+                <div class="row">
+                    <div class="col">
+                        <label for="fullName">Họ và tên<span style="color:red">*</span></label>
+                        <input type="text" id="fullName" name="fullName" placeholder="Họ và tên" value="${p.fullName}" readonly>
                     </div>
 
-                    <div class="row">
-                        <div class="col">
-                            <label for="phone">Số điện thoại<span style="color:red">*</span></label>
-                            <input type="tel" id="phone" name="phone" value="${p.phoneNumber}" readonly>
-                        </div>
+                    <div class="col">
+                        <label for="doctorId">Chọn bác sĩ</label>
+                        <select name="doctorId" id="doctorId" required>
+                            <option value="">-- Chọn bác sĩ --</option>
+                            <c:forEach var="d" items="${listDoctors}">
+                                <option value="${d.id}">${d.fullName} - ${d.specialization.name}</option>
+                            </c:forEach>
+                        </select>
+                    </div>
+                </div>
 
-                        <div class="col">
-                            <label for="email">Email<span style="color:red">*</span></label>
-                            <input type="email" id="email" name="email" value="${p.email}" readonly>
-                        </div>
+                <div class="row">
+                    <div class="col">
+                        <label for="phone">Số điện thoại<span style="color:red">*</span></label>
+                        <input type="tel" id="phone" name="phone" value="${p.phoneNumber}" readonly>
                     </div>
 
-                    <%
-                       java.time.LocalDate today = java.time.LocalDate.now();
-                       java.time.LocalDate minDate = today.plusDays(2);
-                       java.time.LocalDate maxDate = today.plusDays(7);
-                    %>
+                    <div class="col">
+                        <label for="email">Email<span style="color:red">*</span></label>
+                        <input type="email" id="email" name="email" value="${p.email}" readonly>
+                    </div>
+                </div>
 
-                    <div class="row">
-                        <div class="col">
-                            <label for="appointmentDate">Ngày đặt khám</label>
-                            <input type="date" id="appointmentDate" name="appointmentDate" min="<%= minDate %>" max="<%= maxDate %>" required>
-                        </div>
+                <%
+                   java.time.LocalDate today = java.time.LocalDate.now();
+                   java.time.LocalDate minDate = today.plusDays(2);
+                   java.time.LocalDate maxDate = today.plusDays(7);
+                %>
 
-                        <div class="col">
-                            <label for="appointmentTime">Giờ đặt khám</label>
-                            <select id="appointmentTime" name="appointmentTime" required>
-                                <option value="">-- Chọn giờ --</option>
-                                <option value="08:00">08:00</option>
-                                <option value="09:00">09:00</option>
-                                <option value="10:00">10:00</option>
-                                <option value="11:00">11:00</option>
-                                <option value="13:00">13:00</option>
-                                <option value="14:00">14:00</option>
-                                <option value="15:00">15:00</option>
-                                <option value="16:00">16:00</option>
-                            </select>
-                        </div>
+                <div class="row">
+                    <div class="col">
+                        <label for="appointmentDate">Ngày đặt khám</label>
+                        <input type="date" id="appointmentDate" name="appointmentDate" min="<%= minDate %>" max="<%= maxDate %>" required>
                     </div>
 
-                    <c:if test="${not empty error}">
-                        <p style="color:red">${error}</p>
-                    </c:if>
-
-                    <div class="row">
-                        <div class="col" style="width: 100%;">
-                            <label for="symptom">Lý do khám</label>
-                            <textarea id="symptom" name="symptom" placeholder="Triệu chứng của bạn" required></textarea>
-                        </div>
+                    <div class="col">
+                        <label for="appointmentTime">Giờ đặt khám</label>
+                        <select id="appointmentTime" name="appointmentTime" required>
+                            <option value="">-- Chọn giờ --</option>
+                            <option value="08:00">08:00</option>
+                            <option value="09:00">09:00</option>
+                            <option value="10:00">10:00</option>
+                            <option value="11:00">11:00</option>
+                            <option value="13:00">13:00</option>
+                            <option value="14:00">14:00</option>
+                            <option value="15:00">15:00</option>
+                            <option value="16:00">16:00</option>
+                        </select>
                     </div>
+                </div>
 
-                    <!--                    <div class="checkbox">
-                                            <input type="checkbox" id="agree" name="agree">
-                                            <label for="agree">
-                                                Tôi đã đọc và đồng ý với
-                                                <a href="#" target="_blank">Chính sách bảo vệ dữ liệu cá nhân</a>
-                                                và chấp thuận để xử lý dữ liệu cá nhân của tôi.
-                                            </label>
-                                        </div>
-                    
-                                        <div class="note">
-                                            *Lưu ý: Chúng tôi chỉ liên hệ với Thuê bao nội địa. Nếu quý khách sử dụng thuê bao quốc tế, vui lòng bổ sung email chính xác để nhận mã xác nhận và thông tin xác nhận đặt lịch.
-                                        </div>-->
-                    <div class="note">
-                        vui lòng thanh toán 200.00VND để đăng kí khám bệnh
+                <c:if test="${not empty error}">
+                    <p style="color:red">${error}</p>
+                </c:if>
+
+                <div class="row">
+                    <div class="col" style="width: 100%;">
+                        <label for="symptom">Lý do khám</label>
+                        <textarea id="symptom" name="symptom" placeholder="Triệu chứng của bạn" required></textarea>
                     </div>
+                </div>
 
-                    <button type="submit" class="submit-btn">Gửi thông tin</button>
-                </form>
-            </div>
+                <div class="note" style="text-align:center; font-weight:bold; color:#e53935;">
+                    Vui lòng thanh toán 200.000 VND để hoàn tất đăng ký khám bệnh
+                </div>
+
+                <button type="submit" class="submit-btn">Thanh toán</button>
+            </form>
+
         </div>
-    </body>
+    </div>
+</body>
 </html>

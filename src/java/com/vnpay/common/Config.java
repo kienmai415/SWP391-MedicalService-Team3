@@ -1,34 +1,24 @@
-
 package com.vnpay.common;
 
 import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import jakarta.servlet.http.HttpServletRequest;
 
-/**
- *
- * @author CTT VNPAY
- */
 public class Config {
 
     public static String vnp_PayUrl = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
-    public static String vnp_ReturnUrl = "http://localhost:8080/vnpay_jsp/vnpay_return.jsp";
-    public static String vnp_TmnCode = "";
-    public static String secretKey = "";
+    public static String vnp_ReturnUrl = "http://localhost:9999/SWP391-MedicalHealthCareSystem/vnpay_return.jsp";
+    public static String vnp_TmnCode = "1ZIKUQT6";
+    public static String secretKey = "4S5WV0WKO0MQQB0KQKDT0H4LIWJRKS0R";
     public static String vnp_ApiUrl = "https://sandbox.vnpayment.vn/merchant_webapi/api/transaction";
 
     public static String md5(String message) {
-        String digest = null;
         try {
             MessageDigest md = MessageDigest.getInstance("MD5");
             byte[] hash = md.digest(message.getBytes("UTF-8"));
@@ -36,17 +26,13 @@ public class Config {
             for (byte b : hash) {
                 sb.append(String.format("%02x", b & 0xff));
             }
-            digest = sb.toString();
-        } catch (UnsupportedEncodingException ex) {
-            digest = "";
-        } catch (NoSuchAlgorithmException ex) {
-            digest = "";
+            return sb.toString();
+        } catch (Exception ex) {
+            return "";
         }
-        return digest;
     }
 
     public static String Sha256(String message) {
-        String digest = null;
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-256");
             byte[] hash = md.digest(message.getBytes("UTF-8"));
@@ -54,39 +40,38 @@ public class Config {
             for (byte b : hash) {
                 sb.append(String.format("%02x", b & 0xff));
             }
-            digest = sb.toString();
-        } catch (UnsupportedEncodingException ex) {
-            digest = "";
-        } catch (NoSuchAlgorithmException ex) {
-            digest = "";
+            return sb.toString();
+        } catch (Exception ex) {
+            return "";
         }
-        return digest;
     }
 
-    //Util for VNPAY
+    // ✅ Sửa chỗ này để match với quy tắc hash của VNPay (giống trong VNPayServlet)
     public static String hashAllFields(Map fields) {
-        List fieldNames = new ArrayList(fields.keySet());
+        List<String> fieldNames = new ArrayList<>(fields.keySet());
         Collections.sort(fieldNames);
         StringBuilder sb = new StringBuilder();
-        Iterator itr = fieldNames.iterator();
-        while (itr.hasNext()) {
-            String fieldName = (String) itr.next();
-            String fieldValue = (String) fields.get(fieldName);
-            if ((fieldValue != null) && (fieldValue.length() > 0)) {
-                sb.append(fieldName);
-                sb.append("=");
-                sb.append(fieldValue);
+        try {
+            for (int i = 0; i < fieldNames.size(); i++) {
+                String fieldName = fieldNames.get(i);
+                String fieldValue = (String) fields.get(fieldName);
+                if (fieldValue != null && fieldValue.length() > 0) {
+                    sb.append(URLEncoder.encode(fieldName, StandardCharsets.US_ASCII.toString()));
+                    sb.append("=");
+                    sb.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()));
+                    if (i < fieldNames.size() - 1) {
+                        sb.append("&");
+                    }
+                }
             }
-            if (itr.hasNext()) {
-                sb.append("&");
-            }
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
         }
-        return hmacSHA512(secretKey,sb.toString());
+        return hmacSHA512(secretKey, sb.toString());
     }
-    
+
     public static String hmacSHA512(final String key, final String data) {
         try {
-
             if (key == null || data == null) {
                 throw new NullPointerException();
             }
@@ -101,23 +86,18 @@ public class Config {
                 sb.append(String.format("%02x", b & 0xff));
             }
             return sb.toString();
-
         } catch (Exception ex) {
             return "";
         }
     }
-    
+
     public static String getIpAddress(HttpServletRequest request) {
-        String ipAdress;
         try {
-            ipAdress = request.getHeader("X-FORWARDED-FOR");
-            if (ipAdress == null) {
-                ipAdress = request.getRemoteAddr();
-            }
+            String ip = request.getHeader("X-FORWARDED-FOR");
+            return (ip != null) ? ip : request.getRemoteAddr();
         } catch (Exception e) {
-            ipAdress = "Invalid IP:" + e.getMessage();
+            return "Invalid IP:" + e.getMessage();
         }
-        return ipAdress;
     }
 
     public static String getRandomNumber(int len) {

@@ -532,6 +532,26 @@ public class AppointmentScheduleDAO extends DBContext {
         }
     }
 
+    //xu ly thanh toan
+    public void insertAppointmentAfterPayment(int patientId, int doctorId, String date, String time, String symptom) {
+        String sql = """
+        INSERT INTO appointmentSchedule
+            (patientId, doctorId, appointment_date, appointment_hour, Symptom, confirmationStatus)
+        VALUES (?, ?, ?, ?, ?, 'Pending')
+    """;
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, patientId);
+            ps.setInt(2, doctorId);
+            ps.setString(3, date);
+            ps.setString(4, time);
+            ps.setString(5, symptom);
+            ps.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     public static void main(String[] args) {
         AppointmentScheduleDAO dao = new AppointmentScheduleDAO();
         List<AppoinmentScheduleDTO> apd = dao.getListAppointmentDTOByPId(1);

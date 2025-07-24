@@ -52,6 +52,10 @@
         <servlet-name>BookingServlet</servlet-name>
         <servlet-class>controller.BookingServlet</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>VNPayServlet</servlet-name>
+        <servlet-class>controller.VNPayServlet</servlet-class>
+    </servlet>
     <servlet-mapping>
         <servlet-name>HomeServlet</servlet-name>
         <url-pattern>/home</url-pattern>
@@ -95,5 +99,9 @@
     <servlet-mapping>
         <servlet-name>AccountManagementServlet</servlet-name>
         <url-pattern>/AccountManagementServlet</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>VNPayServlet</servlet-name>
+        <url-pattern>/VNPayServlet</url-pattern>
     </servlet-mapping>
 </web-app>

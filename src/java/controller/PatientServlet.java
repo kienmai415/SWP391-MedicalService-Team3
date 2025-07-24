@@ -3,14 +3,11 @@ package controller;
 import dal.AppointmentScheduleDAO;
 import dal.DoctorDAO;
 import java.io.IOException;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import java.time.LocalDate;
 import java.util.List;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.*;
 import model.AppoinmentScheduleDTO;
 import model.AppointmentSchedule;
 import model.Doctor;
@@ -29,7 +26,6 @@ public class PatientServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-       
 
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("p") == null) {
@@ -52,6 +48,7 @@ public class PatientServlet extends HttpServlet {
             List<AppoinmentScheduleDTO> historyList = dao.getListAppointmentDTOByPId(patientId);
             request.setAttribute("historyList", historyList);
             request.setAttribute("pageContent", "lich_su_kham.jsp");
+
         } else if (action.equals("schedule")) {
             List<AppointmentSchedule> historyList = dao.getListAppointmentById(patientId);
             List<Doctor> listDoctors = new DoctorDAO().getAllDoctors();
@@ -61,13 +58,13 @@ public class PatientServlet extends HttpServlet {
         } else {
             request.setAttribute("pageContent", "dashboard_placeholder.jsp");
         }
+
         request.getRequestDispatcher("view/patient/patient_dashboard.jsp").forward(request, response);
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-       
 
         request.setCharacterEncoding("UTF-8");
         response.setContentType("text/html;charset=UTF-8");
@@ -79,6 +76,7 @@ public class PatientServlet extends HttpServlet {
         }
 
         Patient patient = (Patient) session.getAttribute("p");
+        int patientId = patient.getId();
 
         String appointmentDate = request.getParameter("appointmentDate");
         String appointmentTime = request.getParameter("appointmentTime");
@@ -104,19 +102,26 @@ public class PatientServlet extends HttpServlet {
             } else {
                 try {
                     int doctorId = Integer.parseInt(doctorIdRaw);
-                    int result = dao.addAppointment(patient.getId(), doctorId, appointmentDate, appointmentTime, symptom);
-                    if (result != -1) {
-                        request.setAttribute("errorB", "Thông tin đặt lịch đã được gửi.");
-                    } else {
-                        request.setAttribute("errorB", "Có lỗi xảy ra khi gửi thông tin đặt lịch.");
-                    }
+
+                    // ✅ Gán thông tin vào session để VNPayServlet sử dụng
+                    HttpSession userSession = request.getSession();
+                    userSession.setAttribute("patientId", patientId);
+                    userSession.setAttribute("doctorId", doctorIdRaw);
+                    userSession.setAttribute("appointmentDate", appointmentDate);
+                    userSession.setAttribute("appointmentTime", appointmentTime);
+                    userSession.setAttribute("symptom", symptom);
+
+                    // ✅ Chuyển hướng sang VNPayServlet để thanh toán
+                    response.sendRedirect("VNPayServlet");
+                    return;
+
                 } catch (NumberFormatException e) {
                     request.setAttribute("error", "ID bác sĩ không hợp lệ.");
                 }
             }
         }
 
-        // Luôn tải lại danh sách bác sĩ và hiển thị trang đặt lịch
+        // Nếu có lỗi, quay lại trang đặt lịch
         List<Doctor> listDoctors = new DoctorDAO().getAllDoctors();
         request.setAttribute("listDoctors", listDoctors);
         request.setAttribute("pageContent", "dat_lich.jsp");

@@ -39,7 +39,7 @@ public class ReceptionServlet extends HttpServlet {
 //            return;
 //        }
 //        AppointmentSchedule appointmentSchedule = (AppointmentSchedule) session.getAttribute("p");
-//        
+        
         String action = request.getParameter("action");
         String message = request.getParameter("message");
         if (message != null) {
@@ -192,7 +192,7 @@ public class ReceptionServlet extends HttpServlet {
 //            return;
 //        }
 //        AppointmentSchedule appointmentSchedule = (AppointmentSchedule) session.getAttribute("p");
-//        
+        
         String action = request.getParameter("action");
         if ("confirm".equals(action) || "cancel".equals(action)) {
             int id = Integer.parseInt(request.getParameter("id"));
